@@ -33,7 +33,7 @@ public class ColorsConstants {
     public static final int DEFAULT_NOTIFICATION_BACKGROUND_COLOR = DEFAULT_SECONDARY_DARK_COLOR;
     public static final int DEFAULT_NOTIFICATION_TEXT_TITLE_COLOR = DEFAULT_PRIMARY_TEXT_COLOR;
     public static final int DEFAULT_NOTIFICATION_TEXT_ARTIST_COLOR = DEFAULT_SECONDARY_TEXT_COLOR;
-    public static final int DEFAULT_BACKGROUND_COLOR = Color.parseColor("#444444");
+    public static final int DEFAULT_BACKGROUND_COLOR = Color.parseColor("#2a2828");
     public static final int DEFAULT_SELECTED_COLOR = Color.parseColor("#88207667");
     public static final int DEFAULT_EDITMODE_SELECTED_COLOR = Color.parseColor("#8876202e");
 

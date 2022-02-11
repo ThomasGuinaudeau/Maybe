@@ -18,6 +18,8 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 
+import com.maybe.maybe.fragments.ColorCallback;
+
 public class ColorPickerDialog extends DialogFragment {
     private final String key;
     private final String title;
@@ -43,8 +45,18 @@ public class ColorPickerDialog extends DialogFragment {
 
         LinearLayout layout = (LinearLayout) dialogView.findViewById(R.id.outer_linearlayout);
 
-        String[] names = new String[]{ "Red", "Green", "Blue", "Opacity" };
-        String[] colors = new String[]{ "#fa2a2a", "#7bd130", "#429bed", "#888888" };
+        String[] names = new String[]{
+                getResources().getString(R.string.seek_bar_text_red),
+                getResources().getString(R.string.seek_bar_text_green),
+                getResources().getString(R.string.seek_bar_text_blue),
+                getResources().getString(R.string.seek_bar_text_alpha)
+        };
+        int[] colors = new int[]{
+                R.color.seek_bar_red,
+                R.color.seek_bar_green,
+                R.color.seek_bar_blue,
+                R.color.seek_bar_alpha
+        };
         int[] colorArray = new int[]{
                 (int) (Color.valueOf(color).red() * 255),
                 (int) (Color.valueOf(color).green() * 255),
@@ -86,9 +98,9 @@ public class ColorPickerDialog extends DialogFragment {
                 }
             });
             seekBar.setProgress(colorArray[i]);
-            seekBar.setThumbTintList(ColorStateList.valueOf(Color.parseColor(colors[i])));
-            seekBar.setProgressBackgroundTintList(ColorStateList.valueOf(Color.parseColor(colors[i])));
-            seekBar.setProgressTintList(ColorStateList.valueOf(Color.parseColor(colors[i])));
+            seekBar.setThumbTintList(ColorStateList.valueOf(getResources().getInteger(colors[i])));
+            seekBar.setProgressBackgroundTintList(ColorStateList.valueOf(getResources().getInteger(colors[i])));
+            seekBar.setProgressTintList(ColorStateList.valueOf(getResources().getInteger(colors[i])));
             singlePropLayout.addView(seekBar);
 
             layout.addView(singlePropLayout);

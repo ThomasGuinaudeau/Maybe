@@ -128,6 +128,12 @@
     <string name="desc_current_duration">Timer: %1$d minutes</string>
     <string name="desc_playlists">Part of those playlists: %1$s</string>
 
+    <!--Color Picker Dialog-->
+    <string name="seek_bar_text_red">Red</string>
+    <string name="seek_bar_text_green">Green</string>
+    <string name="seek_bar_text_blue">Blue</string>
+    <string name="seek_bar_text_alpha">Opacity</string>
+
     <!--Toast-->
     <string name="toast_reset_colors">Colors have been reset</string>
 </resources>

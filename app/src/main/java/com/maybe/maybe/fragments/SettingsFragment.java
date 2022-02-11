@@ -11,11 +11,10 @@ import androidx.preference.PreferenceCategory;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceScreen;
 
-import com.maybe.maybe.ColorCallback;
 import com.maybe.maybe.ColorPickerDialog;
 import com.maybe.maybe.ColorPreference;
-import com.maybe.maybe.utils.ColorsConstants;
 import com.maybe.maybe.R;
+import com.maybe.maybe.utils.ColorsConstants;
 
 public class SettingsFragment extends PreferenceFragmentCompat implements ColorCallback {
 

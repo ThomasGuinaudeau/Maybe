@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--
+        <color name="primaryColor">#207667</color>
+        <color name="primaryLightColor">#54a595</color>
+        <color name="primaryDarkColor">#004a3d</color>
+        <color name="secondaryColor">#76202e</color>
+        <color name="secondaryLightColor">#a94e57</color>
+        <color name="secondaryDarkColor">#450004</color>
+        <color name="primaryTextColor">#DDDDDD</color>
+        <color name="secondaryTextColor">#ffffff</color>
+
+        <color name="background">#99325448</color>
+
+        <color name="primaryColorTrans">#88207667</color>
+        <color name="primaryLightColorTrans">#8854a595</color>
+        <color name="primaryDarkColorTrans">#88004a3d</color>
+        <color name="secondaryColorTrans">#8876202e</color>
+        <color name="secondaryLightColorTrans">#88a94e57</color>
+        <color name="secondaryDarkColorTrans">#88450004</color>
+        <color name="primaryTextColorTrans">#66DDDDDD</color>
+
+
+        <color name="rowActivated">#8832a88b</color>
+        <color name="seekbar">#32a88b</color>
+        <color name="expandableParent">#BBBBBB</color>
+        <color name="transparent">#00000000</color>
+        <color name="darkGrey">#444444</color>
+        <color name="progressBar">#66F7CF7E</color>-->
+
+    <color name="even">#22000000</color>
+    <color name="odd">#00000000</color>
+</resources>

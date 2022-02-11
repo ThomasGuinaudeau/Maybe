@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+        <variable
+            name="musicWithArtists"
+            type="com.maybe.maybe.database.entity.MusicWithArtists" />
+
+        <variable
+            name="playlists"
+            type="String" />
+
+        <variable
+            name="seekValue"
+            type="com.maybe.maybe.fragments.PlayerFragment.SeekValueBinding" />
+
+        <variable
+            name="currentDurationStr"
+            type="String" />
+
+        <variable
+            name="currentDuration"
+            type="Integer" />
+
+        <variable
+            name="image"
+            type="android.graphics.drawable.Drawable" />
+
+        <variable
+            name="state"
+            type="Integer" />
+
+        <variable
+            name="next"
+            type="Integer" />
+
+        <variable
+            name="previous"
+            type="Integer" />
+
+        <variable
+            name="repeat"
+            type="Integer" />
+
+        <variable
+            name="shuffle"
+            type="Integer" />
+
+        <variable
+            name="primaryTextColor"
+            type="Integer" />
+
+        <variable
+            name="secondaryTextColor"
+            type="Integer" />
+
+        <variable
+            name="secondaryColor"
+            type="Integer" />
+
+        <variable
+            name="secondaryDarkColor"
+            type="Integer" />
+
+        <variable
+            name="enable"
+            type="Boolean" />
+
+        <variable
+            name="descTitle"
+            type="String" />
+
+        <variable
+            name="descArtist"
+            type="String" />
+
+        <variable
+            name="descAlbum"
+            type="String" />
+
+        <variable
+            name="descCurrentDuration"
+            type="String" />
+
+        <variable
+            name="descTotalDuration"
+            type="String" />
+
+        <variable
+            name="descPlaylists"
+            type="String" />
+
+        <variable
+            name="fragment"
+            type="com.maybe.maybe.fragments.PlayerFragment" />
+
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no">
+
+        <TextView
+            android:id="@+id/player_playlists"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:contentDescription="@{descPlaylists}"
+            android:text="@{playlists}"
+            android:textColor="@{secondaryTextColor}"
+            app:layout_constraintStart_toStartOf="@id/content"
+            app:layout_constraintTop_toTopOf="@id/content" />
+
+        <SeekBar
+            android:id="@+id/player_seekBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:enabled="@{enable}"
+            android:max="1000"
+            android:onProgressChanged="@{seekValue::onValueChanged}"
+            android:progress="@{currentDuration}"
+            android:progressBackgroundTint="@{secondaryDarkColor}"
+            android:progressTint="@{secondaryColor}"
+            android:thumbTint="@{secondaryColor}"
+            app:layout_constraintBottom_toTopOf="@id/player_layout_ppn"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <LinearLayout
+            android:id="@+id/player_layout_ppn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:importantForAccessibility="no"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toTopOf="@id/player_layout_rs"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.32"
+                android:importantForAccessibility="no" />
+
+            <ImageView
+                android:id="@+id/player_previous"
+                customtint="@{primaryTextColor}"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="0.12"
+                android:adjustViewBounds="true"
+                android:contentDescription="@string/desc_player_previous"
+                android:enabled="@{enable}"
+                android:onClick="@{(v)->fragment.onClick(v)}"
+                android:scaleType="fitCenter"
+                android:src="@{previous}" />
+
+            <ImageView
+                android:id="@+id/player_play"
+                customtint="@{primaryTextColor}"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.16"
+                android:adjustViewBounds="true"
+                android:contentDescription="@string/desc_player_play"
+                android:enabled="@{enable}"
+                android:onClick="@{(v)->fragment.onClick(v)}"
+                android:scaleType="fitCenter"
+                android:src="@{state}" />
+
+            <ImageView
+                android:id="@+id/player_next"
+                customtint="@{primaryTextColor}"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="0.12"
+                android:adjustViewBounds="true"
+                android:contentDescription="@string/desc_player_next"
+                android:enabled="@{enable}"
+                android:onClick="@{(v)->fragment.onClick(v)}"
+                android:scaleType="fitCenter"
+                android:src="@{next}" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.32"
+                android:importantForAccessibility="no" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/player_layout_rs"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:importantForAccessibility="no"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.12"
+                android:importantForAccessibility="no" />
+
+            <ImageView
+                android:id="@+id/player_repeat"
+                customtint="@{primaryTextColor}"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.08"
+                android:adjustViewBounds="true"
+                android:contentDescription="@string/desc_player_repeat"
+                android:enabled="@{enable}"
+                android:onClick="@{(v)->fragment.onClick(v)}"
+                android:scaleType="fitCenter"
+                android:src="@{repeat}" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.6"
+                android:importantForAccessibility="no" />
+
+            <ImageView
+                android:id="@+id/player_shuffle"
+                customtint="@{primaryTextColor}"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.08"
+                android:adjustViewBounds="true"
+                android:contentDescription="@string/desc_player_sort"
+                android:enabled="@{enable}"
+                android:onClick="@{(v)->fragment.onClick(v)}"
+                android:scaleType="fitCenter"
+                android:src="@{shuffle}" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.12"
+                android:importantForAccessibility="no" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/player_current_duration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@{descCurrentDuration}"
+            android:paddingStart="14dp"
+            android:text="@{currentDurationStr}"
+            android:textAlignment="center"
+            android:textColor="@{primaryTextColor}"
+            app:layout_constraintBottom_toTopOf="@id/player_seekBar"
+            app:layout_constraintStart_toStartOf="@id/player_seekBar" />
+
+        <TextView
+            android:id="@+id/player_total_duration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@{descTotalDuration}"
+            android:paddingEnd="14dp"
+            android:text="@{fragment.convertMilliToTime(musicWithArtists.music.music_duration)}"
+            android:textAlignment="center"
+            android:textColor="@{primaryTextColor}"
+            app:layout_constraintBottom_toTopOf="@id/player_seekBar"
+            app:layout_constraintEnd_toEndOf="@id/player_seekBar" />
+
+        <TextView
+            android:id="@+id/player_album"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:contentDescription="@{descAlbum}"
+            android:text="@{musicWithArtists.music.music_album}"
+            android:textAlignment="center"
+            android:textColor="@{secondaryTextColor}"
+            app:layout_constraintBottom_toTopOf="@id/player_current_duration"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <TextView
+            android:id="@+id/player_aritst"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:contentDescription="@{descArtist}"
+            android:text="@{musicWithArtists.artistsToString()}"
+            android:textAlignment="center"
+            android:textColor="@{secondaryTextColor}"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toTopOf="@id/player_album"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <TextView
+            android:id="@+id/player_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:contentDescription="@{descTitle}"
+            android:text="@{musicWithArtists.music.music_title}"
+            android:textAlignment="center"
+            android:textColor="@{primaryTextColor}"
+            android:textSize="22sp"
+            app:layout_constraintBottom_toTopOf="@id/player_aritst"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <ImageView
+            android:id="@+id/player_image"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:adjustViewBounds="true"
+            android:contentDescription="@null"
+            android:importantForAccessibility="no"
+            android:src="@{image}"
+            app:layout_constraintBottom_toTopOf="@id/player_title"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintWidth_percent="0.7" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

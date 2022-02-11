@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:importantForAccessibility="no">
+
+    <TextView
+        android:id="@+id/main_title"
+        android:layout_width="match_parent"
+        android:layout_height="26dp"
+        android:gravity="center"
+        android:textAlignment="center"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ProgressBar
+        android:id="@+id/main_progress_bar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:layout_gravity="center"
+        android:importantForAccessibility="no"
+        app:layout_constraintTop_toBottomOf="@id/main_title" />
+
+    <LinearLayout
+        android:id="@+id/main_search_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:focusable="true"
+        android:importantForAccessibility="no"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toBottomOf="@id/main_progress_bar">
+
+        <EditText
+            android:id="@+id/main_search_edit"
+            android:layout_width="0dp"
+            android:layout_height="26dp"
+            android:layout_weight="0.8"
+            android:background="@null"
+            android:hint="@string/search_box"
+            android:importantForAutofill="no"
+            android:inputType="text"
+            android:textAlignment="center"
+            android:textSize="14sp"
+            tools:ignore="TouchTargetSizeCheck" />
+
+        <Button
+            android:id="@+id/main_search_button"
+            android:layout_width="0dp"
+            android:layout_height="26dp"
+            android:layout_marginStart="2dp"
+            android:layout_weight="0.2"
+            android:background="@null"
+            android:contentDescription="@string/desc_main_search_button"
+            android:text="@string/search_button"
+            android:textSize="14sp"
+            tools:ignore="TouchTargetSizeCheck" />
+    </LinearLayout>
+
+    <com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView
+        android:id="@+id/main_recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:importantForAccessibility="no"
+        app:fastScrollPopupPosition="center"
+        app:fastScrollPopupTextColor="@android:color/primary_text_dark"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/main_search_layout" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

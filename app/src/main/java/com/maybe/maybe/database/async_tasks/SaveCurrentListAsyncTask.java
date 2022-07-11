@@ -3,7 +3,6 @@ package com.maybe.maybe.database.async_tasks;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
-import android.util.Log;
 
 import com.maybe.maybe.R;
 import com.maybe.maybe.database.AppDatabase;
@@ -31,7 +30,7 @@ public class SaveCurrentListAsyncTask extends AsyncTask<Object, Integer, Object>
 
     @Override
     protected Object doInBackground(Object... objects) {
-        //PARAMS: 0=db 1=context 2=currentCol 3=currentCat 4=sort
+        //PARAMS: 0=db 1=context 2=currentCol 3=currentCat 4=sort 5=isStart
         Context context = (Context) objects[1];
         SharedPreferences sharedPref = context.getSharedPreferences(context.getString(R.string.preference_file_key), Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
@@ -41,12 +40,14 @@ public class SaveCurrentListAsyncTask extends AsyncTask<Object, Integer, Object>
         editor.putString(context.getString(R.string.sort), (String) objects[4]);
         editor.apply();
 
-        CurrentPlaylistDao dao = ((AppDatabase) objects[0]).currentPlaylistDao();
-        dao.deleteAll();
-        for (int i = 0; i < musicWithArtists.size(); i++) {
-            CurrentPlaylist currentPlaylist = new CurrentPlaylist(i, musicWithArtists.get(i).music.getMusic_id());
-            dao.insert(currentPlaylist);
-            publishProgress(i);
+        if (!((boolean) objects[5])) {
+            CurrentPlaylistDao dao = ((AppDatabase) objects[0]).currentPlaylistDao();
+            dao.deleteAll();
+            for (int i = 0; i < musicWithArtists.size(); i++) {
+                CurrentPlaylist currentPlaylist = new CurrentPlaylist(i, musicWithArtists.get(i).music.getMusic_id());
+                dao.insert(currentPlaylist);
+                publishProgress(i);
+            }
         }
 
         return null;

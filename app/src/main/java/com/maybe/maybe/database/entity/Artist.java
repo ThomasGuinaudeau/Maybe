@@ -8,7 +8,6 @@ import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 @Entity(tableName = "artist")
-//, foreignKeys = @ForeignKey(entity = Music.class, parentColumns = "id", childColumns = "playlist_file_id", onDelete = CASCADE), indices = {@Index(value = {"playlist_file_id"})})
 public class Artist implements Parcelable {
     @Ignore
     public static Parcelable.Creator<Artist> CREATOR = new Parcelable.Creator<Artist>() {
@@ -22,7 +21,6 @@ public class Artist implements Parcelable {
         public Artist[] newArray(int size) {
             return new Artist[size];
         }
-
     };
     @PrimaryKey(autoGenerate = true)
     private long artist_id;
@@ -66,5 +64,4 @@ public class Artist implements Parcelable {
     public int describeContents() {
         return 0;
     }
-
 }

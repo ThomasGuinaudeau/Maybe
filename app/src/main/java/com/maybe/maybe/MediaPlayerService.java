@@ -28,6 +28,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -39,6 +40,7 @@ import android.util.Log;
 import android.widget.RemoteViews;
 
 import androidx.core.app.NotificationCompat;
+import androidx.documentfile.provider.DocumentFile;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.maybe.maybe.activities.MainActivity;
@@ -65,7 +67,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnPrepare
             mHandler.postDelayed(this, 200);
         }
     };
-    private boolean isServiceReceiverRegistered;
+    private boolean isServiceReceiverRegistered, isNoisyAudioStreamReceiverRegistered;
     private String isLoop;
     private int timestamp, begin; //begin-->> -1 = dont prepare, 0 = prepare but dont play(at start), 1 = prepare and play
     private NotificationManager notificationManager;
@@ -116,7 +118,10 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnPrepare
                 mediaPlayer.start();
                 mediaSession.setPlaybackState(buildPlaybackState(PlaybackStateCompat.STATE_PLAYING));
                 //mediaPlayer.setPlaybackParams(mediaPlayer.getPlaybackParams().setSpeed(0.5f));
-                registerReceiver(myNoisyAudioStreamReceiver, becomeNoisyIntentFilter);
+                if (!isNoisyAudioStreamReceiverRegistered) {
+                    registerReceiver(myNoisyAudioStreamReceiver, becomeNoisyIntentFilter);
+                    isNoisyAudioStreamReceiverRegistered = true;
+                }
                 if (begin != -1) {
                     updateMetaData();
                     notificationManager.notify(NOTIFICATION_ID, buildForegroundNotification("all"));
@@ -155,7 +160,10 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnPrepare
             Log.d(TAG, "MediaSession onStop");
             if (mediaPlayer.isPlaying()) {
                 Log.d(TAG, "mHandler = off");
-                unregisterReceiver(myNoisyAudioStreamReceiver);
+                if (isNoisyAudioStreamReceiverRegistered) {
+                    unregisterReceiver(myNoisyAudioStreamReceiver);
+                    isNoisyAudioStreamReceiverRegistered = false;
+                }
                 mHandler.removeCallbacks(updateTimeTask);
             }
             mediaPlayer.stop();
@@ -329,6 +337,10 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnPrepare
             mediaPlayer.release();
             mediaPlayer = null;
         }
+        if (isNoisyAudioStreamReceiverRegistered) {
+            unregisterReceiver(myNoisyAudioStreamReceiver);
+            isNoisyAudioStreamReceiverRegistered = false;
+        }
         unregisterServiceReceiver();
     }
 
@@ -366,13 +378,23 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnPrepare
         mediaPlayer.setOnCompletionListener(this);
         mediaPlayer.reset();
 
-        try {
-            mediaPlayer.setDataSource(this, getContentUri("external", fileId));
-        } catch (IOException e) {
-            e.printStackTrace();
-            onDestroy();
+        Uri uri = getContentUri("external", fileId);
+        DocumentFile sourceFile = DocumentFile.fromSingleUri(this, uri);
+        Log.e(TAG, fileId + " exist " + sourceFile.exists());
+        if (sourceFile.exists()) {
+            try {
+                mediaPlayer.setDataSource(this, uri);
+                mediaPlayer.prepareAsync();
+            } catch (IOException e) {
+                e.printStackTrace();
+                onDestroy();
+            }
+        } else {
+            mediaPlayer.reset();
+            mediaPlayer.release();
+            mediaPlayer = null;
+            skipToNext();
         }
-        mediaPlayer.prepareAsync();
     }
 
     public void updateColors() {

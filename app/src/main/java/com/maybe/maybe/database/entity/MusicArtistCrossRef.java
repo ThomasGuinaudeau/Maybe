@@ -1,9 +1,12 @@
 package com.maybe.maybe.database.entity;
 
+import static androidx.room.ForeignKey.CASCADE;
+
 import androidx.room.Entity;
+import androidx.room.ForeignKey;
 import androidx.room.Index;
 
-@Entity(tableName = "music_artist_cross_ref", primaryKeys = {"music_id", "artist_id"}, indices = @Index(value = {"artist_id"}))
+@Entity(tableName = "music_artist_cross_ref", foreignKeys = { @ForeignKey(entity = Music.class, parentColumns = "music_id", childColumns = "music_id", onDelete = CASCADE), @ForeignKey(entity = Artist.class, parentColumns = "artist_id", childColumns = "artist_id", onDelete = CASCADE) }, primaryKeys = { "music_id", "artist_id" }, indices = @Index(value = { "artist_id" }))
 public class MusicArtistCrossRef {
     private long music_id;
     private long artist_id;

@@ -5,6 +5,8 @@
       <map>
         <entry key="..\:/programs/AndroidStudioProjects/Maybe/app/src/main/res/drawable/activated_background.xml" value="0.14739583333333334" />
         <entry key="..\:/programs/AndroidStudioProjects/Maybe/app/src/main/res/drawable/custom_expandable.xml" value="0.14739583333333334" />
+        <entry key="..\:/programs/AndroidStudioProjects/Maybe/app/src/main/res/drawable/ic_launcher_background.xml" value="0.34" />
+        <entry key="..\:/programs/AndroidStudioProjects/Maybe/app/src/main/res/drawable/ic_launcher_foreground.xml" value="0.34" />
         <entry key="..\:/programs/AndroidStudioProjects/Maybe/app/src/main/res/drawable/ic_round_delete_sweep_24.xml" value="0.3880208333333333" />
         <entry key="..\:/programs/AndroidStudioProjects/Maybe/app/src/main/res/drawable/ic_round_keyboard_arrow_left_24.xml" value="0.3880208333333333" />
         <entry key="..\:/programs/AndroidStudioProjects/Maybe/app/src/main/res/drawable/line.xml" value="0.14739583333333334" />
@@ -31,6 +33,8 @@
         <entry key="..\:/programs/AndroidStudioProjects/Maybe/app/src/main/res/layout/tetest.xml" value="0.371875" />
         <entry key="..\:/programs/AndroidStudioProjects/Maybe/app/src/main/res/layout/ttest.xml" value="0.371875" />
         <entry key="..\:/programs/AndroidStudioProjects/Maybe/app/src/main/res/menu/drawer_menu.xml" value="0.371875" />
+        <entry key="..\:/programs/AndroidStudioProjects/Maybe/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.1975" />
+        <entry key="..\:/programs/AndroidStudioProjects/Maybe/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml" value="0.1975" />
         <entry key="..\:/programs/AndroidStudioProjects/Maybe/app/src/main/res/xml/preferences.xml" value="0.371875" />
       </map>
     </option>

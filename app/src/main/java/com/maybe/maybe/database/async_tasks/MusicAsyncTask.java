@@ -1,5 +1,7 @@
 package com.maybe.maybe.database.async_tasks;
 
+import static com.maybe.maybe.utils.Constants.SORT_RANDOM;
+
 import android.database.Cursor;
 import android.os.AsyncTask;
 
@@ -11,8 +13,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-
-import static com.maybe.maybe.utils.Constants.SORT_RANDOM;
 
 public class MusicAsyncTask extends AsyncTask<Object, Object, List<Object>> {
 
@@ -62,8 +62,8 @@ public class MusicAsyncTask extends AsyncTask<Object, Object, List<Object>> {
                 if (cursor != null && cursor.getCount() > 0) {
                     while (cursor.moveToNext()) {
                         HashMap<String, Object> hashMap = new HashMap<>();
-                        hashMap.put("name", cursor.getString(cursor.getColumnIndex("name")));
-                        hashMap.put("count", cursor.getString(cursor.getColumnIndex("count")));
+                        hashMap.put("name", cursor.getString(cursor.getColumnIndexOrThrow("name")));
+                        hashMap.put("count", cursor.getString(cursor.getColumnIndexOrThrow("count")));
                         hashMapList.add(hashMap);
                     }
                 }
@@ -101,5 +101,4 @@ public class MusicAsyncTask extends AsyncTask<Object, Object, List<Object>> {
                 break;
         }
     }
-
 }

@@ -60,7 +60,7 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
     private Button main_search_button;
     private ProgressBar main_progress_bar;
     private AppDatabase appDatabase;
-    private boolean searchEnable = false, buttonEnable = false;
+    private boolean searchEnable = false, buttonEnable = false, isStart = true;
     private String sort, currentCat, currentCol;
     private boolean editMode, isBroadcastReceiverRegistered;
     private ArrayList<Long> searchIdList;
@@ -363,11 +363,9 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
     @Override
     public void onSelectMusicAsyncFinish(List<Object> objects) {
         List<MusicWithArtists> musicWithArtists = (List<MusicWithArtists>) (Object) objects;
-        Log.e(TAG, "BUTTON " + buttonEnable);
         if (musicWithArtists.size() > 0) {
             if (!buttonEnable) {
                 buttonEnable = true;
-                Log.e(TAG, "BUTTON " + buttonEnable);
                 callback.disableButtons(true);
             }
             adapter.setMusics(musicWithArtists);
@@ -376,11 +374,12 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
             main_title.setText(currentCat);
             sendBroadcast("change_music_list", new ArrayList<>(musicWithArtists));
 
-            new SaveCurrentListAsyncTask(musicWithArtists, this).execute(appDatabase, getContext(), currentCol, currentCat, sort);
+            new SaveCurrentListAsyncTask(musicWithArtists, this).execute(appDatabase, getContext(), currentCol, currentCat, sort, isStart);
         } else if (buttonEnable) {
             buttonEnable = false;
             callback.disableButtons(false);
         }
+        isStart = false;
     }
 
     //recieved from CategoryFragment

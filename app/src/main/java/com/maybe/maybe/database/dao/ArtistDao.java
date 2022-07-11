@@ -21,11 +21,17 @@ public interface ArtistDao {
     @Delete
     void delete(Artist artist);
 
+    @Query("DELETE FROM artist WHERE artist_id = :artist_id")
+    void deleteById(long artist_id);
+
     @Query("DELETE FROM artist")
     void deleteAll();
 
     @Query("SELECT * FROM artist")
     List<Artist> selectAll();
+
+    @Query("SELECT artist_id FROM artist")
+    List<Long> selectAllArtistsId();
 
     @Transaction
     @Query("SELECT * FROM artist ORDER BY artist_name")
@@ -34,5 +40,4 @@ public interface ArtistDao {
     @Transaction
     @Query("SELECT * FROM artist WHERE artist_name LIKE :name ORDER BY :sort ASC")
     ArtistWithMusics selectOneArtistWithMusics(String sort, String name);
-
 }

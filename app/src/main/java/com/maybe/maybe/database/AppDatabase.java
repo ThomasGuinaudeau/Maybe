@@ -1,5 +1,7 @@
 package com.maybe.maybe.database;
 
+import static com.maybe.maybe.activities.MainActivity.DATABASE_VERSION;
+
 import android.content.Context;
 
 import androidx.room.Database;
@@ -22,9 +24,7 @@ import com.maybe.maybe.database.entity.Settings;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import static com.maybe.maybe.activities.MainActivity.DATABASE_VERSION;
-
-@Database(entities = {Music.class, MusicArtistCrossRef.class, Artist.class, Playlist.class, CurrentPlaylist.class, Settings.class}, version = DATABASE_VERSION, exportSchema = false)
+@Database(entities = { Music.class, MusicArtistCrossRef.class, Artist.class, Playlist.class, CurrentPlaylist.class, Settings.class }, version = DATABASE_VERSION, exportSchema = true)
 public abstract class AppDatabase extends RoomDatabase {
 
     public static final String DATABASE_NAME = "maybe_db";
@@ -42,7 +42,8 @@ public abstract class AppDatabase extends RoomDatabase {
     }
 
     private static AppDatabase buildDatabase(final Context appContext, final Executor thread) {
-        return Room.databaseBuilder(appContext, AppDatabase.class, DATABASE_NAME).fallbackToDestructiveMigration().build();
+        //return Room.databaseBuilder(appContext, AppDatabase.class, DATABASE_NAME).fallbackToDestructiveMigration().build();
+        return Room.databaseBuilder(appContext, AppDatabase.class, DATABASE_NAME).build();
     }
 
     public abstract MusicDao musicDao();
@@ -56,5 +57,4 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract CurrentPlaylistDao currentPlaylistDao();
 
     public abstract SettingsDao settingsDao();
-
 }

@@ -1,5 +1,9 @@
 package com.maybe.maybe.database.dao;
 
+import static com.maybe.maybe.utils.Constants.SORT_ALPHA;
+import static com.maybe.maybe.utils.Constants.SORT_NUM;
+import static com.maybe.maybe.utils.Constants.SORT_RANDOM;
+
 import android.database.Cursor;
 
 import androidx.room.Dao;
@@ -13,15 +17,14 @@ import com.maybe.maybe.database.entity.MusicWithArtists;
 
 import java.util.List;
 
-import static com.maybe.maybe.utils.Constants.SORT_ALPHA;
-import static com.maybe.maybe.utils.Constants.SORT_NUM;
-import static com.maybe.maybe.utils.Constants.SORT_RANDOM;
-
 @Dao
 public interface MusicDao {
 
     @Insert
     void insert(Music music);
+
+    @Query("DELETE FROM music WHERE music_id = :music_id")
+    void deleteById(long music_id);
 
     @Query("DELETE FROM music")
     void deleteAll();
@@ -55,6 +58,9 @@ public interface MusicDao {
     @Query("SELECT music_id FROM music WHERE music_title LIKE :title")
     List<Long> selectAllIdsByTitle(String title);
 
+    @Query("SELECT music_id FROM music")
+    List<Long> selectAllIds();
+
     /*@Transaction
     @Query("SELECT * FROM music WHERE music_id IN (:musicFileIds)")
     List<MusicWithArtists> selectAllByIds(List<Integer> musicFileIds);
@@ -68,5 +74,4 @@ public interface MusicDao {
     //ALBUM
     @Query("SELECT music_id, music_album name, COUNT(music_id) count FROM music GROUP BY name ORDER BY name ASC")
     Cursor selectAllAlbumWithCount();
-
 }

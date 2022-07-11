@@ -12,7 +12,6 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.os.Bundle;
-import android.os.StrictMode;
 import android.text.SpannableString;
 import android.text.style.TextAppearanceSpan;
 import android.util.Log;
@@ -33,7 +32,6 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.navigation.NavigationView;
-import com.maybe.maybe.utils.ColorsConstants;
 import com.maybe.maybe.CustomViewPager;
 import com.maybe.maybe.R;
 import com.maybe.maybe.database.AppDatabase;
@@ -44,15 +42,13 @@ import com.maybe.maybe.database.entity.MusicWithArtists;
 import com.maybe.maybe.fragments.CategoryFragment;
 import com.maybe.maybe.fragments.MainFragment;
 import com.maybe.maybe.fragments.PlayerFragment;
+import com.maybe.maybe.utils.ColorsConstants;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.Locale;
 
 public class MainActivity extends FragmentActivity implements CategoryFragment.CategoryFragmentListener, MainFragment.MainFragmentListener, PlayerFragment.PlayerFragmentListener, OnFillDbAsyncTaskFinish {
 
-    public static final int DATABASE_VERSION = 11;
+    public static final int DATABASE_VERSION = 1;
     private static final String TAG = "MainActivity";
     private ViewPager2 viewPager;
     private CustomViewPager pagerAdapter;
@@ -84,9 +80,9 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Thread.setDefaultUncaughtExceptionHandler(this::handleUncaughtException);
+        //Thread.setDefaultUncaughtExceptionHandler(this::handleUncaughtException);
 
-        StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder().detectLeakedClosableObjects().penaltyLog().build());
+        //StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder().detectLeakedClosableObjects().penaltyLog().build());
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
             ActivityCompat.requestPermissions(this, new String[]{ Manifest.permission.READ_EXTERNAL_STORAGE }, 1);
@@ -226,7 +222,8 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
         super.onResume();
         if (pagerAdapter != null && time != 0) {
             MainFragment fragment = (MainFragment) pagerAdapter.getRegisteredFragment(MAIN_POS);
-            fragment.onAppForeground();
+            if (fragment != null)
+                fragment.onAppForeground();
         }
         time = 1;
     }
@@ -300,7 +297,7 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
     }
 
     //On crash send stack trace
-    public void handleUncaughtException(Thread thread, Throwable e) {
+    /*public void handleUncaughtException(Thread thread, Throwable e) {
         String exStackTrace = Log.getStackTraceString(e);
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault());
         String currentDate = sdf.format(new Date());
@@ -323,5 +320,5 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
             finish();
             System.exit(0);
         }
-    }
+    }*/
 }

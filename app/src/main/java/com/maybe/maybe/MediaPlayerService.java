@@ -26,20 +26,25 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.telephony.PhoneStateListener;
+import android.telephony.TelephonyCallback;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.widget.RemoteViews;
 
+import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
+import androidx.core.content.ContextCompat;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
@@ -67,12 +72,13 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnPrepare
             mHandler.postDelayed(this, 200);
         }
     };
-    private boolean isServiceReceiverRegistered, isNoisyAudioStreamReceiverRegistered;
+    private boolean isServiceReceiverRegistered, isNoisyAudioStreamReceiverRegistered, callStateListenerRegistered;
     private String isLoop;
     private int timestamp, begin; //begin-->> -1 = dont prepare, 0 = prepare but dont play(at start), 1 = prepare and play
     private NotificationManager notificationManager;
     private MediaSessionCompat mediaSession;
     private MusicList musicList;
+    private TelephonyManager telephonyManager;
     public BroadcastReceiver serviceReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -195,14 +201,29 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnPrepare
             initMediaPlayer(musicList.getCurrent().music.getMusic_id());
         }
     };
-    private final PhoneStateListener callStateListener = new PhoneStateListener() {
+    private final PhoneStateListener callStateListener = (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) ? new PhoneStateListener() {
         public void onCallStateChanged(int state, String incomingNumber) {
             if (state == TelephonyManager.CALL_STATE_RINGING) {
                 if (mediaPlayer.isPlaying())
                     pauseMedia();
             }
         }
-    };
+    } : null;
+    private TelephonyCallback telephonyCallback = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) ? new CustomTelephonyCallback() {
+        @Override
+        public void onCallStateChanged(int i) {
+            if (i == TelephonyManager.CALL_STATE_RINGING) {
+                if (mediaPlayer.isPlaying())
+                    pauseMedia();
+            }
+        }
+    } : null;
+
+    @RequiresApi(api = Build.VERSION_CODES.S)
+    private static abstract class CustomTelephonyCallback extends TelephonyCallback implements TelephonyCallback.CallStateListener {
+        @Override
+        public void onCallStateChanged(int i) {}
+    }
 
     public void onCreate() {
         Log.d(TAG, "onCreate");
@@ -223,8 +244,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnPrepare
         switch (action) {
             case ACTION_CREATE_SERVICE:
                 startForeground(NOTIFICATION_ID, buildForegroundNotification("all"));
-                TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-                telephonyManager.listen(callStateListener, PhoneStateListener.LISTEN_CALL_STATE);
+                telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+                registerCallStateListener();
                 break;
             case ACTION_PREVIOUS:
                 skipToPrevious();
@@ -253,6 +274,32 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnPrepare
                 break;
         }
         return START_NOT_STICKY;
+    }
+
+    private void registerCallStateListener() {
+        if (!callStateListenerRegistered) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
+                    telephonyManager.registerTelephonyCallback(getMainExecutor(), telephonyCallback);
+                    callStateListenerRegistered = true;
+                }
+            } else {
+                telephonyManager.listen(callStateListener, PhoneStateListener.LISTEN_CALL_STATE);
+                callStateListenerRegistered = true;
+            }
+        }
+    }
+
+    private void unregisterCallStateListener() {
+        if (callStateListenerRegistered) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                telephonyManager.unregisterTelephonyCallback(telephonyCallback);
+                callStateListenerRegistered = false;
+            } else {
+                telephonyManager.listen(callStateListener, PhoneStateListener.LISTEN_NONE);
+                callStateListenerRegistered = false;
+            }
+        }
     }
 
     private void registerServiceReceiver() {
@@ -342,6 +389,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnPrepare
             isNoisyAudioStreamReceiverRegistered = false;
         }
         unregisterServiceReceiver();
+        unregisterCallStateListener();
     }
 
     public void onPrepared(MediaPlayer player) {
@@ -450,12 +498,12 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnPrepare
     public PendingIntent pendingIntent(String action) {
         Intent intent = new Intent(this, MediaPlayerService.class);
         intent.setAction(action);
-        return PendingIntent.getService(this, (int) System.currentTimeMillis(), intent, 0);
+        return PendingIntent.getService(this, (int) System.currentTimeMillis(), intent, PendingIntent.FLAG_MUTABLE);
     }
 
     public PendingIntent MainActivityPendingIntent() {
         Intent intent = new Intent(this, MainActivity.class);
-        return PendingIntent.getActivity(this, (int) System.currentTimeMillis(), intent, 0);
+        return PendingIntent.getActivity(this, (int) System.currentTimeMillis(), intent, PendingIntent.FLAG_MUTABLE);
     }
 
     private void createNotificationChannel() {

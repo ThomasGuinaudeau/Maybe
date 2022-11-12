@@ -4,7 +4,6 @@ import static com.maybe.maybe.CustomViewPager.CAT_POS;
 import static com.maybe.maybe.CustomViewPager.MAIN_POS;
 import static com.maybe.maybe.CustomViewPager.PLAY_POS;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -50,6 +49,10 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
 
     public static final int DATABASE_VERSION = 1;
     private static final String TAG = "MainActivity";
+    private static final String[] PERMISSIONS = {
+            android.Manifest.permission.READ_EXTERNAL_STORAGE,
+            android.Manifest.permission.READ_PHONE_STATE
+    };
     private ViewPager2 viewPager;
     private CustomViewPager pagerAdapter;
     private DrawerLayout drawerLayout;
@@ -83,16 +86,31 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
         //Thread.setDefaultUncaughtExceptionHandler(this::handleUncaughtException);
 
         //StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder().detectLeakedClosableObjects().penaltyLog().build());
+        int permissionLevel = hasPermissions();
+        if (permissionLevel == 0 || permissionLevel == 1)
+            ActivityCompat.requestPermissions(this, PERMISSIONS, 1);
+        else
+            checkForUpdate();
+    }
 
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
-            ActivityCompat.requestPermissions(this, new String[]{ Manifest.permission.READ_EXTERNAL_STORAGE }, 1);
-        else checkForUpdate();
+    private int hasPermissions() {
+        boolean permStorage = ContextCompat.checkSelfPermission(this, PERMISSIONS[0]) == PackageManager.PERMISSION_GRANTED;
+        boolean permPhone = ContextCompat.checkSelfPermission(this, PERMISSIONS[1]) == PackageManager.PERMISSION_GRANTED;
+        if (!permStorage && !permPhone) {
+            return 0;
+        } else if (!permStorage && permPhone) {
+            return 1;
+        } else if (permStorage && !permPhone) {
+            return 2;
+        }
+        return 3;
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+        int permissionLevel = hasPermissions();
+        if (permissionLevel == 2 || permissionLevel == 3)
             checkForUpdate();
     }
 
@@ -204,7 +222,8 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
     protected void onDestroy() {
         Log.d(TAG, "onDestroy");
         activityResultLauncher.unregister();
-        viewPager.unregisterOnPageChangeCallback(onPageChangeCallback);
+        if (viewPager != null)
+            viewPager.unregisterOnPageChangeCallback(onPageChangeCallback);
         super.onDestroy();
     }
 

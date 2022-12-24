@@ -16,6 +16,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ExpandableListView;
+import android.widget.GridView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -26,9 +27,9 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
-import com.maybe.maybe.utils.ColorsConstants;
 import com.maybe.maybe.R;
 import com.maybe.maybe.adapters.CategoryExpandableListViewAdapter;
+import com.maybe.maybe.adapters.CategoryGridAdapter;
 import com.maybe.maybe.adapters.CustomArrayAdapter;
 import com.maybe.maybe.database.AppDatabase;
 import com.maybe.maybe.database.async_tasks.ArtistAsyncTask;
@@ -46,6 +47,7 @@ import com.maybe.maybe.database.async_tasks.playlist.PlaylistAsyncTaskPlaylistRe
 import com.maybe.maybe.database.entity.ArtistWithMusics;
 import com.maybe.maybe.database.entity.Music;
 import com.maybe.maybe.database.entity.Playlist;
+import com.maybe.maybe.utils.ColorsConstants;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -86,7 +88,8 @@ public class CategoryFragment extends Fragment implements PlaylistAsyncTaskPlayl
     };
     private ArrayList<Music> addPlaylist;
     private CategoryExpandableListViewAdapter adapter;
-    private ExpandableListView elv;
+    //private ExpandableListView elv;
+    private GridView gridView;
     private String currentPlaylistName;
     private final ExpandableListView.OnChildClickListener onChildClickListener = new ExpandableListView.OnChildClickListener() {
         @Override
@@ -124,10 +127,19 @@ public class CategoryFragment extends Fragment implements PlaylistAsyncTaskPlayl
 
         drawerHint = (View) view.findViewById(R.id.drawer_hint);
         adapter = new CategoryExpandableListViewAdapter(getContext(), elp, elh);
-        elv = (ExpandableListView) view.findViewById(R.id.category_list_view);
-        elv.setAdapter(adapter);
-        elv.setOnChildClickListener(onChildClickListener);
-        elv.setOnItemLongClickListener(onLongChildClickListener);
+
+        ArrayList<String> catList = new ArrayList<>();
+        catList.add("Playlists");
+        catList.add("Artists");
+        catList.add("Albums");
+        catList.add("Folders");
+        CategoryGridAdapter gridAdapter = new CategoryGridAdapter(getContext(), R.layout.grid_row_item, catList);
+        gridView = (GridView) view.findViewById(R.id.category_grid_view);
+        gridView.setAdapter(gridAdapter);
+        //elv = (ExpandableListView) view.findViewById(R.id.category_list_view);
+        //elv.setAdapter(adapter);
+        //elv.setOnChildClickListener(onChildClickListener);
+        //elv.setOnItemLongClickListener(onLongChildClickListener);
         updateColors();
 
         return view;
@@ -148,10 +160,10 @@ public class CategoryFragment extends Fragment implements PlaylistAsyncTaskPlayl
 
             new PlaylistAsyncTaskNull().execute(this, appDatabase, "deleteAllFromPlaylists", deletePlaylists);
 
-            if (elv.getChildCount() > 1) {
-                for (int i = 0; i < elv.getChildCount(); i++)
-                    elv.getChildAt(i).setBackgroundColor(Color.parseColor("#00000000"));
-            }
+            //if (elv.getChildCount() > 1) {
+            //    for (int i = 0; i < elv.getChildCount(); i++)
+            //        elv.getChildAt(i).setBackgroundColor(Color.parseColor("#00000000"));
+            //}
         }
         //Delete musics from current playlist
         if (!currentPlaylistName.equals("All Musics") && addPlaylist != null && addPlaylist.size() > 0) {
@@ -218,7 +230,7 @@ public class CategoryFragment extends Fragment implements PlaylistAsyncTaskPlayl
 
         Drawable icon = ContextCompat.getDrawable(getContext(), R.drawable.custom_expandable);
         icon.setTint(ColorsConstants.SECONDARY_TEXT_COLOR);
-        elv.setGroupIndicator(icon);
+        //elv.setGroupIndicator(icon);
         adapter.notifyDataSetChanged();
     }
 
@@ -259,8 +271,8 @@ public class CategoryFragment extends Fragment implements PlaylistAsyncTaskPlayl
             deletePlaylists.clear();
         fillList();
         adapter.notifyDataSetChanged();
-        for (int i = 0; i < 3; i++)
-            elv.collapseGroup(i);
+        //for (int i = 0; i < 3; i++)
+        //    elv.collapseGroup(i);
     }
 
     //Dialog to add musics to playlist

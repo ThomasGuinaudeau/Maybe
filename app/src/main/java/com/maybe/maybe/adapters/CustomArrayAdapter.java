@@ -28,8 +28,10 @@ public class CustomArrayAdapter extends ArrayAdapter {
             convertView = inflater.inflate(android.R.layout.simple_spinner_item, parent, false);
         } else {
             TextView textView = (TextView) convertView.findViewById(R.id.text1);
-            textView.setBackgroundColor(ColorsConstants.BACKGROUND_COLOR);
-            textView.setTextColor(ColorsConstants.PRIMARY_TEXT_COLOR);
+            if (textView != null) {
+                textView.setBackgroundColor(ColorsConstants.BACKGROUND_COLOR);
+                textView.setTextColor(ColorsConstants.PRIMARY_TEXT_COLOR);
+            }
         }
         return super.getView(position, convertView, parent);
     }

@@ -35,7 +35,7 @@ public class CategoryGridAdapter extends ArrayAdapter {
         TextView textView = (TextView) v.findViewById(R.id.category_title);
         ImageView imageView = (ImageView) v.findViewById(R.id.category_icon);
         textView.setText(categories.get(position));
-        //imageView.setImageResource(categories[position]);
+        imageView.setImageResource(R.drawable.round_album_24);
         return v;
     }
 }

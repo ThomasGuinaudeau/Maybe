@@ -5,12 +5,14 @@
       <map>
         <entry key="..\:/programs/AndroidStudioProjects/Maybe/app/src/main/res/drawable/activated_background.xml" value="0.14739583333333334" />
         <entry key="..\:/programs/AndroidStudioProjects/Maybe/app/src/main/res/drawable/custom_expandable.xml" value="0.14739583333333334" />
+        <entry key="..\:/programs/AndroidStudioProjects/Maybe/app/src/main/res/drawable/grid_item_shape.xml" value="0.244" />
         <entry key="..\:/programs/AndroidStudioProjects/Maybe/app/src/main/res/drawable/ic_launcher_background.xml" value="0.34" />
         <entry key="..\:/programs/AndroidStudioProjects/Maybe/app/src/main/res/drawable/ic_launcher_foreground.xml" value="0.34" />
         <entry key="..\:/programs/AndroidStudioProjects/Maybe/app/src/main/res/drawable/ic_round_delete_sweep_24.xml" value="0.3880208333333333" />
         <entry key="..\:/programs/AndroidStudioProjects/Maybe/app/src/main/res/drawable/ic_round_keyboard_arrow_left_24.xml" value="0.3880208333333333" />
         <entry key="..\:/programs/AndroidStudioProjects/Maybe/app/src/main/res/drawable/line.xml" value="0.14739583333333334" />
         <entry key="..\:/programs/AndroidStudioProjects/Maybe/app/src/main/res/drawable/line_drawable.xml" value="0.14739583333333334" />
+        <entry key="..\:/programs/AndroidStudioProjects/Maybe/app/src/main/res/drawable/round_album_24.xml" value="0.244" />
         <entry key="..\:/programs/AndroidStudioProjects/Maybe/app/src/main/res/drawable/round_music_note_24.xml" value="0.2335" />
         <entry key="..\:/programs/AndroidStudioProjects/Maybe/app/src/main/res/drawable/round_repeat_24.xml" value="0.3880208333333333" />
         <entry key="..\:/programs/AndroidStudioProjects/Maybe/app/src/main/res/drawable/round_square.xml" value="0.3880208333333333" />

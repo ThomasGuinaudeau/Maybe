@@ -1,4 +1,0 @@
-No data is being collected by this app.
-
-Phone permission is used to pause the music during calls.
-Storage permission is used to access audio files on the device.

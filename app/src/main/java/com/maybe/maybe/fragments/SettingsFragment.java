@@ -47,13 +47,13 @@ public class SettingsFragment extends PreferenceFragmentCompat implements ColorC
                 { R.string.key_primary_color, R.string.key_primary_light_color, R.string.key_primary_dark_color, R.string.key_primary_text_color },
                 { R.string.key_secondary_color, R.string.key_secondary_light_color, R.string.key_secondary_dark_color, R.string.key_secondary_text_color },
                 { R.string.key_notification_background_color, R.string.key_notification_text_music_title_color, R.string.key_notification_text_music_artist_color },
-                { R.string.key_background_color, R.string.key_selected_color, R.string.key_editmode_selected_color }
+                { R.string.key_background_color, R.string.key_selected_color }
         };
         int[][] colors = new int[][]{
                 { ColorsConstants.PRIMARY_COLOR, ColorsConstants.PRIMARY_LIGHT_COLOR, ColorsConstants.PRIMARY_DARK_COLOR, ColorsConstants.PRIMARY_TEXT_COLOR },
                 { ColorsConstants.SECONDARY_COLOR, ColorsConstants.SECONDARY_LIGHT_COLOR, ColorsConstants.SECONDARY_DARK_COLOR, ColorsConstants.SECONDARY_TEXT_COLOR },
                 { ColorsConstants.NOTIFICATION_BACKGROUND_COLOR, ColorsConstants.NOTIFICATION_TEXT_TITLE_COLOR, ColorsConstants.NOTIFICATION_TEXT_ARTIST_COLOR },
-                { ColorsConstants.BACKGROUND_COLOR, ColorsConstants.SELECTED_COLOR, ColorsConstants.EDITMODE_SELECTED_COLOR }
+                { ColorsConstants.BACKGROUND_COLOR, ColorsConstants.SELECTED_COLOR }
         };
         int[][] titles = new int[][]{
                 { R.string.title_color, R.string.title_light_color, R.string.title_dark_color, R.string.title_text_color },

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:paddingVertical="10dp"
+    android:paddingEnd="10dp">
+
+    <CheckBox
+        android:id="@+id/category_editing_list_item_checkBox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="0"
+
+        android:buttonTint="#ffffff"
+        android:clickable="false"
+        android:longClickable="false" />
+
+    <TextView
+        android:id="@+id/category_editing_list_item_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_weight="1"
+        android:text="Perfect timing"
+        android:textColor="#ffffff" />
+
+    <TextView
+        android:id="@+id/category_editing_list_item_artist"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_weight="0"
+        android:text="Hiroyuki Sawano"
+        android:textColor="#ffffff" />
+
+    <TextView
+        android:id="@+id/category_editing_list_item_quantity"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_weight="0"
+        android:text="1"
+        android:textColor="#bbbbbb" />
+</LinearLayout>

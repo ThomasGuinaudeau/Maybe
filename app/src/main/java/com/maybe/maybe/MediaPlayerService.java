@@ -34,6 +34,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.PowerManager;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.telephony.PhoneStateListener;
@@ -415,6 +416,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnPrepare
     public void initMediaPlayer(long fileId) {
         if (mediaPlayer == null) {
             mediaPlayer = new MediaPlayer();
+            mediaPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
             /*equalizer = new Equalizer(0, mediaPlayer.getAudioSessionId());
             equalizer.usePreset((short) 0);
             equalizer.setEnabled(true);*/

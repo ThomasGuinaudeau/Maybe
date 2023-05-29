@@ -9,17 +9,19 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
+import com.maybe.maybe.CategoryItem;
 import com.maybe.maybe.R;
 
 import java.util.ArrayList;
 
-public class CategoryGridAdapter extends ArrayAdapter {
-    private ArrayList<String> categories;
+public class CategoryGridAdapter extends ArrayAdapter<CategoryItem> {
+    private final ArrayList<CategoryItem> categoryList;
 
-    public CategoryGridAdapter(@NonNull Context context, int resource, ArrayList objects) {
-        super(context, resource, objects);
-        categories = objects;
+    public CategoryGridAdapter(@NonNull Context context, int resource, ArrayList<CategoryItem> categoryList) {
+        super(context, resource, categoryList);
+        this.categoryList = categoryList;
     }
 
     @Override
@@ -27,15 +29,19 @@ public class CategoryGridAdapter extends ArrayAdapter {
         return super.getCount();
     }
 
+    @NonNull
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        View v = convertView;
-        LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        v = inflater.inflate(R.layout.grid_row_item, null);
-        TextView textView = (TextView) v.findViewById(R.id.category_title);
-        ImageView imageView = (ImageView) v.findViewById(R.id.category_icon);
-        textView.setText(categories.get(position));
-        imageView.setImageResource(R.drawable.round_album_24);
-        return v;
+    public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+        if (convertView == null) {
+            LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            convertView = inflater.inflate(R.layout.grid_row_item, null);
+
+            TextView textView = (TextView) convertView.findViewById(R.id.category_title);
+            ImageView imageView = (ImageView) convertView.findViewById(R.id.category_icon);
+            textView.setText(categoryList.get(position).getName());
+            imageView.setImageResource(categoryList.get(position).getIcon());
+        }
+
+        return convertView;
     }
 }

@@ -1,5 +1,9 @@
 package com.maybe.maybe.fragments;
 
+import static com.maybe.maybe.CategoryItem.CATEGORY_ALBUM;
+import static com.maybe.maybe.CategoryItem.CATEGORY_ARTIST;
+import static com.maybe.maybe.CategoryItem.CATEGORY_PLAYLIST;
+
 import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -61,8 +65,9 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
     private ProgressBar main_progress_bar;
     private AppDatabase appDatabase;
     private boolean searchEnable = false, buttonEnable = false, isStart = true;
-    private String sort, currentCat, currentCol;
-    private boolean editMode, isBroadcastReceiverRegistered;
+    private String sort, currentName;
+    private int currentCategoryId;
+    private boolean isBroadcastReceiverRegistered;
     private ArrayList<Long> searchIdList;
     private ArrayList<Music> selectedId;
     private int currentSearchId;
@@ -76,22 +81,15 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
                 case "change_metadata":
                     MusicWithArtists musicWithArtists = (MusicWithArtists) objects[0];
                     callback.changeMusicInPlayer(musicWithArtists);
-                    if (!editMode) {
                         selectedId.clear();
                         selectedId.add(musicWithArtists.music);
                         setSelected(true);
-                    }
                     break;
                 case "change_duration":
                     callback.changeDurationInPlayer((long) (int) objects[0]);
                     break;
                 case "change_state":
                     callback.changePlayPauseInPlayer((Boolean) objects[0]);
-                    break;
-                case "change_selection":
-                    selectedId.clear();
-                    selectedId.add((Music) objects[0]);
-                    setSelected(true);
                     break;
             }
         }
@@ -108,7 +106,6 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
 
         SharedPreferences sharedPref = getContext().getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE);
         sort = sharedPref.getString(getString(R.string.sort), Constants.SORT_ALPHA);
-        editMode = false;
         selectedId = new ArrayList<>();
 
         Intent playerIntent = new Intent(getContext(), MediaPlayerService.class);
@@ -129,7 +126,6 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
         sllm.setActivity(getActivity());
         mainRecyclerView.setLayoutManager(sllm);
         adapter = new MainRecyclerViewAdapter(this, new ArrayList<>());
-        adapter.setEditMode(false);
         mainRecyclerView.setAdapter(adapter);
         mainRecyclerView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
@@ -145,8 +141,8 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
         main_progress_bar = (ProgressBar) view.findViewById(R.id.main_progress_bar);
 
         updateColors();
-        main_title.setContentDescription(currentCat);
-        main_title.setText(currentCat);
+        main_title.setContentDescription(currentName);
+        main_title.setText(currentName);
         main_search_edit.addTextChangedListener(this);
         if (main_search_edit.isFocused()) {
             main_search_edit.clearFocus();
@@ -154,7 +150,7 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
         main_search_button.setText("-");
         main_search_button.setOnClickListener(this);
 
-        changeList("current_playlist", "");
+        changeList(0, "", true);
         return view;
     }
 
@@ -175,28 +171,15 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
 
     @Override
     public void onItemClick(Music music) {
-        if (editMode) {
-            if (!selectedId.contains(music))
-                selectedId.add(music);
-            else
-                selectedId.remove(music);
-            setSelected(false);
-            callback.addToPlaylist(selectedId);
-        } else
             sendBroadcast("change_music", music);
     }
 
     @Override
-    public void onLongItemClick(Music music) {
-        editChange();
-    }
+    public void onLongItemClick(Music music) {}
 
     @Override
     public void onResume() {
         super.onResume();
-        /*if(main_search_edit.isFocused()) {
-            main_search_edit.clearFocus();
-        }*/
     }
 
     @Override
@@ -306,58 +289,35 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
         }
     }
 
-    public void editChange() {
-        selectedId.clear();
-        int textResId;
-        editMode ^= true;
-        adapter.setEditMode(editMode);
-        if (editMode) {
-            textResId = R.string.edit_mode_on;
-            setSelected(false);
-        } else {
-            textResId = R.string.edit_mode_off;
-            setSelected(false);
-            sendBroadcast("action", "change_selection");
-            callback.resetList();
-            //adapter.notifyDataSetChanged();
-        }
-        Toast.makeText(getContext(), textResId, Toast.LENGTH_SHORT).show();
-    }
-
-    public void changeList(String column, String category) {
-        currentCol = column;
-        currentCat = category;
+    public void changeList(int categoryId, String name, boolean isFirstLoad) {
+        currentCategoryId = categoryId;
+        currentName = name;
 
         String query = "";
-        switch (column) {
-            case "playlist":
-                if (category.equals("All Musics"))
-                    query = "selectAll";
-                else
-                    query = "selectAllMusicsOfPlaylist";
-                break;
-            case "artist":
-                query = "selectAllMusicsOfArtist";
-                break;
-            case "album":
-                query = "selectAllMusicsOfAlbum";
-                break;
-            case "current_playlist":
-                SharedPreferences sharedPref = getContext().getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE);
-                String cat = sharedPref.getString(getString(R.string.current_cat), "<unknown>");
-                if (cat.equals("<unknown>")) {
-                    query = "selectAll";
-                    currentCol = "playlist";
-                    currentCat = "All Musics";
-                } else {
-                    query = "selectAllMusicsOfCurrentPlaylist";
-                    currentCol = sharedPref.getString(getString(R.string.current_col), "playlist");
-                    currentCat = cat;
-                }
-                break;
+        if (isFirstLoad) {
+            SharedPreferences sharedPref = getContext().getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE);
+            String savedName = sharedPref.getString(getString(R.string.current_name), "<unknown>");
+            if (savedName.equals("<unknown>")) {
+                query = "selectAll";
+                currentCategoryId = CATEGORY_PLAYLIST;
+                currentName = "All Musics";
+            } else {
+                query = "selectAllMusicsOfCurrentPlaylist";
+                currentCategoryId = sharedPref.getInt(getString(R.string.current_category_id), CATEGORY_PLAYLIST);
+                currentName = savedName;
+            }
+        } else if (categoryId == CATEGORY_PLAYLIST) {
+            if (name.equals("All Musics"))
+                query = "selectAll";
+            else
+                query = "selectAllMusicsOfPlaylist";
+        } else if (categoryId == CATEGORY_ARTIST) {
+            query = "selectAllMusicsOfArtist";
+        } else if (categoryId == CATEGORY_ALBUM) {
+            query = "selectAllMusicsOfAlbum";
         }
-        Log.d(TAG, "col=" + currentCol + " cat=" + currentCat + " sort=" + sort);
-        new MusicAsyncTask().execute(this, appDatabase, query, sort, category);
+        //Log.d(TAG, "category=" + currentCategoryId + " name=" + currentName + " sort=" + sort);
+        new MusicAsyncTask().execute(this, appDatabase, query, sort, name);
     }
 
     @Override
@@ -371,10 +331,10 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
             adapter.setMusics(musicWithArtists);
             adapter.setSort(sort);
             adapter.notifyDataSetChanged();
-            main_title.setText(currentCat);
+            main_title.setText(currentName);
             sendBroadcast("change_music_list", new ArrayList<>(musicWithArtists));
 
-            new SaveCurrentListAsyncTask(musicWithArtists, this).execute(appDatabase, getContext(), currentCol, currentCat, sort, isStart);
+            new SaveCurrentListAsyncTask(musicWithArtists, this).execute(appDatabase, getContext(), currentCategoryId, currentName, sort, isStart);
         } else if (buttonEnable) {
             buttonEnable = false;
             callback.disableButtons(false);
@@ -383,20 +343,20 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
     }
 
     //recieved from CategoryFragment
-    public void change(String column, String category) {
-        changeList(column, category);
+    public void change(int categoryId, String category) {
+        changeList(categoryId, category, false);
     }
 
-    public void change2(String column, String category) {
+    public void change2(int categoryId, String category) {
         if (category.equals("All Musics"))
             sort = Constants.SORT_ALPHA;
-        changeList(column, category);
+        changeList(categoryId, category, false);
     }
 
     public void action(String action, String value) {
         if (action.equals("sort")) {
             sort = value;
-            change(currentCol, currentCat);
+            change(currentCategoryId, currentName);
         }
         sendBroadcast("action", action, value);
     }

@@ -13,8 +13,8 @@
     <!--Preferences-->
     <string name="preference_file_key">app_preferences</string>
     <string name="db_version">db_version</string>
-    <string name="current_col">current_col</string>
-    <string name="current_cat">current_cat</string>
+    <string name="current_category_id">current_category_id</string>
+    <string name="current_name">current_name</string>
     <string name="sort">sort</string>
     <string name="current_file_id">current_file_id</string>
     <string name="current_timestamp">current_timestamp</string>
@@ -48,7 +48,6 @@
 
     <string name="key_background_color">key_background_color</string>
     <string name="key_selected_color">key_selected_color</string>
-    <string name="key_editmode_selected_color">key_editmode_selected_color</string>
 
     <!--Titles-->
     <string name="title_category_primary_color">Primary Color</string>
@@ -97,8 +96,7 @@
     <string name="search_button">-</string>
 
     <!--New Playlist Dialog-->
-    <string name="dialog_title">Add a Playlist</string>
-    <string name="dialog_playlist_name">Name</string>
+    <string name="dialog_playlist_name">Playlist Name</string>
     <string name="dialog_button_cancel">Cancel</string>
     <string name="dialog_button_add">Add</string>
 
@@ -136,4 +134,8 @@
 
     <!--Toast-->
     <string name="toast_reset_colors">Colors have been reset</string>
+
+    <!--Tag-->
+    <string name="categories_fragment_tag">categories_fragment_tag</string>
+    <string name="lists_fragment_tag">lists_fragment_tag</string>
 </resources>

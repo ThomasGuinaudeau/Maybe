@@ -5,13 +5,13 @@ import static com.maybe.maybe.utils.Constants.SORT_RANDOM;
 import android.database.Cursor;
 import android.os.AsyncTask;
 
+import com.maybe.maybe.ListItem;
 import com.maybe.maybe.database.AppDatabase;
 import com.maybe.maybe.database.dao.MusicDao;
 import com.maybe.maybe.database.entity.MusicWithArtists;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 
 public class MusicAsyncTask extends AsyncTask<Object, Object, List<Object>> {
@@ -58,17 +58,15 @@ public class MusicAsyncTask extends AsyncTask<Object, Object, List<Object>> {
             case "selectAllAlbumWithCount":
                 onSelectAlbumAsyncTaskFinish = (OnSelectAlbumAsyncTaskFinish) objects[0];
                 Cursor cursor = dao.selectAllAlbumWithCount();
-                List<HashMap<String, Object>> hashMapList = new ArrayList<>();
+                //List<HashMap<String, Object>> hashMapList = new ArrayList<>();
+                List<ListItem> listItems = new ArrayList<>();
                 if (cursor != null && cursor.getCount() > 0) {
                     while (cursor.moveToNext()) {
-                        HashMap<String, Object> hashMap = new HashMap<>();
-                        hashMap.put("name", cursor.getString(cursor.getColumnIndexOrThrow("name")));
-                        hashMap.put("count", cursor.getString(cursor.getColumnIndexOrThrow("count")));
-                        hashMapList.add(hashMap);
+                        listItems.add(new ListItem(cursor.getLong(cursor.getColumnIndexOrThrow("music_id")), cursor.getString(cursor.getColumnIndexOrThrow("name")), cursor.getInt(cursor.getColumnIndexOrThrow("count"))));
                     }
                 }
                 cursor.close();
-                list = (List<Object>) (Object) hashMapList;
+                list = (List<Object>) (Object) listItems;
                 break;
         }
 

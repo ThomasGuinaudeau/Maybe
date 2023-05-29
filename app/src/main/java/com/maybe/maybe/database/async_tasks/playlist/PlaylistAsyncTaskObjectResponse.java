@@ -1,8 +1,9 @@
 package com.maybe.maybe.database.async_tasks.playlist;
 
+import com.maybe.maybe.ListItem;
+
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public interface PlaylistAsyncTaskObjectResponse {
-    void onPlaylistAsyncTaskObjectFinish(ArrayList<HashMap<String, Object>> hashMapList);
+    void onPlaylistAsyncTaskObjectFinish(ArrayList<ListItem> listItems);
 }

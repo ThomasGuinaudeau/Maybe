@@ -48,10 +48,10 @@ public class CustomRecyclerViewRow extends ConstraintLayout {
         setBackgroundColor(ContextCompat.getColor(getContext(), R.color.odd));
     }
 
-    public void setSelected(boolean selected, boolean editMode) {
+    public void setSelected(boolean selected) {
         super.setSelected(selected);
         if (selected)
-            setBackgroundColor(editMode ? ColorsConstants.SELECTED_COLOR : ColorsConstants.EDITMODE_SELECTED_COLOR);//was primaryColorTrans : secondaryColorTrans
+            setBackgroundColor(ColorsConstants.SELECTED_COLOR);//was primaryColorTrans : secondaryColorTrans
     }
 
     public void setEven(boolean isEven) {

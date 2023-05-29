@@ -9,13 +9,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.content.res.ColorStateList;
 import android.os.Bundle;
-import android.text.SpannableString;
-import android.text.style.TextAppearanceSpan;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 
 import androidx.activity.result.ActivityResult;
@@ -25,12 +20,9 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.core.view.GravityCompat;
-import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager2.widget.ViewPager2;
 
-import com.google.android.material.navigation.NavigationView;
 import com.maybe.maybe.CustomViewPager;
 import com.maybe.maybe.R;
 import com.maybe.maybe.database.AppDatabase;
@@ -53,11 +45,6 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
             android.Manifest.permission.READ_EXTERNAL_STORAGE,
             android.Manifest.permission.READ_PHONE_STATE
     };
-    private ViewPager2 viewPager;
-    private CustomViewPager pagerAdapter;
-    private DrawerLayout drawerLayout;
-    private NavigationView navigationView;
-    private int time = 0;
     private final ViewPager2.OnPageChangeCallback onPageChangeCallback = new ViewPager2.OnPageChangeCallback() {
         @Override
         public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
@@ -67,11 +54,6 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
         @Override
         public void onPageSelected(int position) {
             super.onPageSelected(position);
-            if (position == CAT_POS) {
-                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
-            } else {
-                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
-            }
         }
 
         @Override
@@ -79,6 +61,20 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
             super.onPageScrollStateChanged(state);
         }
     };
+    private ViewPager2 viewPager;
+    private CustomViewPager pagerAdapter;
+    ActivityResultLauncher<Intent> activityResultLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            new ActivityResultCallback<ActivityResult>() {
+                @Override
+                public void onActivityResult(ActivityResult result) {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        //Intent data = result.getData();
+                        settingsUpdated();
+                    }
+                }
+            });
+    private int time = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,9 +94,9 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
         boolean permPhone = ContextCompat.checkSelfPermission(this, PERMISSIONS[1]) == PackageManager.PERMISSION_GRANTED;
         if (!permStorage && !permPhone) {
             return 0;
-        } else if (!permStorage && permPhone) {
+        } else if (!permStorage) {
             return 1;
-        } else if (permStorage && !permPhone) {
+        } else if (!permPhone) {
             return 2;
         }
         return 3;
@@ -138,22 +134,7 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
 
         setContentView(R.layout.activity_main);
 
-        drawerLayout = findViewById(R.id.drawer_layout);
-        drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
-        navigationView = findViewById(R.id.nav_view);
         updateColors();
-        navigationView.setNavigationItemSelectedListener(item -> {
-            drawerLayout.closeDrawer(GravityCompat.START, true);
-            CategoryFragment fragment = (CategoryFragment) pagerAdapter.getRegisteredFragment(CAT_POS);
-            if (item.getItemId() == R.id.sync_database) fragment.syncDatabase();
-            else if (item.getItemId() == R.id.add_playlist) fragment.addPlaylist();
-            else if (item.getItemId() == R.id.delete_playlist) fragment.deletePlaylist();
-            else if (item.getItemId() == R.id.settings) {
-                Intent intent = new Intent(this, SettingsActivity.class);
-                activityResultLauncher.launch(intent);
-            }
-            return true;
-        });
         viewPager = findViewById(R.id.pager);
         viewPager.setOffscreenPageLimit(2);
         pagerAdapter = new CustomViewPager(this);
@@ -161,18 +142,6 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
         viewPager.setCurrentItem(MAIN_POS);
         viewPager.registerOnPageChangeCallback(onPageChangeCallback);
     }
-
-    ActivityResultLauncher<Intent> activityResultLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            new ActivityResultCallback<ActivityResult>() {
-                @Override
-                public void onActivityResult(ActivityResult result) {
-                    if (result.getResultCode() == Activity.RESULT_OK) {
-                        //Intent data = result.getData();
-                        settingsUpdated();
-                    }
-                }
-            });
 
     public void settingsUpdated() {
         ColorsConstants.loadColors(this);
@@ -192,30 +161,6 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
     public void updateColors() {
         View background = (View) findViewById(R.id.view);
         background.setBackgroundColor(ColorsConstants.BACKGROUND_COLOR);
-        navigationView.setBackgroundColor(ColorsConstants.PRIMARY_DARK_COLOR);
-        ColorStateList colorStateList = new ColorStateList(new int[][]{ new int[]{ android.R.attr.state_enabled } }, new int[]{ ColorsConstants.PRIMARY_TEXT_COLOR });
-
-        Menu navMenu = navigationView.getMenu();
-        MenuItem tools1 = navMenu.findItem(R.id.subtitle_music);
-        SpannableString spannableString1 = new SpannableString(tools1.getTitle());
-        TextAppearanceSpan textAppearanceSpan1 = new TextAppearanceSpan(null, 0, 40, colorStateList, null);
-        spannableString1.setSpan(textAppearanceSpan1, 0, spannableString1.length(), 0);
-        tools1.setTitle(spannableString1);
-
-        MenuItem tools2 = navMenu.findItem(R.id.subtitle_database);
-        SpannableString spannableString2 = new SpannableString(tools2.getTitle());
-        TextAppearanceSpan textAppearanceSpan2 = new TextAppearanceSpan(null, 0, 40, colorStateList, null);
-        spannableString2.setSpan(textAppearanceSpan2, 0, spannableString2.length(), 0);
-        tools2.setTitle(spannableString2);
-
-        MenuItem tools3 = navMenu.findItem(R.id.subtitle_other);
-        SpannableString spannableString3 = new SpannableString(tools3.getTitle());
-        TextAppearanceSpan textAppearanceSpan3 = new TextAppearanceSpan(null, 0, 40, colorStateList, null);
-        spannableString3.setSpan(textAppearanceSpan3, 0, spannableString3.length(), 0);
-        tools3.setTitle(spannableString3);
-
-        navigationView.setItemIconTintList(colorStateList);
-        navigationView.setItemTextColor(colorStateList);
     }
 
     @Override
@@ -249,15 +194,20 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
 
     @Override
     public void onBackPressed() {
-        if (viewPager.getCurrentItem() == MAIN_POS) {
-            finish();
-        } else {
-            viewPager.setCurrentItem(MAIN_POS);
+        if (viewPager.getCurrentItem() == CAT_POS) {
+            CategoryFragment fragment = (CategoryFragment) pagerAdapter.getRegisteredFragment(CAT_POS);
+            if (!fragment.onBack()) {
+                if (viewPager.getCurrentItem() == MAIN_POS) {
+                    finish();
+                } else {
+                    viewPager.setCurrentItem(MAIN_POS);
+                }
+            }
         }
     }
 
     @Override
-    public void changeListInMain(String column, String category) {
+    public void changeListInMain(int column, String category) {
         MainFragment fragment = (MainFragment) pagerAdapter.getRegisteredFragment(MAIN_POS);
         fragment.change2(column, category);
     }
@@ -293,12 +243,6 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
     }
 
     @Override
-    public void finishEdit() {
-        MainFragment fragment = (MainFragment) pagerAdapter.getRegisteredFragment(MAIN_POS);
-        fragment.editChange();
-    }
-
-    @Override
     public void resetList() {
         CategoryFragment fragment = (CategoryFragment) pagerAdapter.getRegisteredFragment(CAT_POS);
         fragment.resetList();
@@ -313,6 +257,12 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
     @Override
     public void swipeToMain() {
         viewPager.setCurrentItem(MAIN_POS, true);
+    }
+
+    @Override
+    public void openSettings() {
+        Intent intent = new Intent(this, SettingsActivity.class);
+        activityResultLauncher.launch(intent);
     }
 
     //On crash send stack trace

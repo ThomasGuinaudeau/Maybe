@@ -35,8 +35,8 @@ public class SaveCurrentListAsyncTask extends AsyncTask<Object, Integer, Object>
         SharedPreferences sharedPref = context.getSharedPreferences(context.getString(R.string.preference_file_key), Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
 
-        editor.putString(context.getString(R.string.current_col), (String) objects[2]);
-        editor.putString(context.getString(R.string.current_cat), (String) objects[3]);
+        editor.putInt(context.getString(R.string.current_category_id), (int) objects[2]);
+        editor.putString(context.getString(R.string.current_name), (String) objects[3]);
         editor.putString(context.getString(R.string.sort), (String) objects[4]);
         editor.apply();
 

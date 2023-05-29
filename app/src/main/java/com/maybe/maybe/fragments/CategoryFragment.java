@@ -1,35 +1,30 @@
 package com.maybe.maybe.fragments;
 
+import static com.maybe.maybe.CategoryItem.CATEGORY_ALBUM;
+import static com.maybe.maybe.CategoryItem.CATEGORY_ARTIST;
+import static com.maybe.maybe.CategoryItem.CATEGORY_FOLDER;
+import static com.maybe.maybe.CategoryItem.CATEGORY_PLAYLIST;
+import static com.maybe.maybe.CategoryItem.CATEGORY_SETTING;
+import static com.maybe.maybe.CategoryItem.CATEGORY_SYNC;
+import static com.maybe.maybe.utils.Constants.SORT_ALPHA;
+
 import android.content.Context;
-import android.content.SharedPreferences;
-import android.content.res.ColorStateList;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ExpandableListView;
-import android.widget.Spinner;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 
-import com.maybe.maybe.utils.ColorsConstants;
+import com.maybe.maybe.CategoryItem;
+import com.maybe.maybe.ListItem;
 import com.maybe.maybe.R;
-import com.maybe.maybe.adapters.CategoryExpandableListViewAdapter;
-import com.maybe.maybe.adapters.CustomArrayAdapter;
 import com.maybe.maybe.database.AppDatabase;
 import com.maybe.maybe.database.async_tasks.ArtistAsyncTask;
 import com.maybe.maybe.database.async_tasks.FillDbAsyncTask;
@@ -37,74 +32,28 @@ import com.maybe.maybe.database.async_tasks.MusicAsyncTask;
 import com.maybe.maybe.database.async_tasks.OnArtistAsyncTaskFinish;
 import com.maybe.maybe.database.async_tasks.OnFillDbAsyncTaskFinish;
 import com.maybe.maybe.database.async_tasks.OnSelectAlbumAsyncTaskFinish;
+import com.maybe.maybe.database.async_tasks.OnSelectMusicAsyncTaskFinish;
 import com.maybe.maybe.database.async_tasks.playlist.PlaylistAsyncTaskNull;
 import com.maybe.maybe.database.async_tasks.playlist.PlaylistAsyncTaskNullResponse;
 import com.maybe.maybe.database.async_tasks.playlist.PlaylistAsyncTaskObject;
 import com.maybe.maybe.database.async_tasks.playlist.PlaylistAsyncTaskObjectResponse;
-import com.maybe.maybe.database.async_tasks.playlist.PlaylistAsyncTaskPlaylist;
 import com.maybe.maybe.database.async_tasks.playlist.PlaylistAsyncTaskPlaylistResponse;
 import com.maybe.maybe.database.entity.ArtistWithMusics;
 import com.maybe.maybe.database.entity.Music;
+import com.maybe.maybe.database.entity.MusicWithArtists;
 import com.maybe.maybe.database.entity.Playlist;
+import com.maybe.maybe.utils.ColorsConstants;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
-public class CategoryFragment extends Fragment implements PlaylistAsyncTaskPlaylistResponse, PlaylistAsyncTaskNullResponse, OnFillDbAsyncTaskFinish {
+public class CategoryFragment extends Fragment implements PlaylistAsyncTaskPlaylistResponse, PlaylistAsyncTaskNullResponse, OnFillDbAsyncTaskFinish, CategoriesFragment.CategoriesFragmentListener {
 
     private static final String TAG = "CategoryFragment";
     private CategoryFragmentListener callback;
     private AppDatabase appDatabase;
-    private ArrayList<String> elp;
-    private HashMap<String, ArrayList<HashMap<String, Object>>> elh;
-    private ArrayList<String> deletePlaylists;
-    private View drawerHint;
-    private final ExpandableListView.OnItemLongClickListener onLongChildClickListener = new ExpandableListView.OnItemLongClickListener() {
-        @Override
-        public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-            if (ExpandableListView.getPackedPositionType(id) == ExpandableListView.PACKED_POSITION_TYPE_CHILD) {
-                int groupPosition = ExpandableListView.getPackedPositionGroup(id);
-                int childPosition = ExpandableListView.getPackedPositionChild(id);
-
-                if (deletePlaylists == null)
-                    deletePlaylists = new ArrayList<>();
-                if (groupPosition == 0 && childPosition > 0) {
-                    String name = (String) ((ArrayList<HashMap<String, Object>>) elh.get("playlist")).get(childPosition).get("name");
-                    if (deletePlaylists.contains(name)) {
-                        deletePlaylists.remove(name);
-                        view.setBackgroundColor(Color.parseColor("#00000000"));
-                    } else {
-                        deletePlaylists.add(name);
-                        view.setBackgroundColor(Color.parseColor("#44C90000"));
-                    }
-                    return true;
-                }
-            }
-            return false;
-        }
-    };
     private ArrayList<Music> addPlaylist;
-    private CategoryExpandableListViewAdapter adapter;
-    private ExpandableListView elv;
-    private String currentPlaylistName;
-    private final ExpandableListView.OnChildClickListener onChildClickListener = new ExpandableListView.OnChildClickListener() {
-        @Override
-        public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long id) {
-            if (groupPosition == 0 && childPosition == 0) {
-                currentPlaylistName = "All Musics";
-                callback.changeListInMain("playlist", "All Musics");
-            } else {
-                if (groupPosition == 0)
-                    currentPlaylistName = (String) v.getTag();
-                callback.changeListInMain(elp.get(groupPosition), (String) v.getTag());
-            }
-            callback.swipeToMain();
-            return true;
-        }
-    };
-    private EditText edit;
-    private AlertDialog alertDialog;
+    private ArrayList<MusicWithArtists> tempMusics;
 
     public static CategoryFragment newInstance() {
         return new CategoryFragment();
@@ -113,22 +62,23 @@ public class CategoryFragment extends Fragment implements PlaylistAsyncTaskPlayl
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         appDatabase = AppDatabase.getInstance(getContext());
-        SharedPreferences sharedPref = getContext().getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE);
-        currentPlaylistName = sharedPref.getString(getString(R.string.current_cat), "All Musics");
-        fillList();
+        //SharedPreferences sharedPref = getContext().getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE);
+        //currentPlaylistName = sharedPref.getString(getString(R.string.current_cat), "All Musics");
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_category, container, false);
 
-        drawerHint = (View) view.findViewById(R.id.drawer_hint);
-        adapter = new CategoryExpandableListViewAdapter(getContext(), elp, elh);
-        elv = (ExpandableListView) view.findViewById(R.id.category_list_view);
-        elv.setAdapter(adapter);
-        elv.setOnChildClickListener(onChildClickListener);
-        elv.setOnItemLongClickListener(onLongChildClickListener);
         updateColors();
+
+        CategoriesFragment fragment = CategoriesFragment.newInstance();
+        fragment.setCallback(this);
+        getParentFragmentManager().beginTransaction()
+                .add(R.id.category_fragment_list, fragment, getString(R.string.categories_fragment_tag))
+                .setReorderingAllowed(true)
+                .addToBackStack(null)
+                .commit();
 
         return view;
     }
@@ -137,89 +87,141 @@ public class CategoryFragment extends Fragment implements PlaylistAsyncTaskPlayl
         new FillDbAsyncTask(getContext()).execute(getContext(), this, appDatabase);
     }
 
-    public void deletePlaylist() {
-        boolean nothingToDelete = true;
-        //Delete playlists
-        if (deletePlaylists != null && deletePlaylists.size() > 0) {
-            nothingToDelete = false;
-
-            for (String s : deletePlaylists)
-                Log.e(TAG, "gon del " + s);
-
-            new PlaylistAsyncTaskNull().execute(this, appDatabase, "deleteAllFromPlaylists", deletePlaylists);
-
-            if (elv.getChildCount() > 1) {
-                for (int i = 0; i < elv.getChildCount(); i++)
-                    elv.getChildAt(i).setBackgroundColor(Color.parseColor("#00000000"));
-            }
-        }
-        //Delete musics from current playlist
-        if (!currentPlaylistName.equals("All Musics") && addPlaylist != null && addPlaylist.size() > 0) {
-            nothingToDelete = false;
-            ArrayList<Long> ids = new ArrayList<>();
-            for (Music m : addPlaylist)
-                ids.add(m.getMusic_id());
-            new PlaylistAsyncTaskNull().execute(this, appDatabase, "deleteAllPlaylistsByIds", currentPlaylistName, ids);
-            addPlaylist.clear();
-            callback.finishEdit();
-            callback.changeListInMain("playlist", "All Musics");
-        }
-        if (nothingToDelete)
-            Toast.makeText(getContext(), R.string.delete_nothing, Toast.LENGTH_SHORT).show();
+    private void openPlaylists(CategoryItem categoryItem) {
+        new PlaylistAsyncTaskObject().execute((PlaylistAsyncTaskObjectResponse) objects -> {
+            addFragment(objects, categoryItem);
+        }, appDatabase, "selectAllPlaylistWithCount");
     }
 
-    public void addPlaylist() {
-        if (addPlaylist != null && addPlaylist.size() > 0)
-            new PlaylistAsyncTaskPlaylist().execute(this, appDatabase, "selectAllPlaylist");
-        else
-            Toast.makeText(getContext(), R.string.add_nothing, Toast.LENGTH_SHORT).show();
-    }
-
-    private void fillList() {
-
-        final ArrayList<HashMap<String, Object>> artists = new ArrayList<>();
-        final ArrayList<HashMap<String, Object>> playlists = new ArrayList<>();
-        final ArrayList<HashMap<String, Object>> albums = new ArrayList<>();
-
+    private void openArtists(CategoryItem categoryItem) {
         new ArtistAsyncTask().execute((OnArtistAsyncTaskFinish) objects -> {
+            ArrayList<ListItem> artists = new ArrayList<>();
             List<ArtistWithMusics> artistWithMusics = (List<ArtistWithMusics>) (Object) objects;
             for (ArtistWithMusics am : artistWithMusics) {
-                HashMap<String, Object> hashMap = new HashMap<>();
-                hashMap.put("name", am.artist.getArtist_name());
-                hashMap.put("count", am.musics.size());
-                artists.add(hashMap);
+                artists.add(new ListItem(am.artist.getArtist_id(), am.artist.getArtist_name(), am.musics.size()));
             }
+            addFragment(artists, categoryItem);
         }, appDatabase, "selectAllArtistWithMusics");
+    }
 
-        new PlaylistAsyncTaskObject().execute((PlaylistAsyncTaskObjectResponse) playlists::addAll, appDatabase, "selectAllPlaylistWithCount");
-
+    private void openAlbums(CategoryItem categoryItem) {
         new MusicAsyncTask().execute((OnSelectAlbumAsyncTaskFinish) objects -> {
-            List<HashMap<String, Object>> hashMapList = (List<HashMap<String, Object>>) (Object) objects;
-            albums.addAll(hashMapList);
+            ArrayList<ListItem> albums = new ArrayList<>((List<ListItem>) (Object) objects);
+            addFragment(albums, categoryItem);
         }, appDatabase, "selectAllAlbumWithCount");
+    }
 
-        if (elp == null) elp = new ArrayList<>();
-        else elp.clear();
+    private void openMusicsFrom(CategoryItem categoryItem, String name) {
+        String select = "selectAll";
+        if (categoryItem.getId() == CATEGORY_ARTIST)
+            select = "selectAllMusicsOfArtist";
+        else if (categoryItem.getId() == CATEGORY_ALBUM)
+            select = "selectAllMusicsOfAlbum";
+        else if (categoryItem.getId() == CATEGORY_PLAYLIST && !name.equals("All Musics"))
+            select = "selectAllMusicsOfPlaylist";
 
-        if (elh == null) elh = new HashMap<>();
-        else elh.clear();
+        if (select.equals("selectAllMusicsOfPlaylist")) {
+            new MusicAsyncTask().execute((OnSelectMusicAsyncTaskFinish) objects -> {
+                ArrayList<MusicWithArtists> musics = new ArrayList<>((List<MusicWithArtists>) (Object) objects);
+                if (tempMusics == null)
+                    tempMusics = musics;
+                else {
+                    addFragmentEdit(musics, tempMusics, categoryItem, name);
+                    tempMusics = null;
+                }
+            }, appDatabase, "selectAll", SORT_ALPHA, name);
+            new MusicAsyncTask().execute((OnSelectMusicAsyncTaskFinish) objects -> {
+                ArrayList<MusicWithArtists> musics = new ArrayList<>((List<MusicWithArtists>) (Object) objects);
+                if (tempMusics == null)
+                    tempMusics = musics;
+                else {
+                    addFragmentEdit(tempMusics, musics, categoryItem, name);
+                    tempMusics = null;
+                }
+            }, appDatabase, select, SORT_ALPHA, name);
+        } else {
+            new MusicAsyncTask().execute((OnSelectMusicAsyncTaskFinish) objects -> {
+                ArrayList<MusicWithArtists> musics = new ArrayList<>((List<MusicWithArtists>) (Object) objects);
+                addFragmentEdit(musics, null, categoryItem, name);
+            }, appDatabase, select, SORT_ALPHA, name);
+        }
+    }
 
-        elp.add("playlist");
-        elp.add("artist");
-        elp.add("album");
+    private void addFragment(ArrayList<ListItem> list, CategoryItem categoryItem) {
+        ListsFragment fragment = ListsFragment.newInstance();
+        fragment.setCallback(this);
+        fragment.setList(list);
+        fragment.setCategory(categoryItem);
+        getParentFragmentManager().beginTransaction()
+                .replace(R.id.category_fragment_list, fragment, getString(R.string.lists_fragment_tag))
+                .setReorderingAllowed(true)
+                .addToBackStack(null)
+                .commit();
+    }
 
-        elh.put(elp.get(0), playlists);
-        elh.put(elp.get(1), artists);
-        elh.put(elp.get(2), albums);
+    private void addFragmentEdit(ArrayList<MusicWithArtists> listAll, ArrayList<MusicWithArtists> list, CategoryItem categoryItem, String name) {
+        ListEditingFragment fragment = ListEditingFragment.newInstance();
+        fragment.setCallback(this);
+        fragment.setListAll(listAll);
+        fragment.setList(list);
+        fragment.setCategoryAndName(categoryItem, name);
+        getParentFragmentManager().beginTransaction()
+                .replace(R.id.category_fragment_list, fragment, null)
+                .setReorderingAllowed(true)
+                .addToBackStack(null)
+                .commit();
+    }
+
+    @Override
+    public void back() {
+        onBack();
+    }
+
+    @Override
+    public void saveToList(ArrayList<Long> keyList, String name) {
+        List<Playlist> playlists = new ArrayList<>();
+        for (long l : keyList) {
+            playlists.add(new Playlist(l, name));
+        }
+        new PlaylistAsyncTaskNull().execute(this, appDatabase, "updatePlaylist", playlists, name);
+    }
+
+    @Override
+    public void changeList(int categoryId, String name) {
+        callback.changeListInMain(categoryId, name);
+        getParentFragmentManager().popBackStack(1, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+        callback.swipeToMain();
+    }
+
+    @Override
+    public void changeFragment(CategoryItem categoryItem, String name, boolean isEditable) {
+        if (isEditable)
+            openMusicsFrom(categoryItem, name);
+        else if (categoryItem.getId() == CATEGORY_PLAYLIST)
+            openPlaylists(categoryItem);
+        else if (categoryItem.getId() == CATEGORY_ARTIST)
+            openArtists(categoryItem);
+        else if (categoryItem.getId() == CATEGORY_ALBUM)
+            openAlbums(categoryItem);
+        else if (categoryItem.getId() == CATEGORY_FOLDER)
+            Toast.makeText(getContext(), "Not working yet!", Toast.LENGTH_SHORT).show();
+        else if (categoryItem.getId() == CATEGORY_SETTING)
+            callback.openSettings();
+        else if (categoryItem.getId() == CATEGORY_SYNC)
+            syncDatabase();
+    }
+
+    public boolean onBack() {
+        FragmentManager fragmentManager = getParentFragmentManager();
+        if (fragmentManager.getBackStackEntryCount() == 1)
+            return false;
+        fragmentManager.popBackStack();
+        return true;
     }
 
     public void updateColors() {
-        drawerHint.setBackgroundColor(ColorsConstants.PRIMARY_DARK_COLOR);
-
         Drawable icon = ContextCompat.getDrawable(getContext(), R.drawable.custom_expandable);
         icon.setTint(ColorsConstants.SECONDARY_TEXT_COLOR);
-        elv.setGroupIndicator(icon);
-        adapter.notifyDataSetChanged();
     }
 
     public void addToPlaylist(ArrayList<Music> musics) {
@@ -233,8 +235,6 @@ public class CategoryFragment extends Fragment implements PlaylistAsyncTaskPlayl
 
     @Override
     public void onFillDbAsyncTaskFinish() {
-        fillList();
-        adapter.notifyDataSetChanged();
     }
 
     @Override
@@ -243,7 +243,7 @@ public class CategoryFragment extends Fragment implements PlaylistAsyncTaskPlayl
         if (context instanceof CategoryFragmentListener) {
             callback = (CategoryFragmentListener) context;
         } else {
-            throw new RuntimeException(context.toString() + " must implement CategoryFragmentListener");
+            throw new RuntimeException(context + " must implement CategoryFragmentListener");
         }
     }
 
@@ -253,97 +253,26 @@ public class CategoryFragment extends Fragment implements PlaylistAsyncTaskPlayl
         callback = null;
     }
 
+    //When deleting/inserting musics in a playlist is finished
     @Override
     public void onPlaylistAsyncTaskNullFinish() {
-        if (deletePlaylists != null)
-            deletePlaylists.clear();
-        fillList();
-        adapter.notifyDataSetChanged();
-        for (int i = 0; i < 3; i++)
-            elv.collapseGroup(i);
+        new PlaylistAsyncTaskObject().execute((PlaylistAsyncTaskObjectResponse) objects -> {
+            ListsFragment fragment = ((ListsFragment) getParentFragmentManager().findFragmentByTag(getString(R.string.lists_fragment_tag)));
+            fragment.setList(objects);
+            fragment.updateRecyclerView();
+            onBack();
+        }, appDatabase, "selectAllPlaylistWithCount");
     }
 
-    //Dialog to add musics to playlist
     @Override
-    public void onPlaylistAsyncTaskPlaylistFinish(List<Playlist> playlists) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-
-        LayoutInflater inflater = this.getLayoutInflater();
-        View dialogView = inflater.inflate(R.layout.category_add_playlist, null);
-        TextView label = (TextView) dialogView.findViewById(R.id.dialog_playlist_label);
-        final Spinner spinner = (Spinner) dialogView.findViewById(R.id.dialog_playlist_spinner);
-        edit = (EditText) dialogView.findViewById(R.id.dialog_playlist_edit);
-        Button buttonCancel = (Button) dialogView.findViewById(R.id.dialog_playlist_button_cancel);
-        Button buttonAdd = (Button) dialogView.findViewById(R.id.dialog_playlist_button_add);
-
-        buttonAdd.setBackgroundColor(ColorsConstants.PRIMARY_COLOR);
-        edit.setBackgroundColor(ColorsConstants.PRIMARY_COLOR);
-        edit.setTextColor(ColorsConstants.PRIMARY_TEXT_COLOR);
-        label.setText(R.string.add_a_playlist);
-        label.setTextColor(ColorsConstants.PRIMARY_TEXT_COLOR);
-        ArrayList<String> strPlaylists = new ArrayList<>();
-        strPlaylists.add("-new-");
-        for (Playlist playlist : playlists)
-            strPlaylists.add(playlist.getPlaylist_name());
-        spinner.setBackgroundTintList(new ColorStateList(new int[][]{ new int[]{ android.R.attr.state_enabled } }, new int[]{ ColorsConstants.PRIMARY_TEXT_COLOR }));
-        spinner.setPopupBackgroundDrawable(new ColorDrawable(0xFF888888));//was darkgrey
-        ArrayAdapter<String> adapter = new CustomArrayAdapter(getContext(), R.layout.dialog_playlist_spinner_1line, strPlaylists);
-        spinner.setAdapter(adapter);
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                if (i != 0) {
-                    edit.setEnabled(false);
-                    edit.setText(strPlaylists.get(adapterView.getSelectedItemPosition()));
-                } else {
-                    edit.setEnabled(true);
-                    edit.setText("");
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-            }
-        });
-
-        PlaylistAsyncTaskNullResponse thisCallback = this;
-
-        buttonAdd.setOnClickListener(view -> {
-            String name = edit.getText().toString();
-            if (name != null && !name.equals("")) {
-                ArrayList<Playlist> playlists1 = new ArrayList<>();
-                for (Music m : addPlaylist)
-                    playlists1.add(new Playlist(m.getMusic_id(), name));
-                new PlaylistAsyncTaskNull().execute(thisCallback, appDatabase, "insertAll", playlists1);
-                alertDialog.cancel();
-                addPlaylist.clear();
-                adapter.notifyDataSetChanged();
-                callback.finishEdit();
-                callback.swipeToMain();
-            } else
-                Toast.makeText(getContext(), "You must enter a name or choose one in the list", Toast.LENGTH_SHORT).show();
-        });
-
-        buttonCancel.setOnClickListener(view -> {
-            alertDialog.cancel();
-            addPlaylist.clear();
-            callback.finishEdit();
-            callback.swipeToMain();
-        });
-
-        builder.setView(dialogView);
-        builder.setCancelable(false);
-
-        alertDialog = builder.create();
-        alertDialog.show();
-    }
+    public void onPlaylistAsyncTaskPlaylistFinish(List<Playlist> playlists) {}
 
     //COMMUNICATING
     public interface CategoryFragmentListener {
-        void changeListInMain(String column, String category);
-
-        void finishEdit();
+        void changeListInMain(int column, String category);
 
         void swipeToMain();
+
+        void openSettings();
     }
 }

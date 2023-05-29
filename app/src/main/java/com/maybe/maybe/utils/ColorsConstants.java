@@ -20,7 +20,6 @@ public class ColorsConstants {
     public static int NOTIFICATION_TEXT_ARTIST_COLOR;
     public static int BACKGROUND_COLOR;
     public static int SELECTED_COLOR;
-    public static int EDITMODE_SELECTED_COLOR;
 
     public static final int DEFAULT_PRIMARY_COLOR = Color.parseColor("#207667");
     public static final int DEFAULT_PRIMARY_LIGHT_COLOR = Color.parseColor("#54a595");
@@ -34,8 +33,7 @@ public class ColorsConstants {
     public static final int DEFAULT_NOTIFICATION_TEXT_TITLE_COLOR = DEFAULT_PRIMARY_TEXT_COLOR;
     public static final int DEFAULT_NOTIFICATION_TEXT_ARTIST_COLOR = DEFAULT_SECONDARY_TEXT_COLOR;
     public static final int DEFAULT_BACKGROUND_COLOR = Color.parseColor("#2a2828");
-    public static final int DEFAULT_SELECTED_COLOR = Color.parseColor("#88207667");
-    public static final int DEFAULT_EDITMODE_SELECTED_COLOR = Color.parseColor("#8876202e");
+    public static final int DEFAULT_SELECTED_COLOR = Color.parseColor("#8876202e");
 
     public static void loadColors(Context context) {
         SharedPreferences sharedPref = context.getSharedPreferences(context.getString(R.string.preference_file_key), Context.MODE_PRIVATE);
@@ -52,7 +50,6 @@ public class ColorsConstants {
         NOTIFICATION_TEXT_ARTIST_COLOR = sharedPref.getInt(context.getString(R.string.key_notification_text_music_artist_color), DEFAULT_NOTIFICATION_TEXT_ARTIST_COLOR);
         BACKGROUND_COLOR = sharedPref.getInt(context.getString(R.string.key_background_color), DEFAULT_BACKGROUND_COLOR);
         SELECTED_COLOR = sharedPref.getInt(context.getString(R.string.key_selected_color), DEFAULT_SELECTED_COLOR);
-        EDITMODE_SELECTED_COLOR = sharedPref.getInt(context.getString(R.string.key_editmode_selected_color), DEFAULT_EDITMODE_SELECTED_COLOR);
     }
 
     public static void resetColors(Context context) {
@@ -71,7 +68,6 @@ public class ColorsConstants {
         editor.putInt(context.getString(R.string.key_notification_text_music_artist_color), DEFAULT_NOTIFICATION_TEXT_ARTIST_COLOR);
         editor.putInt(context.getString(R.string.key_background_color), DEFAULT_BACKGROUND_COLOR);
         editor.putInt(context.getString(R.string.key_selected_color), DEFAULT_SELECTED_COLOR);
-        editor.putInt(context.getString(R.string.key_editmode_selected_color), DEFAULT_EDITMODE_SELECTED_COLOR);
         editor.apply();
     }
 }

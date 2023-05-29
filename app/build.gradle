@@ -28,6 +28,7 @@ android {
     buildFeatures {
         dataBinding true
     }
+    namespace 'com.maybe.maybe'
 }
 
 dependencies {
@@ -44,6 +45,7 @@ dependencies {
     implementation "androidx.media:media:1.4.3"
     implementation 'androidx.core:core:1.7.0'
     implementation "androidx.recyclerview:recyclerview:1.2.1"
+    implementation 'androidx.recyclerview:recyclerview-selection:1.1.0'
     implementation "androidx.activity:activity:1.4.0"
 
     implementation 'androidx.appcompat:appcompat:1.4.1'

@@ -8,14 +8,26 @@ import static com.maybe.maybe.CategoryItem.CATEGORY_SETTING;
 import static com.maybe.maybe.CategoryItem.CATEGORY_SYNC;
 import static com.maybe.maybe.utils.Constants.SORT_ALPHA;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.os.ParcelFileDescriptor;
+import android.provider.DocumentsContract;
+import android.provider.OpenableColumns;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
@@ -31,6 +43,7 @@ import com.maybe.maybe.database.async_tasks.FillDbAsyncTask;
 import com.maybe.maybe.database.async_tasks.MusicAsyncTask;
 import com.maybe.maybe.database.async_tasks.OnArtistAsyncTaskFinish;
 import com.maybe.maybe.database.async_tasks.OnFillDbAsyncTaskFinish;
+import com.maybe.maybe.database.async_tasks.OnSearchMusicAsyncTaskFinish;
 import com.maybe.maybe.database.async_tasks.OnSelectAlbumAsyncTaskFinish;
 import com.maybe.maybe.database.async_tasks.OnSelectMusicAsyncTaskFinish;
 import com.maybe.maybe.database.async_tasks.playlist.PlaylistAsyncTaskNull;
@@ -44,16 +57,28 @@ import com.maybe.maybe.database.entity.MusicWithArtists;
 import com.maybe.maybe.database.entity.Playlist;
 import com.maybe.maybe.utils.ColorsConstants;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
-public class CategoryFragment extends Fragment implements PlaylistAsyncTaskPlaylistResponse, PlaylistAsyncTaskNullResponse, OnFillDbAsyncTaskFinish, CategoriesFragment.CategoriesFragmentListener {
+public class CategoryFragment extends Fragment implements PlaylistAsyncTaskPlaylistResponse, PlaylistAsyncTaskNullResponse, OnFillDbAsyncTaskFinish, CategoriesFragment.CategoriesFragmentListener, ActivityResultCallback<ActivityResult> {
 
     private static final String TAG = "CategoryFragment";
+    ActivityResultLauncher<Intent> activityResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), this);
     private CategoryFragmentListener callback;
     private AppDatabase appDatabase;
     private ArrayList<Music> addPlaylist;
-    private ArrayList<MusicWithArtists> tempMusics;
+    private ArrayList<MusicWithArtists> tempMusicsEditList;
+    private ArrayList<MusicWithArtists> tempMusicsExportList;
+    private String tempPlaylistExportName;
+    private String currentAction;
+    private String playlistUpdateAction;
 
     public static CategoryFragment newInstance() {
         return new CategoryFragment();
@@ -81,6 +106,12 @@ public class CategoryFragment extends Fragment implements PlaylistAsyncTaskPlayl
                 .commit();
 
         return view;
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        activityResultLauncher.unregister();
     }
 
     public void syncDatabase() {
@@ -123,20 +154,20 @@ public class CategoryFragment extends Fragment implements PlaylistAsyncTaskPlayl
         if (select.equals("selectAllMusicsOfPlaylist")) {
             new MusicAsyncTask().execute((OnSelectMusicAsyncTaskFinish) objects -> {
                 ArrayList<MusicWithArtists> musics = new ArrayList<>((List<MusicWithArtists>) (Object) objects);
-                if (tempMusics == null)
-                    tempMusics = musics;
+                if (tempMusicsEditList == null)
+                    tempMusicsEditList = musics;
                 else {
-                    addFragmentEdit(musics, tempMusics, categoryItem, name);
-                    tempMusics = null;
+                    addFragmentEdit(musics, tempMusicsEditList, categoryItem, name);
+                    tempMusicsEditList = null;
                 }
             }, appDatabase, "selectAll", SORT_ALPHA, name);
             new MusicAsyncTask().execute((OnSelectMusicAsyncTaskFinish) objects -> {
                 ArrayList<MusicWithArtists> musics = new ArrayList<>((List<MusicWithArtists>) (Object) objects);
-                if (tempMusics == null)
-                    tempMusics = musics;
+                if (tempMusicsEditList == null)
+                    tempMusicsEditList = musics;
                 else {
-                    addFragmentEdit(tempMusics, musics, categoryItem, name);
-                    tempMusics = null;
+                    addFragmentEdit(tempMusicsEditList, musics, categoryItem, name);
+                    tempMusicsEditList = null;
                 }
             }, appDatabase, select, SORT_ALPHA, name);
         } else {
@@ -183,7 +214,39 @@ public class CategoryFragment extends Fragment implements PlaylistAsyncTaskPlayl
         for (long l : keyList) {
             playlists.add(new Playlist(l, name));
         }
+        playlistUpdateAction = "back";
         new PlaylistAsyncTaskNull().execute(this, appDatabase, "updatePlaylist", playlists, name);
+    }
+
+    @Override
+    public void exportPlaylist(ArrayList<Long> keyList, String name) {
+        tempPlaylistExportName = name;
+        tempMusicsExportList = new ArrayList<>();
+        new MusicAsyncTask().execute((OnSelectMusicAsyncTaskFinish) objects -> {
+            ArrayList<MusicWithArtists> musics = new ArrayList<>((List<MusicWithArtists>) (Object) objects);
+            musics.forEach(item -> {
+                if (keyList.contains(item.music.getMusic_id()))
+                    tempMusicsExportList.add(item);
+            });
+
+            currentAction = Intent.ACTION_CREATE_DOCUMENT;
+            Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            intent.setType("application/x-mpegurl");
+            intent.putExtra(Intent.EXTRA_TITLE, name);
+            activityResultLauncher.launch(intent);
+        }, appDatabase, "selectAll", SORT_ALPHA);
+    }
+
+    @Override
+    public void importPlaylist() {
+        currentAction = Intent.ACTION_OPEN_DOCUMENT;
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("*/*");
+        File file = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
+        intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, file.getPath());
+        activityResultLauncher.launch(intent);
     }
 
     @Override
@@ -204,7 +267,7 @@ public class CategoryFragment extends Fragment implements PlaylistAsyncTaskPlayl
         else if (categoryItem.getId() == CATEGORY_ALBUM)
             openAlbums(categoryItem);
         else if (categoryItem.getId() == CATEGORY_FOLDER)
-            Toast.makeText(getContext(), "Not working yet!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), R.string.toast_folder_category, Toast.LENGTH_SHORT).show();
         else if (categoryItem.getId() == CATEGORY_SETTING)
             callback.openSettings();
         else if (categoryItem.getId() == CATEGORY_SYNC)
@@ -253,19 +316,114 @@ public class CategoryFragment extends Fragment implements PlaylistAsyncTaskPlayl
         callback = null;
     }
 
-    //When deleting/inserting musics in a playlist is finished
     @Override
     public void onPlaylistAsyncTaskNullFinish() {
+        //When deleting/inserting musics in a playlist, update the recycler view
         new PlaylistAsyncTaskObject().execute((PlaylistAsyncTaskObjectResponse) objects -> {
             ListsFragment fragment = ((ListsFragment) getParentFragmentManager().findFragmentByTag(getString(R.string.lists_fragment_tag)));
             fragment.setList(objects);
             fragment.updateRecyclerView();
-            onBack();
+            if (playlistUpdateAction.equals("back")) {
+                onBack();
+            }
         }, appDatabase, "selectAllPlaylistWithCount");
     }
 
     @Override
     public void onPlaylistAsyncTaskPlaylistFinish(List<Playlist> playlists) {}
+
+    @Override
+    public void onActivityResult(ActivityResult result) {
+        // file format information https://en.wikipedia.org/wiki/M3U
+        if (result.getResultCode() == Activity.RESULT_OK) {
+            Intent intent = result.getData();
+            if (intent != null) {
+                Uri uri = intent.getData();
+                if (currentAction.equals(Intent.ACTION_CREATE_DOCUMENT)) {
+                    writePlaylistToFile(uri);
+                } else if (currentAction.equals(Intent.ACTION_OPEN_DOCUMENT)) {
+                    parsePlaylistFile(uri);
+                }
+            }
+        }
+        currentAction = null;
+    }
+
+    private void writePlaylistToFile(Uri uri) {
+        StringBuilder text = new StringBuilder("#EXTM3U\n");
+        text.append("#PLAYLIST:").append(tempPlaylistExportName).append("\n");
+        for (MusicWithArtists item : tempMusicsExportList) {
+            String line = "#EXTINF:";
+            line += item.music.getMusic_duration() / 1000 + ",";
+            line += item.artistsToString() + " - ";
+            line += item.music.getMusic_title() + "\n";
+            line += Uri.fromFile(new File(item.music.getMusic_path())).getEncodedPath();
+            text.append(line).append("\n");
+        }
+
+        try {
+            ParcelFileDescriptor pfd = getContext().getContentResolver().openFileDescriptor(uri, "w");
+            FileOutputStream fileOutputStream = new FileOutputStream(pfd.getFileDescriptor());
+            fileOutputStream.write(text.toString().getBytes());
+            fileOutputStream.close();
+            pfd.close();
+            Toast.makeText(getContext(), R.string.toast_exportation_successful, Toast.LENGTH_SHORT).show();
+        } catch (IOException e) {
+            e.printStackTrace();
+            Toast.makeText(getContext(), R.string.toast_error, Toast.LENGTH_SHORT).show();
+        }
+        tempPlaylistExportName = null;
+        tempMusicsExportList = null;
+    }
+
+    private void parsePlaylistFile(Uri uri) {
+        //Get the name of the file without its extension
+        String name = null;
+        Cursor cursor = getContext().getContentResolver().query(uri, new String[]{ OpenableColumns.DISPLAY_NAME }, null, null, null);
+        if (cursor != null && cursor.moveToFirst()) {
+            String fullName = cursor.getString(0);
+            name = fullName.substring(0, fullName.lastIndexOf('.'));
+            cursor.close();
+        }
+
+        //Read the file line by line to get the path of each music
+        try {
+            InputStream inputStream = getContext().getContentResolver().openInputStream(uri);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(Objects.requireNonNull(inputStream)));
+            ArrayList<String> lines = new ArrayList<>();
+            String line = reader.readLine();
+            if (line != null && line.matches("^#EXTM3U.*")) {
+                while ((line = reader.readLine()) != null) {
+                    if (line.matches("^#PLAYLIST:.*")) {
+                        name = line.substring(10);
+                    } else if (line.matches("^#EXTINF:.*")) {
+                        if ((line = reader.readLine()) != null)
+                            lines.add(Uri.decode(line));
+                    }
+                }
+            }
+            if (lines.size() > 0) {
+                final String playlistName = name;
+                //Get all music ids from the paths
+                new MusicAsyncTask().execute((OnSearchMusicAsyncTaskFinish) objects -> {
+                    ArrayList<Long> keyList = new ArrayList<>((List<Long>) (Object) objects);
+                    List<Playlist> playlists = new ArrayList<>();
+                    for (long l : keyList) {
+                        playlists.add(new Playlist(l, playlistName));
+                    }
+                    //delete/insert all ids in the playlist
+                    playlistUpdateAction = "nothing";
+                    new PlaylistAsyncTaskNull().execute(this, appDatabase, "updatePlaylist", playlists, playlistName);
+                    Toast.makeText(getContext(), R.string.toast_importation_successful, Toast.LENGTH_SHORT).show();
+                }, appDatabase, "selectAllIdsByPath", lines);
+            } else {
+                Toast.makeText(getContext(), R.string.toast_invalid_file, Toast.LENGTH_SHORT).show();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            Toast.makeText(getContext(), R.string.toast_error, Toast.LENGTH_SHORT).show();
+        }
+    }
 
     //COMMUNICATING
     public interface CategoryFragmentListener {

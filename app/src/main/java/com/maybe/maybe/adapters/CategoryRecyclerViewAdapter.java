@@ -16,6 +16,32 @@ public class CategoryRecyclerViewAdapter extends RecyclerView.Adapter<CategoryRe
     private final OnListItemClick onListItemClick;
     private ArrayList<ListItem> list;
 
+    public CategoryRecyclerViewAdapter(OnListItemClick onListItemClick) {
+        this.onListItemClick = onListItemClick;
+    }
+
+    public void setList(ArrayList<ListItem> list) {
+        this.list = list;
+    }
+
+    @Override
+    public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
+        View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.category_recycler_view_row, viewGroup, false);
+        return new ViewHolder(view);
+    }
+
+    @Override
+    public void onBindViewHolder(ViewHolder viewHolder, final int position) {
+        viewHolder.getNameTextView().setText(list.get(position).getName());
+        viewHolder.getQuantityTextView().setText("" + list.get(position).getQuantity());
+        viewHolder.setOnItemClickCallback(list.get(position), onListItemClick);
+    }
+
+    @Override
+    public int getItemCount() {
+        return list.size();
+    }
+
     public class ViewHolder extends RecyclerView.ViewHolder {
         private final TextView name, quantity;
 
@@ -41,28 +67,5 @@ public class CategoryRecyclerViewAdapter extends RecyclerView.Adapter<CategoryRe
                 }
             });
         }
-    }
-
-    public CategoryRecyclerViewAdapter(OnListItemClick onListItemClick, ArrayList<ListItem> list) {
-        this.onListItemClick = onListItemClick;
-        this.list = list;
-    }
-
-    @Override
-    public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
-        View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.category_recycler_view_row, viewGroup, false);
-        return new ViewHolder(view);
-    }
-
-    @Override
-    public void onBindViewHolder(ViewHolder viewHolder, final int position) {
-        viewHolder.getNameTextView().setText(list.get(position).getName());
-        viewHolder.getQuantityTextView().setText("" + list.get(position).getQuantity());
-        viewHolder.setOnItemClickCallback(list.get(position), onListItemClick);
-    }
-
-    @Override
-    public int getItemCount() {
-        return list.size();
     }
 }

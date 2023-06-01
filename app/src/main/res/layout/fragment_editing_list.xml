@@ -45,6 +45,13 @@
             android:background="@drawable/ic_round_visibility_24" />
 
         <Button
+            android:id="@+id/category_editing_list_export"
+            style="@style/AppTheme.TopButton"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:background="@drawable/ic_round_upload_24" />
+
+        <Button
             android:id="@+id/category_editing_list_save"
             style="@style/AppTheme.TopButton"
             android:layout_width="30dp"

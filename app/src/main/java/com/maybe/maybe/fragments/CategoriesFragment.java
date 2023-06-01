@@ -80,6 +80,10 @@ public class CategoriesFragment extends Fragment implements AdapterView.OnItemCl
 
         void saveToList(ArrayList<Long> keyList, String name);
 
+        void exportPlaylist(ArrayList<Long> keyList, String name);
+
+        void importPlaylist();
+
         void back();
 
         /*default void changeFragment(int categoryIndex) {

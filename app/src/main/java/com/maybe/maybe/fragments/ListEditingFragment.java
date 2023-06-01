@@ -127,13 +127,28 @@ public class ListEditingFragment extends Fragment {
                 ArrayList<Long> keyList = new ArrayList<>();
                 callback.saveToList(keyList, name);
             });
+
+            Button buttonExport = view.findViewById(R.id.category_editing_list_export);
+            buttonExport.setOnClickListener(view1 -> {
+                MutableSelection<Long> snapshot = new MutableSelection<Long>();
+                tracker.copySelection(snapshot);
+                ArrayList<Long> keyList = new ArrayList<>();
+                snapshot.forEach(keyList::add);//keyList::add = aLong -> keyList.add(aLong)
+                callback.exportPlaylist(keyList, name);
+            });
         } else {
             LinearLayout buttonLayout = view.findViewById(R.id.category_editing_list_buttons_layout);
             buttonLayout.removeView(view.findViewById(R.id.category_editing_list_visibility));
             buttonLayout.removeView(view.findViewById(R.id.category_editing_list_save));
             buttonLayout.removeView(view.findViewById(R.id.category_editing_list_delete));
+            buttonLayout.removeView(view.findViewById(R.id.category_editing_list_export));
         }
         return view;
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
     }
 
     public void setListAll(List<MusicWithArtists> listAll) {

@@ -34,7 +34,6 @@ public class ListsFragment extends Fragment implements OnListItemClick {
     private CategoryItem categoryItem;
     private CategoriesFragment.CategoriesFragmentListener callback;
     private CategoryRecyclerViewAdapter adapter;
-    private Button buttonBack;
 
     public static ListsFragment newInstance() {
         return new ListsFragment();
@@ -54,12 +53,13 @@ public class ListsFragment extends Fragment implements OnListItemClick {
         TextView textView = view.findViewById(R.id.category_list_title);
         textView.setText(categoryItem.getName());
 
-        adapter = new CategoryRecyclerViewAdapter(this, list);
+        adapter = new CategoryRecyclerViewAdapter(this);
+        adapter.setList(list);
         RecyclerView recyclerView = view.findViewById(R.id.lists_recycler_view);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerView.setAdapter(adapter);
 
-        buttonBack = view.findViewById(R.id.category_list_back);
+        Button buttonBack = view.findViewById(R.id.category_list_back);
         buttonBack.setOnClickListener(view1 -> callback.back());
 
         if (categoryItem.getId() == CATEGORY_PLAYLIST) {
@@ -87,9 +87,15 @@ public class ListsFragment extends Fragment implements OnListItemClick {
                 builder.setNegativeButton(R.string.dialog_button_cancel, (dialog, id) -> {});
                 builder.create().show();
             });
+
+            Button buttonImport = view.findViewById(R.id.category_list_import);
+            buttonImport.setOnClickListener(view1 -> {
+                callback.importPlaylist();
+            });
         } else {
             LinearLayout buttonLayout = view.findViewById(R.id.category_list_buttons_layout);
             buttonLayout.removeView(view.findViewById(R.id.category_list_add));
+            buttonLayout.removeView(view.findViewById(R.id.category_list_import));
         }
 
         return view;
@@ -97,6 +103,9 @@ public class ListsFragment extends Fragment implements OnListItemClick {
 
     public void setList(ArrayList<ListItem> list) {
         this.list = list;
+        if (adapter != null) {
+            adapter.setList(this.list);
+        }
     }
 
     public void setCategory(CategoryItem categoryItem) {

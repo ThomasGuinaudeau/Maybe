@@ -4,6 +4,7 @@ import static com.maybe.maybe.utils.Constants.SORT_RANDOM;
 
 import android.database.Cursor;
 import android.os.AsyncTask;
+import android.util.Log;
 
 import com.maybe.maybe.ListItem;
 import com.maybe.maybe.database.AppDatabase;
@@ -55,6 +56,10 @@ public class MusicAsyncTask extends AsyncTask<Object, Object, List<Object>> {
                 onSearchMusicAsyncFinish = (OnSearchMusicAsyncTaskFinish) objects[0];
                 list = (List<Object>) (Object) dao.selectAllIdsByTitle("%" + objects[3] + "%");
                 break;
+            case "selectAllIdsByPath": //3=pathList
+                onSearchMusicAsyncFinish = (OnSearchMusicAsyncTaskFinish) objects[0];
+                list = (List<Object>) (Object) dao.selectAllIdsByPath((List<String>) objects[3]);
+                break;
             case "selectAllAlbumWithCount":
                 onSelectAlbumAsyncTaskFinish = (OnSelectAlbumAsyncTaskFinish) objects[0];
                 Cursor cursor = dao.selectAllAlbumWithCount();
@@ -92,6 +97,7 @@ public class MusicAsyncTask extends AsyncTask<Object, Object, List<Object>> {
                 onSelectMusicAsyncTaskFinish.onSelectMusicAsyncFinish(list);
                 break;
             case "selectAllIdsByTitle":
+            case "selectAllIdsByPath":
                 onSearchMusicAsyncFinish.onSearchMusicAsyncFinish(list);
                 break;
             case "selectAllAlbumWithCount":

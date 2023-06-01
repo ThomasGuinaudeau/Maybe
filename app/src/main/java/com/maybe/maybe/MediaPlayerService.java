@@ -80,151 +80,6 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnPrepare
     private MediaSessionCompat mediaSession;
     private MusicList musicList;
     private TelephonyManager telephonyManager;
-    public BroadcastReceiver serviceReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            Bundle extras = intent.getExtras();
-            Log.d(TAG, "Brodcast receive, action = " + intent.getAction() + " destination = " + extras.getString(BROADCAST_DESTINATION));
-            Object[] objects = (Object[]) extras.get(BROADCAST_EXTRAS);
-            switch (extras.getString(BROADCAST_DESTINATION)) {
-                case "change_music_list":
-                    setMusicList((ArrayList<MusicWithArtists>) objects[0]);
-                    break;
-                case "change_music":
-                    begin = 1;
-                    Music music = (Music) objects[0];
-                    musicList.changeForMusicWithId(music.getMusic_id());
-                    initMediaPlayer(musicList.getCurrent().music.getMusic_id());
-                    break;
-                case "action":
-                    if (objects[0].equals("change_selection")) {
-                        if (musicList.getPointer() != -1)
-                            sendBroadcast("change_selection", musicList.getCurrent().music);
-                    } else if (objects[0].equals("loop"))
-                        isLoop = (String) objects[1];
-                    else if (objects[0].equals("skip") && objects[1].equals("previous"))
-                        skipToPrevious();
-                    else if (objects[0].equals("skip") && objects[1].equals("next"))
-                        skipToNext();
-                    else if (objects[0].equals("state") && objects[1].equals("play_pause")) {
-                        if (mediaPlayer.isPlaying())
-                            pauseMedia();
-                        else
-                            playMedia();
-                    } else if (objects[0].equals("seekBar"))
-                        mediaPlayer.seekTo(Integer.parseInt((String) objects[1]));
-                    break;
-            }
-        }
-    };
-    private final MediaSessionCompat.Callback callback = new MediaSessionCompat.Callback() {
-        @Override
-        public void onPlay() {
-            Log.d(TAG, "MediaSession onPlay");
-            if (!mediaPlayer.isPlaying()) {
-                mediaPlayer.start();
-                mediaSession.setPlaybackState(buildPlaybackState(PlaybackStateCompat.STATE_PLAYING));
-                //mediaPlayer.setPlaybackParams(mediaPlayer.getPlaybackParams().setSpeed(0.5f));
-                if (!isNoisyAudioStreamReceiverRegistered) {
-                    registerReceiver(myNoisyAudioStreamReceiver, becomeNoisyIntentFilter);
-                    isNoisyAudioStreamReceiverRegistered = true;
-                }
-                if (begin != -1) {
-                    updateMetaData();
-                    notificationManager.notify(NOTIFICATION_ID, buildForegroundNotification("all"));
-                } else {
-                    sendBroadcast("change_state", mediaPlayer.isPlaying());
-                    notificationManager.notify(NOTIFICATION_ID, buildForegroundNotification("none"));
-                }
-                if (isServiceReceiverRegistered) {
-                    mHandler.postDelayed(updateTimeTask, 200);
-                    Log.d(TAG, "mHandler = on");
-                }
-            }
-        }
-
-        @Override
-        public void onPause() {
-            Log.d(TAG, "MediaSession onPause");
-            if (mediaPlayer.isPlaying()) {
-                mHandler.removeCallbacks(updateTimeTask);
-                Log.d(TAG, "mHandler = off");
-                mediaPlayer.pause();
-                //mediaPlayer = null;
-                mediaSession.setPlaybackState(buildPlaybackState(PlaybackStateCompat.STATE_PAUSED));
-                if (begin != -1) {
-                    updateMetaData();
-                    notificationManager.notify(NOTIFICATION_ID, buildForegroundNotification("all"));
-                } else {
-                    sendBroadcast("change_state", mediaPlayer.isPlaying());
-                    notificationManager.notify(NOTIFICATION_ID, buildForegroundNotification("none"));
-                }
-            }
-        }
-
-        @Override
-        public void onStop() {
-            Log.d(TAG, "MediaSession onStop");
-            if (mediaPlayer.isPlaying()) {
-                Log.d(TAG, "mHandler = off");
-                if (isNoisyAudioStreamReceiverRegistered) {
-                    unregisterReceiver(myNoisyAudioStreamReceiver);
-                    isNoisyAudioStreamReceiverRegistered = false;
-                }
-                mHandler.removeCallbacks(updateTimeTask);
-            }
-            mediaPlayer.stop();
-        }
-
-        @Override
-        public void onSkipToPrevious() {
-            Log.d(TAG, "MediaSession onSkipToPrevious");
-            begin = 1;
-            musicList.goPrevious(isLoop);
-            if (isLoop.equals(REPEAT_NONE))
-                if (musicList.getPointer() == -1) {
-                    begin = 0;
-                    musicList.changeForIndex(musicList.size() - 1);
-                }
-            initMediaPlayer(musicList.getCurrent().music.getMusic_id());
-        }
-
-        @Override
-        public void onSkipToNext() {
-            Log.d(TAG, "MediaSession onSkipToNext");
-            begin = 1;
-            musicList.goNext(isLoop);
-            if (isLoop.equals(REPEAT_NONE))
-                if (musicList.getPointer() == -1) {
-                    begin = 0;
-                    musicList.changeForIndex(0);
-                }
-            initMediaPlayer(musicList.getCurrent().music.getMusic_id());
-        }
-    };
-    private final PhoneStateListener callStateListener = (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) ? new PhoneStateListener() {
-        public void onCallStateChanged(int state, String incomingNumber) {
-            if (state == TelephonyManager.CALL_STATE_RINGING) {
-                if (mediaPlayer.isPlaying())
-                    pauseMedia();
-            }
-        }
-    } : null;
-    private TelephonyCallback telephonyCallback = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) ? new CustomTelephonyCallback() {
-        @Override
-        public void onCallStateChanged(int i) {
-            if (i == TelephonyManager.CALL_STATE_RINGING) {
-                if (mediaPlayer.isPlaying())
-                    pauseMedia();
-            }
-        }
-    } : null;
-
-    @RequiresApi(api = Build.VERSION_CODES.S)
-    private static abstract class CustomTelephonyCallback extends TelephonyCallback implements TelephonyCallback.CallStateListener {
-        @Override
-        public void onCallStateChanged(int i) {}
-    }
 
     public void onCreate() {
         Log.d(TAG, "onCreate");
@@ -411,13 +266,51 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnPrepare
     public boolean onError(MediaPlayer mp, int what, int extra) {
         Log.e(TAG, "onError");
         return true;
-    }
+    }    public BroadcastReceiver serviceReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Bundle extras = intent.getExtras();
+            Log.d(TAG, "Brodcast receive, action = " + intent.getAction() + " destination = " + extras.getString(BROADCAST_DESTINATION));
+            Object[] objects = (Object[]) extras.get(BROADCAST_EXTRAS);
+            switch (extras.getString(BROADCAST_DESTINATION)) {
+                case "change_music_list":
+                    setMusicList((ArrayList<MusicWithArtists>) objects[0]);
+                    break;
+                case "change_music":
+                    begin = 1;
+                    Music music = (Music) objects[0];
+                    musicList.changeForMusicWithId(music.getMusic_id());
+                    initMediaPlayer(musicList.getCurrent().music.getMusic_id());
+                    break;
+                case "action":
+                    if (objects[0].equals("change_selection")) {
+                        if (musicList.getPointer() != -1)
+                            sendBroadcast("change_selection", musicList.getCurrent().music);
+                    } else if (objects[0].equals("loop"))
+                        isLoop = (String) objects[1];
+                    else if (objects[0].equals("skip") && objects[1].equals("previous"))
+                        skipToPrevious();
+                    else if (objects[0].equals("skip") && objects[1].equals("next"))
+                        skipToNext();
+                    else if (objects[0].equals("state") && objects[1].equals("play_pause")) {
+                        if (mediaPlayer.isPlaying())
+                            pauseMedia();
+                        else
+                            playMedia();
+                    } else if (objects[0].equals("seekBar"))
+                        mediaPlayer.seekTo(Integer.parseInt((String) objects[1]));
+                    break;
+            }
+        }
+    };
 
     public void initMediaPlayer(long fileId) {
         if (mediaPlayer == null) {
             mediaPlayer = new MediaPlayer();
             mediaPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
-            /*equalizer = new Equalizer(0, mediaPlayer.getAudioSessionId());
+            /*float volume = 1f;
+            mediaPlayer.setVolume(volume, volume);
+            equalizer = new Equalizer(0, mediaPlayer.getAudioSessionId());
             equalizer.usePreset((short) 0);
             equalizer.setEnabled(true);*/
         }
@@ -430,7 +323,6 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnPrepare
 
         Uri uri = getContentUri("external", fileId);
         DocumentFile sourceFile = DocumentFile.fromSingleUri(this, uri);
-        Log.e(TAG, fileId + " exist " + sourceFile.exists());
         if (sourceFile.exists()) {
             try {
                 mediaPlayer.setDataSource(this, uri);
@@ -470,8 +362,6 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnPrepare
     private void skipToNext() {
         callback.onSkipToNext();
     }
-
-    //Session
 
     @Override
     public void onCompletion(MediaPlayer mp) {
@@ -515,7 +405,91 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnPrepare
         channel.setDescription(description);
         notificationManager = (NotificationManager) getSystemService(Service.NOTIFICATION_SERVICE);
         notificationManager.createNotificationChannel(channel);
-    }
+    }    private final MediaSessionCompat.Callback callback = new MediaSessionCompat.Callback() {
+        @Override
+        public void onPlay() {
+            Log.d(TAG, "MediaSession onPlay");
+            if (!mediaPlayer.isPlaying()) {
+                mediaPlayer.start();
+                mediaSession.setPlaybackState(buildPlaybackState(PlaybackStateCompat.STATE_PLAYING));
+                //mediaPlayer.setPlaybackParams(mediaPlayer.getPlaybackParams().setSpeed(0.5f));
+                if (!isNoisyAudioStreamReceiverRegistered) {
+                    registerReceiver(myNoisyAudioStreamReceiver, becomeNoisyIntentFilter);
+                    isNoisyAudioStreamReceiverRegistered = true;
+                }
+                if (begin != -1) {
+                    updateMetaData();
+                    notificationManager.notify(NOTIFICATION_ID, buildForegroundNotification("all"));
+                } else {
+                    sendBroadcast("change_state", mediaPlayer.isPlaying());
+                    notificationManager.notify(NOTIFICATION_ID, buildForegroundNotification("none"));
+                }
+                if (isServiceReceiverRegistered) {
+                    mHandler.postDelayed(updateTimeTask, 200);
+                    Log.d(TAG, "mHandler = on");
+                }
+            }
+        }
+
+        @Override
+        public void onPause() {
+            Log.d(TAG, "MediaSession onPause");
+            if (mediaPlayer.isPlaying()) {
+                mHandler.removeCallbacks(updateTimeTask);
+                Log.d(TAG, "mHandler = off");
+                mediaPlayer.pause();
+                //mediaPlayer = null;
+                mediaSession.setPlaybackState(buildPlaybackState(PlaybackStateCompat.STATE_PAUSED));
+                if (begin != -1) {
+                    updateMetaData();
+                    notificationManager.notify(NOTIFICATION_ID, buildForegroundNotification("all"));
+                } else {
+                    sendBroadcast("change_state", mediaPlayer.isPlaying());
+                    notificationManager.notify(NOTIFICATION_ID, buildForegroundNotification("none"));
+                }
+            }
+        }
+
+        @Override
+        public void onStop() {
+            Log.d(TAG, "MediaSession onStop");
+            if (mediaPlayer.isPlaying()) {
+                Log.d(TAG, "mHandler = off");
+                if (isNoisyAudioStreamReceiverRegistered) {
+                    unregisterReceiver(myNoisyAudioStreamReceiver);
+                    isNoisyAudioStreamReceiverRegistered = false;
+                }
+                mHandler.removeCallbacks(updateTimeTask);
+            }
+            mediaPlayer.stop();
+        }
+
+        @Override
+        public void onSkipToPrevious() {
+            Log.d(TAG, "MediaSession onSkipToPrevious");
+            begin = 1;
+            musicList.goPrevious(isLoop);
+            if (isLoop.equals(REPEAT_NONE))
+                if (musicList.getPointer() == -1) {
+                    begin = 0;
+                    musicList.changeForIndex(musicList.size() - 1);
+                }
+            initMediaPlayer(musicList.getCurrent().music.getMusic_id());
+        }
+
+        @Override
+        public void onSkipToNext() {
+            Log.d(TAG, "MediaSession onSkipToNext");
+            begin = 1;
+            musicList.goNext(isLoop);
+            if (isLoop.equals(REPEAT_NONE))
+                if (musicList.getPointer() == -1) {
+                    begin = 0;
+                    musicList.changeForIndex(0);
+                }
+            initMediaPlayer(musicList.getCurrent().music.getMusic_id());
+        }
+    };
 
     private Notification buildForegroundNotification(String updateType) {
         RemoteViews contentView = new RemoteViews(getPackageName(), R.layout.custom_notification);
@@ -568,6 +542,12 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnPrepare
         LocalBroadcastManager.getInstance(this).sendBroadcast(new_intent);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.S)
+    private static abstract class CustomTelephonyCallback extends TelephonyCallback implements TelephonyCallback.CallStateListener {
+        @Override
+        public void onCallStateChanged(int i) {}
+    }
+
     private class BecomingNoisyReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -577,4 +557,29 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnPrepare
             }
         }
     }
+
+
+
+
+
+    private final PhoneStateListener callStateListener = (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) ? new PhoneStateListener() {
+        public void onCallStateChanged(int state, String incomingNumber) {
+            if (state == TelephonyManager.CALL_STATE_RINGING) {
+                if (mediaPlayer.isPlaying())
+                    pauseMedia();
+            }
+        }
+    } : null;
+
+    private TelephonyCallback telephonyCallback = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) ? new CustomTelephonyCallback() {
+        @Override
+        public void onCallStateChanged(int i) {
+            if (i == TelephonyManager.CALL_STATE_RINGING) {
+                if (mediaPlayer.isPlaying())
+                    pauseMedia();
+            }
+        }
+    } : null;
+
+    //Session
 }

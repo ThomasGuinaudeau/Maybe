@@ -133,7 +133,12 @@
     <string name="seek_bar_text_alpha">Opacity</string>
 
     <!--Toast-->
-    <string name="toast_reset_colors">Colors have been reset</string>
+    <string name="toast_reset_colors">Colors have been reset!</string>
+    <string name="toast_folder_category">Not working yet!</string>
+    <string name="toast_error">An error occurred!</string>
+    <string name="toast_invalid_file">Invalid/Empty file!</string>
+    <string name="toast_exportation_successful">Playlist exportation successful!</string>
+    <string name="toast_importation_successful">Playlist importation successful!</string>
 
     <!--Tag-->
     <string name="categories_fragment_tag">categories_fragment_tag</string>

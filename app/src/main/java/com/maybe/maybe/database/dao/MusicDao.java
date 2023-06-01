@@ -11,6 +11,7 @@ import androidx.room.Insert;
 import androidx.room.Query;
 import androidx.room.RewriteQueriesToDropUnusedColumns;
 import androidx.room.Transaction;
+import androidx.room.Update;
 
 import com.maybe.maybe.database.entity.Music;
 import com.maybe.maybe.database.entity.MusicWithArtists;
@@ -22,6 +23,9 @@ public interface MusicDao {
 
     @Insert
     void insert(Music music);
+
+    @Update
+    void update(Music music);
 
     @Query("DELETE FROM music WHERE music_id = :music_id")
     void deleteById(long music_id);
@@ -58,8 +62,14 @@ public interface MusicDao {
     @Query("SELECT music_id FROM music WHERE music_title LIKE :title")
     List<Long> selectAllIdsByTitle(String title);
 
+    @Query("SELECT music_id FROM music WHERE music_path IN (:paths)")
+    List<Long> selectAllIdsByPath(List<String> paths);
+
     @Query("SELECT music_id FROM music")
     List<Long> selectAllIds();
+
+    @Query("SELECT music_path FROM music")
+    List<String> selectAllPaths();
 
     /*@Transaction
     @Query("SELECT * FROM music WHERE music_id IN (:musicFileIds)")

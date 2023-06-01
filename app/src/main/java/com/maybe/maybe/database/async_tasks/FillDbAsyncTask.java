@@ -30,8 +30,8 @@ import java.util.List;
 
 public class FillDbAsyncTask extends AsyncTask<Object, Integer, Object> {
 
-    private OnFillDbAsyncTaskFinish callback;
     private final WeakReference<Context> context;
+    private OnFillDbAsyncTaskFinish callback;
     private AlertDialog dialog;
     private int id;
     private boolean maxSet = false;
@@ -103,15 +103,17 @@ public class FillDbAsyncTask extends AsyncTask<Object, Integer, Object> {
                 MediaStore.Audio.Media.ALBUM,
                 MediaStore.Audio.Media.DURATION,
                 MediaStore.Audio.Media.DISPLAY_NAME,
-                MediaStore.Audio.Media.ARTIST
+                MediaStore.Audio.Media.ARTIST,
+                MediaStore.Audio.Media.DATA
         };
         String selection = MediaStore.Audio.Media.IS_MUSIC + "!= 0";
         Cursor cursor = ((Context) objects[0]).getContentResolver().query(uri, projection, selection, null, null);
-        Log.e("TAG", "totcount " + cursor.getCount());
+        Log.d("TAG", "totcount " + cursor.getCount());
         if (cursor.getCount() > 0) {
             publishProgress(cursor.getCount());
             maxSet = true;
             List<Long> oldMusicIds = appDatabase.musicDao().selectAllIds();
+            List<String> oldMusicPaths = appDatabase.musicDao().selectAllPaths();
             boolean[] deletedMusics = new boolean[oldMusicIds.size()];
             Arrays.fill(deletedMusics, true);
 
@@ -119,48 +121,55 @@ public class FillDbAsyncTask extends AsyncTask<Object, Integer, Object> {
                 publishProgress(cursor.getPosition());
 
                 long newMusicId = longIsNull(cursor.getString(0));
-                int oldMusicsPosition = oldMusicIds.indexOf(newMusicId);
-                Log.d("none", newMusicId + " o " + stringIsNull(cursor.getString(2)));
-                if (newMusicId != 0 && oldMusicsPosition == -1) {
-                    Log.e("tahg", "iddd " + newMusicId);
-                    //Add music
-                    Music music = new Music(longIsNull(cursor.getString(0)), trackIsNull(cursor.getString(1)), stringIsNull(cursor.getString(2)),
-                                            stringIsNull(cursor.getString(3)), longIsNull(cursor.getString(4)), stringIsNull(cursor.getString(5)));
-                    appDatabase.musicDao().insert(music);
+                int oldMusicsIdPosition = oldMusicIds.indexOf(newMusicId);
+                String newMusicPath = stringIsNull(cursor.getString(7));
+                int oldMusicsPathPosition = oldMusicPaths.indexOf(newMusicPath);
+                //Log.d("none", newMusicId + " o " + stringIsNull(cursor.getString(2)));
+                if (newMusicPath != null && oldMusicsPathPosition == -1) {
+                    Music music = new Music(longIsNull(cursor.getString(0)), trackIsNull(cursor.getString(1)), stringIsNull(cursor.getString(2)), stringIsNull(cursor.getString(3)), longIsNull(cursor.getString(4)), stringIsNull(cursor.getString(5)), stringIsNull(cursor.getString(7)));
+                    if ((newMusicId != 0 && oldMusicsIdPosition == -1)) {
+                        Log.d("tag", "new music " + newMusicId);
+                        //Add music
+                        appDatabase.musicDao().insert(music);
 
-                    //Add artists
-                    String artistStr = stringIsNull(cursor.getString(6));
-                    if (artistStr != null) {
-                        String[] artistsStr = artistStr.split("/");
-                        List<Artist> existingArtists = appDatabase.artistDao().selectAll();
-                        List<Artist> newArtists = new ArrayList<>();
-                        List<Long> existingIds = new ArrayList<>();
-                        List<Long> returnIds;
+                        //Add artists
+                        String artistStr = stringIsNull(cursor.getString(6));
+                        if (artistStr != null) {
+                            String[] artistsStr = artistStr.split("/");
+                            List<Artist> existingArtists = appDatabase.artistDao().selectAll();
+                            List<Artist> newArtists = new ArrayList<>();
+                            List<Long> existingIds = new ArrayList<>();
+                            List<Long> returnIds;
 
-                        for (String s : artistsStr) {
-                            boolean exists = false;
-                            for (Artist a : existingArtists) {
-                                if (s.equals(a.getArtist_name())) {
-                                    exists = true;
-                                    existingIds.add(a.getArtist_id());
+                            for (String s : artistsStr) {
+                                boolean exists = false;
+                                for (Artist a : existingArtists) {
+                                    if (s.equals(a.getArtist_name())) {
+                                        exists = true;
+                                        existingIds.add(a.getArtist_id());
+                                    }
                                 }
+                                if (!exists)
+                                    newArtists.add(new Artist(s));
                             }
-                            if (!exists)
-                                newArtists.add(new Artist(s));
-                        }
-                        if (newArtists.size() > 0) {
-                            returnIds = appDatabase.artistDao().insertAll(newArtists);
-                            existingIds.addAll(returnIds);
-                        }
+                            if (newArtists.size() > 0) {
+                                returnIds = appDatabase.artistDao().insertAll(newArtists);
+                                existingIds.addAll(returnIds);
+                            }
 
-                        //Add relation
-                        List<MusicArtistCrossRef> musicArtistCrossRefs = new ArrayList<>();
-                        for (long l : existingIds)
-                            musicArtistCrossRefs.add(new MusicArtistCrossRef(music.getMusic_id(), l));
-                        appDatabase.musicArtistCrossRefDao().insertAll(musicArtistCrossRefs);
+                            //Add relation
+                            List<MusicArtistCrossRef> musicArtistCrossRefs = new ArrayList<>();
+                            for (long l : existingIds)
+                                musicArtistCrossRefs.add(new MusicArtistCrossRef(music.getMusic_id(), l));
+                            appDatabase.musicArtistCrossRefDao().insertAll(musicArtistCrossRefs);
+                        }
+                    } else {
+                        Log.d("tag", "update music " + newMusicId);
+                        appDatabase.musicDao().update(music);
+                        deletedMusics[oldMusicsIdPosition] = false;
                     }
                 } else {
-                    deletedMusics[oldMusicsPosition] = false;
+                    deletedMusics[oldMusicsIdPosition] = false;
                 }
             }
             for (int i = 0; i < deletedMusics.length; i++) {

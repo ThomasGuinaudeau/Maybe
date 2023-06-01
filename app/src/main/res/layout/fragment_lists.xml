@@ -28,15 +28,14 @@
             android:layout_weight="1"
             android:gravity="center"
             android:text="Title"
-            android:textColor="#ffffff"/>
+            android:textColor="#ffffff" />
 
-        <!--<Button
+        <Button
             android:id="@+id/category_list_import"
             style="@style/AppTheme.TopButton"
             android:layout_width="30dp"
             android:layout_height="30dp"
-            android:background="@drawable/ic_round_download_24"
-            android:enabled="false" />-->
+            android:background="@drawable/ic_round_download_24" />
 
         <Button
             android:id="@+id/category_list_add"

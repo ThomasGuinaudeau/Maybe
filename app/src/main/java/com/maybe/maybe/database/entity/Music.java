@@ -22,7 +22,6 @@ public class Music implements Parcelable {
         public Music[] newArray(int size) {
             return new Music[size];
         }
-
     };
     @PrimaryKey
     private long music_id;
@@ -31,14 +30,16 @@ public class Music implements Parcelable {
     private String music_album;
     private long music_duration;
     private String music_filename;
+    private String music_path;
 
-    public Music(long music_id, int music_track, String music_title, String music_album, long music_duration, String music_filename) {
+    public Music(long music_id, int music_track, String music_title, String music_album, long music_duration, String music_filename, String music_path) {
         this.music_id = music_id;
         this.music_track = music_track;
         this.music_title = music_title;
         this.music_album = music_album;
         this.music_duration = music_duration;
         this.music_filename = music_filename;
+        this.music_path = music_path;
     }
 
     @Ignore
@@ -49,6 +50,7 @@ public class Music implements Parcelable {
         this.music_album = parcel.readString();
         this.music_duration = parcel.readLong();
         this.music_filename = parcel.readString();
+        this.music_path = parcel.readString();
     }
 
     public long getMusic_id() {
@@ -99,6 +101,14 @@ public class Music implements Parcelable {
         this.music_filename = music_filename;
     }
 
+    public String getMusic_path() {
+        return music_path;
+    }
+
+    public void setMusic_path(String music_path) {
+        this.music_path = music_path;
+    }
+
     @Ignore
     @Override
     public void writeToParcel(Parcel parcel, int i) {
@@ -108,6 +118,7 @@ public class Music implements Parcelable {
         parcel.writeString(music_album);
         parcel.writeLong(music_duration);
         parcel.writeString(music_filename);
+        parcel.writeString(music_path);
     }
 
     @Ignore

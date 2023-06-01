@@ -4,6 +4,7 @@ import static com.maybe.maybe.activities.MainActivity.DATABASE_VERSION;
 
 import android.content.Context;
 
+import androidx.room.AutoMigration;
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
@@ -24,7 +25,7 @@ import com.maybe.maybe.database.entity.Settings;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-@Database(entities = { Music.class, MusicArtistCrossRef.class, Artist.class, Playlist.class, CurrentPlaylist.class, Settings.class }, version = DATABASE_VERSION, exportSchema = true)
+@Database(entities = { Music.class, MusicArtistCrossRef.class, Artist.class, Playlist.class, CurrentPlaylist.class, Settings.class }, version = DATABASE_VERSION, exportSchema = true, autoMigrations = {@AutoMigration(from = 1, to = 2)})
 public abstract class AppDatabase extends RoomDatabase {
 
     public static final String DATABASE_NAME = "maybe_db";

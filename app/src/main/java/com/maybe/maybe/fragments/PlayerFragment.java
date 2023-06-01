@@ -31,7 +31,6 @@ import androidx.databinding.BindingAdapter;
 import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
 
-import com.maybe.maybe.utils.ColorsConstants;
 import com.maybe.maybe.CycleStateResource;
 import com.maybe.maybe.R;
 import com.maybe.maybe.database.AppDatabase;
@@ -42,6 +41,7 @@ import com.maybe.maybe.database.entity.Music;
 import com.maybe.maybe.database.entity.MusicWithArtists;
 import com.maybe.maybe.database.entity.Playlist;
 import com.maybe.maybe.databinding.FragmentPlayerBinding;
+import com.maybe.maybe.utils.ColorsConstants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -109,7 +109,7 @@ public class PlayerFragment extends Fragment implements PlaylistAsyncTaskPlaylis
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_player, container, false);
 
-        Music music = new Music(0, 0, "Title", "Album", 60000, "Title.mp3");
+        Music music = new Music(0, 0, "Title", "Album", 60000, "Title.mp3", "path/Title.mp3");
         ArrayList<Artist> artists = new ArrayList<>();
         artists.add(new Artist("Artist"));
         MusicWithArtists musicWithArtists = new MusicWithArtists(music, artists);

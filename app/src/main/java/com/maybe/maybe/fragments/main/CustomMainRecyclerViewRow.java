@@ -1,4 +1,4 @@
-package com.maybe.maybe;
+package com.maybe.maybe.fragments.main;
 
 import android.content.Context;
 import android.util.AttributeSet;
@@ -7,28 +7,29 @@ import android.widget.TextView;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 
+import com.maybe.maybe.R;
 import com.maybe.maybe.database.entity.MusicWithArtists;
 import com.maybe.maybe.utils.ColorsConstants;
 
-public class CustomRecyclerViewRow extends ConstraintLayout {
+public class CustomMainRecyclerViewRow extends ConstraintLayout {
 
     private final TextView track;
     private final TextView title;
     private final TextView artist;
 
-    public CustomRecyclerViewRow(Context context) {
+    public CustomMainRecyclerViewRow(Context context) {
         this(context, null);
     }
 
-    public CustomRecyclerViewRow(Context context, AttributeSet attrs) {
+    public CustomMainRecyclerViewRow(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
-    public CustomRecyclerViewRow(Context context, AttributeSet attrs, int defStyleAttr) {
+    public CustomMainRecyclerViewRow(Context context, AttributeSet attrs, int defStyleAttr) {
         this(context, attrs, defStyleAttr, 0);
     }
 
-    public CustomRecyclerViewRow(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+    public CustomMainRecyclerViewRow(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
         inflate(context, R.layout.main_recycler_view_row, this);
         track = (TextView) findViewById(R.id.main_item_track);

@@ -1,11 +1,11 @@
-package com.maybe.maybe.fragments;
+package com.maybe.maybe.fragments.category.grid;
 
-import static com.maybe.maybe.CategoryItem.CATEGORY_ALBUM;
-import static com.maybe.maybe.CategoryItem.CATEGORY_ARTIST;
-import static com.maybe.maybe.CategoryItem.CATEGORY_FOLDER;
-import static com.maybe.maybe.CategoryItem.CATEGORY_PLAYLIST;
-import static com.maybe.maybe.CategoryItem.CATEGORY_SETTING;
-import static com.maybe.maybe.CategoryItem.CATEGORY_SYNC;
+import static com.maybe.maybe.fragments.category.CategoryItem.CATEGORY_ALBUM;
+import static com.maybe.maybe.fragments.category.CategoryItem.CATEGORY_ARTIST;
+import static com.maybe.maybe.fragments.category.CategoryItem.CATEGORY_FOLDER;
+import static com.maybe.maybe.fragments.category.CategoryItem.CATEGORY_PLAYLIST;
+import static com.maybe.maybe.fragments.category.CategoryItem.CATEGORY_SETTING;
+import static com.maybe.maybe.fragments.category.CategoryItem.CATEGORY_SYNC;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -13,25 +13,25 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.GridView;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.maybe.maybe.CategoryItem;
 import com.maybe.maybe.R;
-import com.maybe.maybe.adapters.CategoryGridAdapter;
+import com.maybe.maybe.fragments.category.CategoryItem;
 
 import java.util.ArrayList;
 
-public class CategoriesFragment extends Fragment implements AdapterView.OnItemClickListener {
+public class CategoryGridFragment extends Fragment implements AdapterView.OnItemClickListener {
     private static final String TAG = "CategoriesFragment";
     private GridView gridView;
     private ArrayList<CategoryItem> categoryList;
     private CategoriesFragmentListener callback;
 
-    public static CategoriesFragment newInstance() {
-        return new CategoriesFragment();
+    public static CategoryGridFragment newInstance() {
+        return new CategoryGridFragment();
     }
 
     @Override
@@ -52,6 +52,9 @@ public class CategoriesFragment extends Fragment implements AdapterView.OnItemCl
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable @org.jetbrains.annotations.Nullable ViewGroup container, @Nullable @org.jetbrains.annotations.Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_categories, container, false);
+
+        TextView title = view.findViewById(R.id.category_main_title);
+        title.setText(R.string.category_title);
 
         CategoryGridAdapter gridAdapter = new CategoryGridAdapter(getContext(), R.layout.grid_row_item, categoryList);
         gridView = view.findViewById(R.id.category_grid_view);

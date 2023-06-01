@@ -1,4 +1,4 @@
-package com.maybe.maybe;
+package com.maybe.maybe.fragments;
 
 import android.util.SparseArray;
 
@@ -7,9 +7,9 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 
-import com.maybe.maybe.fragments.CategoryFragment;
-import com.maybe.maybe.fragments.MainFragment;
-import com.maybe.maybe.fragments.PlayerFragment;
+import com.maybe.maybe.fragments.category.CategoryFragment;
+import com.maybe.maybe.fragments.main.MainFragment;
+import com.maybe.maybe.fragments.player.PlayerFragment;
 
 public class CustomViewPager extends FragmentStateAdapter {
     public static final int CAT_POS = 0;

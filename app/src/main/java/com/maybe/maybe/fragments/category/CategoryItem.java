@@ -1,4 +1,4 @@
-package com.maybe.maybe;
+package com.maybe.maybe.fragments.category;
 
 public class CategoryItem {
     public static final int CATEGORY_PLAYLIST = 0;

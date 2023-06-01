@@ -1,4 +1,4 @@
-package com.maybe.maybe.adapters;
+package com.maybe.maybe.fragments.category;
 
 import android.view.LayoutInflater;
 import android.view.View;

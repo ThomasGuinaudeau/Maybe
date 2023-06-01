@@ -1,4 +1,4 @@
-package com.maybe.maybe;
+package com.maybe.maybe.fragments.main.service;
 
 import com.maybe.maybe.database.entity.MusicWithArtists;
 

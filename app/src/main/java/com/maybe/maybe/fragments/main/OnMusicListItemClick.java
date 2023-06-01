@@ -1,4 +1,4 @@
-package com.maybe.maybe.adapters;
+package com.maybe.maybe.fragments.main;
 
 import com.maybe.maybe.database.entity.Music;
 

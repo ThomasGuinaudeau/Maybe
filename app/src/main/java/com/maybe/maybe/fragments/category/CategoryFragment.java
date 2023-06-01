@@ -1,11 +1,11 @@
-package com.maybe.maybe.fragments;
+package com.maybe.maybe.fragments.category;
 
-import static com.maybe.maybe.CategoryItem.CATEGORY_ALBUM;
-import static com.maybe.maybe.CategoryItem.CATEGORY_ARTIST;
-import static com.maybe.maybe.CategoryItem.CATEGORY_FOLDER;
-import static com.maybe.maybe.CategoryItem.CATEGORY_PLAYLIST;
-import static com.maybe.maybe.CategoryItem.CATEGORY_SETTING;
-import static com.maybe.maybe.CategoryItem.CATEGORY_SYNC;
+import static com.maybe.maybe.fragments.category.CategoryItem.CATEGORY_ALBUM;
+import static com.maybe.maybe.fragments.category.CategoryItem.CATEGORY_ARTIST;
+import static com.maybe.maybe.fragments.category.CategoryItem.CATEGORY_FOLDER;
+import static com.maybe.maybe.fragments.category.CategoryItem.CATEGORY_PLAYLIST;
+import static com.maybe.maybe.fragments.category.CategoryItem.CATEGORY_SETTING;
+import static com.maybe.maybe.fragments.category.CategoryItem.CATEGORY_SYNC;
 import static com.maybe.maybe.utils.Constants.SORT_ALPHA;
 
 import android.app.Activity;
@@ -34,7 +34,6 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
-import com.maybe.maybe.CategoryItem;
 import com.maybe.maybe.ListItem;
 import com.maybe.maybe.R;
 import com.maybe.maybe.database.AppDatabase;
@@ -55,6 +54,9 @@ import com.maybe.maybe.database.entity.ArtistWithMusics;
 import com.maybe.maybe.database.entity.Music;
 import com.maybe.maybe.database.entity.MusicWithArtists;
 import com.maybe.maybe.database.entity.Playlist;
+import com.maybe.maybe.fragments.category.editing.ListEditingFragment;
+import com.maybe.maybe.fragments.category.grid.CategoryGridFragment;
+import com.maybe.maybe.fragments.category.list.ListsFragment;
 import com.maybe.maybe.utils.ColorsConstants;
 
 import java.io.BufferedReader;
@@ -67,10 +69,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class CategoryFragment extends Fragment implements PlaylistAsyncTaskPlaylistResponse, PlaylistAsyncTaskNullResponse, OnFillDbAsyncTaskFinish, CategoriesFragment.CategoriesFragmentListener, ActivityResultCallback<ActivityResult> {
+public class CategoryFragment extends Fragment implements PlaylistAsyncTaskPlaylistResponse, PlaylistAsyncTaskNullResponse, OnFillDbAsyncTaskFinish, CategoryGridFragment.CategoriesFragmentListener, ActivityResultCallback<ActivityResult> {
 
     private static final String TAG = "CategoryFragment";
-    ActivityResultLauncher<Intent> activityResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), this);
+    private ActivityResultLauncher<Intent> activityResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), this);
     private CategoryFragmentListener callback;
     private AppDatabase appDatabase;
     private ArrayList<Music> addPlaylist;
@@ -97,7 +99,7 @@ public class CategoryFragment extends Fragment implements PlaylistAsyncTaskPlayl
 
         updateColors();
 
-        CategoriesFragment fragment = CategoriesFragment.newInstance();
+        CategoryGridFragment fragment = CategoryGridFragment.newInstance();
         fragment.setCallback(this);
         getParentFragmentManager().beginTransaction()
                 .add(R.id.category_fragment_list, fragment, getString(R.string.categories_fragment_tag))

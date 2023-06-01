@@ -1,4 +1,4 @@
-package com.maybe.maybe;
+package com.maybe.maybe.fragments.main;
 
 import android.app.Activity;
 import android.content.Context;

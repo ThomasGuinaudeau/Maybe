@@ -1,13 +1,13 @@
-package com.maybe.maybe.fragments;
+package com.maybe.maybe.fragments.category.editing;
 
-import static com.maybe.maybe.CategoryItem.CATEGORY_PLAYLIST;
+import static com.maybe.maybe.fragments.category.CategoryItem.CATEGORY_PLAYLIST;
 
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -21,11 +21,9 @@ import androidx.recyclerview.selection.StorageStrategy;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.maybe.maybe.CategoryItem;
+import com.maybe.maybe.fragments.category.CategoryItem;
 import com.maybe.maybe.R;
-import com.maybe.maybe.categoryEditingAdapter.CategoryEditingListAdapter;
-import com.maybe.maybe.categoryEditingAdapter.CustomItemKeyProvider;
-import com.maybe.maybe.categoryEditingAdapter.CustomItemsDetailsLookup;
+import com.maybe.maybe.fragments.category.grid.CategoryGridFragment;
 import com.maybe.maybe.database.entity.MusicWithArtists;
 
 import java.util.ArrayList;
@@ -34,9 +32,9 @@ import java.util.List;
 public class ListEditingFragment extends Fragment {
     private static final String TAG = "ListEditingFragment";
     private List<MusicWithArtists> list, listAll;
-    private CategoriesFragment.CategoriesFragmentListener callback;
+    private CategoryGridFragment.CategoriesFragmentListener callback;
     private SelectionTracker<Long> tracker;
-    private Button buttonVisibility;
+    private ImageButton buttonVisibility;
     private boolean isVisible;
     private String name;
     private CategoryItem categoryItem;
@@ -57,8 +55,8 @@ public class ListEditingFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_editing_list, container, false);
 
-        TextView textView = view.findViewById(R.id.category_editing_list_title);
-        textView.setText(name);
+        TextView title = view.findViewById(R.id.category_editing_list_main_title);
+        title.setText(name);
 
         adapter = new CategoryEditingListAdapter();
         adapter.setList(listAll);
@@ -67,10 +65,10 @@ public class ListEditingFragment extends Fragment {
         recyclerView.setAdapter(adapter);
         //recyclerView.setItemAnimator(null);
 
-        Button buttonBack = view.findViewById(R.id.category_editing_list_back);
+        ImageButton buttonBack = view.findViewById(R.id.category_editing_list_back);
         buttonBack.setOnClickListener(view1 -> callback.back());
 
-        Button buttonPlay = view.findViewById(R.id.category_editing_list_play);
+        ImageButton buttonPlay = view.findViewById(R.id.category_editing_list_play);
         buttonPlay.setOnClickListener(view1 -> callback.changeList(categoryItem.getId(), name));
         Log.e(TAG, categoryItem.getId() + "");
         if (categoryItem.getId() == CATEGORY_PLAYLIST && !name.equals("All Musics")) {
@@ -113,7 +111,7 @@ public class ListEditingFragment extends Fragment {
                 changeVisibility();
             });
 
-            Button buttonSave = view.findViewById(R.id.category_editing_list_save);
+            ImageButton buttonSave = view.findViewById(R.id.category_editing_list_save);
             buttonSave.setOnClickListener(view1 -> {
                 MutableSelection<Long> snapshot = new MutableSelection<Long>();
                 tracker.copySelection(snapshot);
@@ -122,13 +120,13 @@ public class ListEditingFragment extends Fragment {
                 callback.saveToList(keyList, name);
             });
 
-            Button buttonDelete = view.findViewById(R.id.category_editing_list_delete);
+            ImageButton buttonDelete = view.findViewById(R.id.category_editing_list_delete);
             buttonDelete.setOnClickListener(view1 -> {
                 ArrayList<Long> keyList = new ArrayList<>();
                 callback.saveToList(keyList, name);
             });
 
-            Button buttonExport = view.findViewById(R.id.category_editing_list_export);
+            ImageButton buttonExport = view.findViewById(R.id.category_editing_list_export);
             buttonExport.setOnClickListener(view1 -> {
                 MutableSelection<Long> snapshot = new MutableSelection<Long>();
                 tracker.copySelection(snapshot);
@@ -164,12 +162,13 @@ public class ListEditingFragment extends Fragment {
         this.name = name;
     }
 
-    public void setCallback(CategoriesFragment.CategoriesFragmentListener callback) {
+    public void setCallback(CategoryGridFragment.CategoriesFragmentListener callback) {
         this.callback = callback;
     }
 
     private void changeVisibility() {
-        buttonVisibility.setBackground(getResources().getDrawable(isVisible ? R.drawable.ic_round_visibility_off_24 : R.drawable.ic_round_visibility_24, getContext().getTheme()));
+        //getResources().getDrawable(, getContext().getTheme())
+        buttonVisibility.setImageResource(isVisible ? R.drawable.ic_round_visibility_off_24 : R.drawable.ic_round_visibility_24);
         adapter.setVisible(isVisible);
         adapter.notifyDataSetChanged();
     }

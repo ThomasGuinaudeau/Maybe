@@ -1,4 +1,4 @@
-package com.maybe.maybe.categoryEditingAdapter;
+package com.maybe.maybe.fragments.category.editing;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;

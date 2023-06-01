@@ -1,4 +1,4 @@
-package com.maybe.maybe.adapters;
+package com.maybe.maybe.fragments.category.grid;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -11,8 +11,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.maybe.maybe.CategoryItem;
 import com.maybe.maybe.R;
+import com.maybe.maybe.fragments.category.CategoryItem;
 
 import java.util.ArrayList;
 

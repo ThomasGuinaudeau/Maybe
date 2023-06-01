@@ -1,4 +1,4 @@
-package com.maybe.maybe;
+package com.maybe.maybe.fragments.main.service;
 
 import static android.provider.MediaStore.Files.getContentUri;
 import static com.maybe.maybe.utils.Constants.ACTION_APP_BACKGROUND;
@@ -49,6 +49,7 @@ import androidx.core.content.ContextCompat;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import com.maybe.maybe.R;
 import com.maybe.maybe.activities.MainActivity;
 import com.maybe.maybe.database.entity.Music;
 import com.maybe.maybe.database.entity.MusicWithArtists;

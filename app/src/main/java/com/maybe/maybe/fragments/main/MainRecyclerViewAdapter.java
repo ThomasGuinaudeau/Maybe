@@ -1,4 +1,4 @@
-package com.maybe.maybe.adapters;
+package com.maybe.maybe.fragments.main;
 
 import static com.maybe.maybe.utils.Constants.SORT_ALPHA;
 import static com.maybe.maybe.utils.Constants.SORT_NUM;
@@ -10,7 +10,6 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.maybe.maybe.CustomRecyclerViewRow;
 import com.maybe.maybe.database.entity.Music;
 import com.maybe.maybe.database.entity.MusicWithArtists;
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
@@ -54,7 +53,7 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        CustomRecyclerViewRow itemView = new CustomRecyclerViewRow(parent.getContext());
+        CustomMainRecyclerViewRow itemView = new CustomMainRecyclerViewRow(parent.getContext());
         itemView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         return new ViewHolder(itemView);
     }
@@ -87,15 +86,15 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
 
     public class ViewHolder extends RecyclerView.ViewHolder {
 
-        private final CustomRecyclerViewRow customRecyclerViewRow;
+        private final CustomMainRecyclerViewRow customMainRecyclerViewRow;
 
         public ViewHolder(View view) {
             super(view);
-            customRecyclerViewRow = (CustomRecyclerViewRow) view;
+            customMainRecyclerViewRow = (CustomMainRecyclerViewRow) view;
         }
 
-        public CustomRecyclerViewRow getCustomRecyclerViewRow() {
-            return customRecyclerViewRow;
+        public CustomMainRecyclerViewRow getCustomRecyclerViewRow() {
+            return customMainRecyclerViewRow;
         }
 
         public void setItemClickCallback(final Music music, final OnMusicListItemClick callback) {

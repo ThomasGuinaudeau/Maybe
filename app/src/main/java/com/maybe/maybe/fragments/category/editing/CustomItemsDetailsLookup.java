@@ -1,4 +1,4 @@
-package com.maybe.maybe.categoryEditingAdapter;
+package com.maybe.maybe.fragments.category.editing;
 
 import android.view.MotionEvent;
 import android.view.View;

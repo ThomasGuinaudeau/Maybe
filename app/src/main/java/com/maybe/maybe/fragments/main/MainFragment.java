@@ -1,8 +1,8 @@
-package com.maybe.maybe.fragments;
+package com.maybe.maybe.fragments.main;
 
-import static com.maybe.maybe.CategoryItem.CATEGORY_ALBUM;
-import static com.maybe.maybe.CategoryItem.CATEGORY_ARTIST;
-import static com.maybe.maybe.CategoryItem.CATEGORY_PLAYLIST;
+import static com.maybe.maybe.fragments.category.CategoryItem.CATEGORY_ALBUM;
+import static com.maybe.maybe.fragments.category.CategoryItem.CATEGORY_ARTIST;
+import static com.maybe.maybe.fragments.category.CategoryItem.CATEGORY_PLAYLIST;
 
 import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
@@ -25,7 +25,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -33,11 +32,7 @@ import androidx.fragment.app.Fragment;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import com.maybe.maybe.MediaPlayerService;
 import com.maybe.maybe.R;
-import com.maybe.maybe.SpeedyLinearLayoutManager;
-import com.maybe.maybe.adapters.MainRecyclerViewAdapter;
-import com.maybe.maybe.adapters.OnMusicListItemClick;
 import com.maybe.maybe.database.AppDatabase;
 import com.maybe.maybe.database.async_tasks.MusicAsyncTask;
 import com.maybe.maybe.database.async_tasks.OnSaveCurrentListAsyncTaskFinish;
@@ -46,6 +41,7 @@ import com.maybe.maybe.database.async_tasks.OnSelectMusicAsyncTaskFinish;
 import com.maybe.maybe.database.async_tasks.SaveCurrentListAsyncTask;
 import com.maybe.maybe.database.entity.Music;
 import com.maybe.maybe.database.entity.MusicWithArtists;
+import com.maybe.maybe.fragments.main.service.MediaPlayerService;
 import com.maybe.maybe.utils.ColorsConstants;
 import com.maybe.maybe.utils.Constants;
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;

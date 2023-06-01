@@ -1,8 +1,8 @@
 package com.maybe.maybe.activities;
 
-import static com.maybe.maybe.CustomViewPager.CAT_POS;
-import static com.maybe.maybe.CustomViewPager.MAIN_POS;
-import static com.maybe.maybe.CustomViewPager.PLAY_POS;
+import static com.maybe.maybe.fragments.CustomViewPager.CAT_POS;
+import static com.maybe.maybe.fragments.CustomViewPager.MAIN_POS;
+import static com.maybe.maybe.fragments.CustomViewPager.PLAY_POS;
 
 import android.app.Activity;
 import android.content.Context;
@@ -13,8 +13,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 
-import androidx.activity.result.ActivityResult;
-import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
@@ -23,16 +21,16 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager2.widget.ViewPager2;
 
-import com.maybe.maybe.CustomViewPager;
+import com.maybe.maybe.fragments.CustomViewPager;
 import com.maybe.maybe.R;
 import com.maybe.maybe.database.AppDatabase;
 import com.maybe.maybe.database.async_tasks.FillDbAsyncTask;
 import com.maybe.maybe.database.async_tasks.OnFillDbAsyncTaskFinish;
 import com.maybe.maybe.database.entity.Music;
 import com.maybe.maybe.database.entity.MusicWithArtists;
-import com.maybe.maybe.fragments.CategoryFragment;
-import com.maybe.maybe.fragments.MainFragment;
-import com.maybe.maybe.fragments.PlayerFragment;
+import com.maybe.maybe.fragments.category.CategoryFragment;
+import com.maybe.maybe.fragments.main.MainFragment;
+import com.maybe.maybe.fragments.player.PlayerFragment;
 import com.maybe.maybe.utils.ColorsConstants;
 
 import java.util.ArrayList;
@@ -63,15 +61,12 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
     };
     private ViewPager2 viewPager;
     private CustomViewPager pagerAdapter;
-    ActivityResultLauncher<Intent> activityResultLauncher = registerForActivityResult(
+    private ActivityResultLauncher<Intent> activityResultLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
-            new ActivityResultCallback<ActivityResult>() {
-                @Override
-                public void onActivityResult(ActivityResult result) {
-                    if (result.getResultCode() == Activity.RESULT_OK) {
-                        //Intent data = result.getData();
-                        settingsUpdated();
-                    }
+            result -> {
+                if (result.getResultCode() == Activity.RESULT_OK) {
+                    //Intent data = result.getData();
+                    settingsUpdated();
                 }
             });
     private int time = 0;

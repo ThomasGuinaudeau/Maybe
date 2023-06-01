@@ -1,6 +1,4 @@
-package com.maybe.maybe.categoryEditingAdapter;
-
-import android.util.Log;
+package com.maybe.maybe.fragments.category.editing;
 
 import androidx.annotation.Nullable;
 import androidx.recyclerview.selection.ItemDetailsLookup;

@@ -1,4 +1,4 @@
-package com.maybe.maybe.fragments;
+package com.maybe.maybe.fragments.player;
 
 import static android.provider.MediaStore.Files.getContentUri;
 import static com.maybe.maybe.utils.Constants.REPEAT_ALL;
@@ -41,6 +41,7 @@ import com.maybe.maybe.database.entity.Music;
 import com.maybe.maybe.database.entity.MusicWithArtists;
 import com.maybe.maybe.database.entity.Playlist;
 import com.maybe.maybe.databinding.FragmentPlayerBinding;
+import com.maybe.maybe.fragments.main.MainFragment;
 import com.maybe.maybe.utils.ColorsConstants;
 
 import java.util.ArrayList;

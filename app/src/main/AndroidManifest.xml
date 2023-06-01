@@ -16,7 +16,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <service
-            android:name=".MediaPlayerService"
+            android:name=".fragments.main.service.MediaPlayerService"
             android:enabled="true"
             android:exported="false" />
 

@@ -1,9 +1,5 @@
 package com.maybe.maybe.fragments.main;
 
-import static com.maybe.maybe.utils.Constants.SORT_ALPHA;
-import static com.maybe.maybe.utils.Constants.SORT_NUM;
-import static com.maybe.maybe.utils.Constants.removeDiacritic;
-
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -12,6 +8,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.maybe.maybe.database.entity.Music;
 import com.maybe.maybe.database.entity.MusicWithArtists;
+import com.maybe.maybe.utils.Constants;
+import com.maybe.maybe.utils.Methods;
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
 
 import java.util.ArrayList;
@@ -22,13 +20,12 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
     private final OnMusicListItemClick onMusicListItemClick;
     private boolean isEven = false;
     private List<MusicWithArtists> musics;
-    private ArrayList<Integer> selectedPos;
+    private int currentMusicPosition;
     private String sort;
 
     public MainRecyclerViewAdapter(OnMusicListItemClick onMusicListItemClick, List<MusicWithArtists> musics) {
         this.musics = musics;
         this.onMusicListItemClick = onMusicListItemClick;
-        this.selectedPos = new ArrayList<Integer>();
     }
 
     public void setMusics(List<MusicWithArtists> musics) {
@@ -42,8 +39,14 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
         return -1;
     }
 
-    public void setSelectedPos(ArrayList<Integer> selectedPos) {
-        this.selectedPos = selectedPos;
+    public long getCurrentMusicId() {
+        if(musics.size() > currentMusicPosition)
+            return musics.get(currentMusicPosition).music.getMusic_id();
+        return -1;
+    }
+
+    public void setCurrentMusicPosition(int currentMusicPosition) {
+        this.currentMusicPosition = currentMusicPosition;
     }
 
     public void setSort(String sort) {
@@ -63,7 +66,7 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
         holder.getCustomRecyclerViewRow().setMusicWithArtists(musics.get(position));
         //if(position % 2 == 0)
         //    holder.getCustomRecyclerViewRow().setEven(true);
-        holder.getCustomRecyclerViewRow().setSelected(selectedPos.contains(position));
+        holder.getCustomRecyclerViewRow().setSelected(currentMusicPosition == position);
         holder.setItemClickCallback(musics.get(position).music, onMusicListItemClick);
         holder.setLongItemClickCallback(musics.get(position).music, onMusicListItemClick);
     }
@@ -76,12 +79,14 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
     @NonNull
     @Override
     public String getSectionName(int position) {
-        if (sort.equals(SORT_ALPHA))
-            return removeDiacritic(musics.get(position).music.getMusic_title().charAt(0)).toUpperCase();
-        else if (sort.equals(SORT_NUM))
-            return musics.get(position).music.getMusic_track() + "";
-        else
-            return "";
+        switch (sort) {
+            case Constants.SORT_ALPHA:
+                return Methods.removeDiacritic(musics.get(position).music.getMusic_title().charAt(0)).toUpperCase();
+            case Constants.SORT_NUM:
+                return musics.get(position).music.getMusic_track() + "";
+            default:
+                return "";
+        }
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {

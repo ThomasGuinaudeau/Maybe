@@ -5,10 +5,7 @@ import static com.maybe.maybe.fragments.category.CategoryItem.CATEGORY_ARTIST;
 import static com.maybe.maybe.fragments.category.CategoryItem.CATEGORY_PLAYLIST;
 
 import android.annotation.SuppressLint;
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.os.Build;
@@ -20,7 +17,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
@@ -29,7 +25,6 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.maybe.maybe.R;
@@ -41,9 +36,9 @@ import com.maybe.maybe.database.async_tasks.OnSelectMusicAsyncTaskFinish;
 import com.maybe.maybe.database.async_tasks.SaveCurrentListAsyncTask;
 import com.maybe.maybe.database.entity.Music;
 import com.maybe.maybe.database.entity.MusicWithArtists;
-import com.maybe.maybe.fragments.main.service.MediaPlayerService;
 import com.maybe.maybe.utils.ColorsConstants;
 import com.maybe.maybe.utils.Constants;
+import com.maybe.maybe.utils.Methods;
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
 
 import java.util.ArrayList;
@@ -62,34 +57,9 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
     private AppDatabase appDatabase;
     private boolean searchEnable = false, buttonEnable = false, isStart = true;
     private String sort, currentName;
-    private int currentCategoryId;
-    private boolean isBroadcastReceiverRegistered;
+    private int currentSearchId, currentCategoryId;
     private ArrayList<Long> searchIdList;
-    private ArrayList<Music> selectedId;
-    private int currentSearchId;
     private SpeedyLinearLayoutManager sllm;
-    public BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            Bundle extras = intent.getExtras();
-            Object[] objects = (Object[]) extras.get(Constants.BROADCAST_EXTRAS);
-            switch (extras.getString(Constants.BROADCAST_DESTINATION)) {
-                case "change_metadata":
-                    MusicWithArtists musicWithArtists = (MusicWithArtists) objects[0];
-                    callback.changeMusicInPlayer(musicWithArtists);
-                        selectedId.clear();
-                        selectedId.add(musicWithArtists.music);
-                        setSelected(true);
-                    break;
-                case "change_duration":
-                    callback.changeDurationInPlayer((long) (int) objects[0]);
-                    break;
-                case "change_state":
-                    callback.changePlayPauseInPlayer((Boolean) objects[0]);
-                    break;
-            }
-        }
-    };
 
     public static MainFragment newInstance() {
         return new MainFragment();
@@ -102,13 +72,6 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
 
         SharedPreferences sharedPref = getContext().getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE);
         sort = sharedPref.getString(getString(R.string.sort), Constants.SORT_ALPHA);
-        selectedId = new ArrayList<>();
-
-        Intent playerIntent = new Intent(getContext(), MediaPlayerService.class);
-        playerIntent.setAction(Constants.ACTION_CREATE_SERVICE);
-        getContext().startForegroundService(playerIntent);
-
-        registerReceiver(false);
     }
 
     @Override
@@ -146,7 +109,7 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
         main_search_button.setText("-");
         main_search_button.setOnClickListener(this);
 
-        changeList(0, "", true);
+        updateList(0, "", null, true);
         return view;
     }
 
@@ -162,12 +125,15 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
         main_search_button.setTextColor(ColorsConstants.SECONDARY_TEXT_COLOR);
         main_progress_bar.setProgressTintList(new ColorStateList(new int[][]{ new int[]{ android.R.attr.state_enabled } }, new int[]{ ColorsConstants.SECONDARY_COLOR }));
 
-        newServiceIntent(Constants.ACTION_UPDATE_COLORS);
+        Methods.newServiceIntent(getContext(), Constants.ACTION_UPDATE_COLORS, null);
     }
 
     @Override
     public void onItemClick(Music music) {
-            sendBroadcast("change_music", music);
+        changeCurrentMusic(music.getMusic_id());
+        Bundle bundle = new Bundle();
+        bundle.putParcelable(getString(R.string.key_parcelable_data), music);
+        Methods.newServiceIntent(getContext(), Constants.ACTION_CHANGE_MUSIC, bundle);
     }
 
     @Override
@@ -181,20 +147,18 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
     @Override
     public void onPause() {
         super.onPause();
-        if (main_search_edit.isFocused()) {
+        /*if (main_search_edit.isFocused()) {
             View view = getActivity().getCurrentFocus();
             if (view != null) {
                 InputMethodManager manager = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
                 manager.hideSoftInputFromWindow(view.getWindowToken(), 0);
             }
             main_search_edit.clearFocus();
-        }
+        }*/
     }
 
     public void onAppForeground() {
         Log.d(TAG, "onAppForeground");
-        registerReceiver(isBroadcastReceiverRegistered);
-        newServiceIntent(Constants.ACTION_APP_FOREGROUND);
         if (Build.BRAND.equals("HUAWEI")) {
             Thread t = new Thread(() -> {
                 try {
@@ -206,39 +170,6 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
                 }
             });
             t.start();
-        }
-    }
-
-    public void onAppBackground() {
-        Log.d(TAG, "onAppBackground");
-        newServiceIntent(Constants.ACTION_APP_BACKGROUND);
-        unregisterReceiver();
-    }
-
-    public void onDestroy() {
-        super.onDestroy();
-        Log.d(TAG, "onDestroy");
-        newServiceIntent(Constants.ACTION_END_SERVICE);
-        unregisterReceiver();
-    }
-
-    private void newServiceIntent(String action) {
-        Intent stopIntent = new Intent(getContext(), MediaPlayerService.class);
-        stopIntent.setAction(action);
-        getContext().startService(stopIntent);
-    }
-
-    private void registerReceiver(boolean isRegistered) {
-        if (!isRegistered) {
-            LocalBroadcastManager.getInstance(getContext()).registerReceiver(broadcastReceiver, new IntentFilter(Constants.ACTION_TO_ACTIVITY));
-            isBroadcastReceiverRegistered = true;
-        }
-    }
-
-    private void unregisterReceiver() {
-        if (isBroadcastReceiverRegistered) {
-            LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(broadcastReceiver);
-            isBroadcastReceiverRegistered = false;
         }
     }
 
@@ -263,19 +194,6 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
         }
     }
 
-    private void setSelected(boolean scroll) {
-        ArrayList<Integer> positions = new ArrayList<>();
-        for (Music m : selectedId) {
-            positions.add(adapter.getMusicPosition(m.getMusic_id()));
-            Log.e(TAG, m.getMusic_title());
-        }
-        adapter.setSelectedPos(positions);
-        adapter.notifyDataSetChanged();
-        if (scroll && positions.size() > 0) {
-            smoothScroll(positions.get(0));
-        }
-    }
-
     private void smoothScroll(int position) {
         if (position != -1) {
             sllm.setChildCount(mainRecyclerView.getChildCount());
@@ -285,10 +203,7 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
         }
     }
 
-    public void changeList(int categoryId, String name, boolean isFirstLoad) {
-        currentCategoryId = categoryId;
-        currentName = name;
-
+    public void changeList(boolean isFirstLoad) {
         String query = "";
         if (isFirstLoad) {
             SharedPreferences sharedPref = getContext().getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE);
@@ -302,18 +217,33 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
                 currentCategoryId = sharedPref.getInt(getString(R.string.current_category_id), CATEGORY_PLAYLIST);
                 currentName = savedName;
             }
-        } else if (categoryId == CATEGORY_PLAYLIST) {
-            if (name.equals("All Musics"))
+        } else if (currentCategoryId == CATEGORY_PLAYLIST) {
+            if (currentName.equals("All Musics"))
                 query = "selectAll";
             else
                 query = "selectAllMusicsOfPlaylist";
-        } else if (categoryId == CATEGORY_ARTIST) {
+        } else if (currentCategoryId == CATEGORY_ARTIST) {
             query = "selectAllMusicsOfArtist";
-        } else if (categoryId == CATEGORY_ALBUM) {
+        } else if (currentCategoryId == CATEGORY_ALBUM) {
             query = "selectAllMusicsOfAlbum";
         }
         //Log.d(TAG, "category=" + currentCategoryId + " name=" + currentName + " sort=" + sort);
-        new MusicAsyncTask().execute(this, appDatabase, query, sort, name);
+        new MusicAsyncTask().execute(this, appDatabase, query, sort, currentName);
+    }
+
+    public void updateList(int categoryId, String name, String sort, boolean isFirstLoad) {
+        currentCategoryId = categoryId != -1 ? categoryId : currentCategoryId;
+        currentName = name != null ? name : currentName;
+        this.sort = sort != null ? sort : this.sort;
+        changeList(isFirstLoad);
+    }
+
+    public void changeCurrentMusic(long id) {
+        int position = adapter.getMusicPosition(id);
+        position = position != -1 ? position : 0;
+        adapter.setCurrentMusicPosition(position);
+        smoothScroll(position);
+        adapter.notifyDataSetChanged();
     }
 
     @Override
@@ -324,11 +254,15 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
                 buttonEnable = true;
                 callback.disableButtons(true);
             }
+            long currentMusicId = adapter.getCurrentMusicId();
             adapter.setMusics(musicWithArtists);
             adapter.setSort(sort);
-            adapter.notifyDataSetChanged();
+            changeCurrentMusic(currentMusicId);
+            //adapter.notifyDataSetChanged();
             main_title.setText(currentName);
-            sendBroadcast("change_music_list", new ArrayList<>(musicWithArtists));
+            Bundle bundle = new Bundle();
+            bundle.putParcelableArrayList(getString(R.string.key_parcelable_data), new ArrayList<>(musicWithArtists));
+            Methods.newServiceIntent(getContext(), Constants.ACTION_CHANGE_LIST, bundle);
 
             new SaveCurrentListAsyncTask(musicWithArtists, this).execute(appDatabase, getContext(), currentCategoryId, currentName, sort, isStart);
         } else if (buttonEnable) {
@@ -336,25 +270,6 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
             callback.disableButtons(false);
         }
         isStart = false;
-    }
-
-    //recieved from CategoryFragment
-    public void change(int categoryId, String category) {
-        changeList(categoryId, category, false);
-    }
-
-    public void change2(int categoryId, String category) {
-        if (category.equals("All Musics"))
-            sort = Constants.SORT_ALPHA;
-        changeList(categoryId, category, false);
-    }
-
-    public void action(String action, String value) {
-        if (action.equals("sort")) {
-            sort = value;
-            change(currentCategoryId, currentName);
-        }
-        sendBroadcast("action", action, value);
     }
 
     @Override
@@ -378,7 +293,7 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
         if (context instanceof MainFragmentListener) {
             callback = (MainFragmentListener) context;
         } else {
-            throw new RuntimeException(context.toString() + " must implement MainFragmentListener");
+            throw new RuntimeException(context + " must implement MainFragmentListener");
         }
     }
 
@@ -386,13 +301,6 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
     public void onDetach() {
         super.onDetach();
         callback = null;
-    }
-
-    private void sendBroadcast(String destination, Object... objects) {
-        Intent new_intent = new Intent(Constants.ACTION_TO_SERVICE);
-        new_intent.putExtra(Constants.BROADCAST_DESTINATION, destination);
-        new_intent.putExtra(Constants.BROADCAST_EXTRAS, objects);
-        LocalBroadcastManager.getInstance(getContext()).sendBroadcast(new_intent);
     }
 
     @Override
@@ -427,13 +335,6 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
 
     //COMMUNICATING
     public interface MainFragmentListener {
-        void changeMusicInPlayer(MusicWithArtists musicWithArtists);
-
-        void changeDurationInPlayer(long currentDuration);
-
-        void addToPlaylist(ArrayList<Music> musics);
-
-        void changePlayPauseInPlayer(boolean isPlaying);
 
         void resetList();
 

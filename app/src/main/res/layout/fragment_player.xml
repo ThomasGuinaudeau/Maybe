@@ -17,12 +17,20 @@
             type="com.maybe.maybe.fragments.player.PlayerFragment.SeekValueBinding" />
 
         <variable
-            name="currentDurationStr"
+            name="totalDuration"
+            type="Integer" />
+
+        <variable
+            name="totalDurationStr"
             type="String" />
 
         <variable
             name="currentDuration"
             type="Integer" />
+
+        <variable
+            name="currentDurationStr"
+            type="String" />
 
         <variable
             name="image"
@@ -81,11 +89,11 @@
             type="String" />
 
         <variable
-            name="descCurrentDuration"
+            name="descTotalDuration"
             type="String" />
 
         <variable
-            name="descTotalDuration"
+            name="descCurrentDuration"
             type="String" />
 
         <variable
@@ -122,7 +130,7 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
             android:enabled="@{enable}"
-            android:max="1000"
+            android:max="@{totalDuration}"
             android:onProgressChanged="@{seekValue::onValueChanged}"
             android:progress="@{currentDuration}"
             android:progressBackgroundTint="@{secondaryDarkColor}"
@@ -270,7 +278,7 @@
             android:layout_height="wrap_content"
             android:contentDescription="@{descTotalDuration}"
             android:paddingEnd="14dp"
-            android:text="@{fragment.convertMilliToTime(musicWithArtists.music.music_duration)}"
+            android:text="@{totalDurationStr}"
             android:textAlignment="center"
             android:textColor="@{primaryTextColor}"
             app:layout_constraintBottom_toTopOf="@id/player_seekBar"

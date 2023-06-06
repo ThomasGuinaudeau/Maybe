@@ -1,6 +1,6 @@
 package com.maybe.maybe.database.async_tasks.playlist;
 
-import com.maybe.maybe.ListItem;
+import com.maybe.maybe.fragments.category.ListItem;
 
 import java.util.ArrayList;
 

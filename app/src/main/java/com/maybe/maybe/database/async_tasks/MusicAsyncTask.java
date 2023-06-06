@@ -4,9 +4,8 @@ import static com.maybe.maybe.utils.Constants.SORT_RANDOM;
 
 import android.database.Cursor;
 import android.os.AsyncTask;
-import android.util.Log;
 
-import com.maybe.maybe.ListItem;
+import com.maybe.maybe.fragments.category.ListItem;
 import com.maybe.maybe.database.AppDatabase;
 import com.maybe.maybe.database.dao.MusicDao;
 import com.maybe.maybe.database.entity.MusicWithArtists;

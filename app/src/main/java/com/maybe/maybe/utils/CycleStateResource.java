@@ -1,4 +1,4 @@
-package com.maybe.maybe;
+package com.maybe.maybe.utils;
 
 public class CycleStateResource {
     private final String[] states;
@@ -28,7 +28,7 @@ public class CycleStateResource {
         return states[pointer];
     }
 
-    public Integer getResource() {
+    public int getResource() {
         return resources[pointer];
     }
 }

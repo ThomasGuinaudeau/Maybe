@@ -7,7 +7,6 @@ import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.maybe.maybe.ListItem;
 import com.maybe.maybe.R;
 
 import java.util.ArrayList;

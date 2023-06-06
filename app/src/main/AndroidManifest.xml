@@ -18,7 +18,12 @@
         <service
             android:name=".fragments.main.service.MediaPlayerService"
             android:enabled="true"
-            android:exported="false" />
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.media.browse.MediaBrowserService" />
+                <action android:name="android.intent.action.MEDIA_BUTTON" />
+            </intent-filter>
+        </service>
 
         <activity
             android:name=".activities.MainActivity"

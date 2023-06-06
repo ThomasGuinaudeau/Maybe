@@ -34,7 +34,6 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
-import com.maybe.maybe.ListItem;
 import com.maybe.maybe.R;
 import com.maybe.maybe.database.AppDatabase;
 import com.maybe.maybe.database.async_tasks.ArtistAsyncTask;
@@ -253,7 +252,7 @@ public class CategoryFragment extends Fragment implements PlaylistAsyncTaskPlayl
 
     @Override
     public void changeList(int categoryId, String name) {
-        callback.changeListInMain(categoryId, name);
+        callback.changeList(categoryId, name);
         getParentFragmentManager().popBackStack(1, FragmentManager.POP_BACK_STACK_INCLUSIVE);
         callback.swipeToMain();
     }
@@ -429,7 +428,7 @@ public class CategoryFragment extends Fragment implements PlaylistAsyncTaskPlayl
 
     //COMMUNICATING
     public interface CategoryFragmentListener {
-        void changeListInMain(int column, String category);
+        void changeList(int column, String category);
 
         void swipeToMain();
 

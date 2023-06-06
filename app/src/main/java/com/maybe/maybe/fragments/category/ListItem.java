@@ -1,4 +1,4 @@
-package com.maybe.maybe;
+package com.maybe.maybe.fragments.category;
 
 public class ListItem {
     private long id;

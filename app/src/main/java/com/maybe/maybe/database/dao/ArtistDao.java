@@ -36,8 +36,4 @@ public interface ArtistDao {
     @Transaction
     @Query("SELECT * FROM artist ORDER BY artist_name")
     List<ArtistWithMusics> selectAllArtistWithMusics();
-
-    @Transaction
-    @Query("SELECT * FROM artist WHERE artist_name LIKE :name ORDER BY :sort ASC")
-    ArtistWithMusics selectOneArtistWithMusics(String sort, String name);
 }

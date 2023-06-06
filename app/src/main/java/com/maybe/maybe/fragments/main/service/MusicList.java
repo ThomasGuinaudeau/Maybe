@@ -59,7 +59,7 @@ public class MusicList {
 
     public void goNext(String loop) {
         if (loop.equals(REPEAT_ONE)) ;
-        else if (pointer == musics.size() - 1 && loop.equals(REPEAT_ALL))
+        else if (pointer == musics.size() - 1 && loop == REPEAT_ALL)
             pointer = 0;
         else if (pointer != musics.size() - 1)
             pointer++;
@@ -69,7 +69,7 @@ public class MusicList {
 
     public void goPrevious(String loop) {
         if (loop.equals(REPEAT_ONE)) ;
-        else if ((pointer == 0 || pointer == -1) && loop.equals(REPEAT_ALL))
+        else if ((pointer == 0 || pointer == -1) && loop == REPEAT_ALL)
             pointer = musics.size() - 1;
         else if (pointer != 0)
             pointer--;

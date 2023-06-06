@@ -22,7 +22,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.maybe.maybe.fragments.category.CategoryItem;
-import com.maybe.maybe.ListItem;
+import com.maybe.maybe.fragments.category.ListItem;
 import com.maybe.maybe.R;
 import com.maybe.maybe.fragments.category.CategoryRecyclerViewAdapter;
 import com.maybe.maybe.fragments.category.OnListItemClick;

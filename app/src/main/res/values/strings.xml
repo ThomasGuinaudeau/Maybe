@@ -49,6 +49,8 @@
     <string name="key_background_color">key_background_color</string>
     <string name="key_selected_color">key_selected_color</string>
 
+    <string name="key_parcelable_data">key_parcelable_data</string>
+
     <!--Titles-->
     <string name="title_category_primary_color">Primary Color</string>
     <string name="title_category_secondary_color">Secondary Color</string>
@@ -125,8 +127,8 @@
     <string name="desc_title">Title: %1$s</string>
     <string name="desc_artist">Artists: %1$s</string>
     <string name="desc_album">Album: %1$s</string>
-    <string name="desc_total_duration">Total length: %1$d minutes</string>
-    <string name="desc_current_duration">Timer: %1$d minutes</string>
+    <string name="desc_total_duration">Total time: %1$d hours %2$d minutes %3$d seconds</string>
+    <string name="desc_current_duration">Current time: %1$d hours %2$d minutes %3$d seconds</string>
     <string name="desc_playlists">Part of those playlists: %1$s</string>
 
     <!--Color Picker Dialog-->

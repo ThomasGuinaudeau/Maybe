@@ -34,24 +34,24 @@ public interface MusicDao {
     void deleteAll();
 
     @Transaction
-    @Query("SELECT * FROM music ORDER BY CASE WHEN :sort LIKE '" + SORT_ALPHA + "' THEN music.music_title END ASC, CASE WHEN :sort LIKE '" + SORT_RANDOM + "' THEN music.music_title END ASC, CASE WHEN :sort LIKE '" + SORT_NUM + "' THEN music.music_track END ASC")
+    @Query("SELECT * FROM music ORDER BY CASE WHEN :sort = '" + SORT_ALPHA + "' THEN music.music_title END ASC, CASE WHEN :sort = '" + SORT_RANDOM + "' THEN music.music_title END ASC, CASE WHEN :sort = '" + SORT_NUM + "' THEN music.music_track END ASC")
     List<MusicWithArtists> selectAll(String sort);
 
     @Transaction
     @RewriteQueriesToDropUnusedColumns
     @Query("SELECT * FROM music INNER JOIN playlist ON music.music_id = playlist.playlist_file_id WHERE playlist.playlist_name LIKE :playlistName ORDER BY " +
-            "CASE WHEN :sort LIKE '" + SORT_ALPHA + "' THEN music.music_title END ASC, CASE WHEN :sort LIKE '" + SORT_RANDOM + "' THEN music.music_title END ASC, CASE WHEN :sort LIKE '" + SORT_NUM + "' THEN music.music_track END ASC")
+            "CASE WHEN :sort = '" + SORT_ALPHA + "' THEN music.music_title END ASC, CASE WHEN :sort = '" + SORT_RANDOM + "' THEN music.music_title END ASC, CASE WHEN :sort = '" + SORT_NUM + "' THEN music.music_track END ASC")
     List<MusicWithArtists> selectAllMusicsOfPlaylist(String sort, String playlistName);
 
     @Transaction
     @RewriteQueriesToDropUnusedColumns
     @Query("SELECT * FROM music INNER JOIN music_artist_cross_ref macr ON music.music_id = macr.music_id INNER JOIN artist ON macr.artist_id = artist.artist_id WHERE artist_name LIKE :artistName ORDER BY " +
-            "CASE WHEN :sort LIKE '" + SORT_ALPHA + "' THEN music.music_title END ASC, CASE WHEN :sort LIKE '" + SORT_RANDOM + "' THEN music.music_title END ASC, CASE WHEN :sort LIKE '" + SORT_NUM + "' THEN music.music_track END ASC")
+            "CASE WHEN :sort = '" + SORT_ALPHA + "' THEN music.music_title END ASC, CASE WHEN :sort = '" + SORT_RANDOM + "' THEN music.music_title END ASC, CASE WHEN :sort = '" + SORT_NUM + "' THEN music.music_track END ASC")
     List<MusicWithArtists> selectAllMusicsOfArtist(String sort, String artistName);
 
     @Transaction
     @Query("SELECT *, music_track track, music_title title FROM music WHERE music_album LIKE :albumName ORDER BY " +
-            "CASE WHEN :sort LIKE '" + SORT_ALPHA + "' THEN music.music_title END ASC, CASE WHEN :sort LIKE '" + SORT_RANDOM + "' THEN music.music_title END ASC, CASE WHEN :sort LIKE '" + SORT_NUM + "' THEN music.music_track END ASC")
+            "CASE WHEN :sort = '" + SORT_ALPHA + "' THEN music.music_title END ASC, CASE WHEN :sort = '" + SORT_RANDOM + "' THEN music.music_title END ASC, CASE WHEN :sort = '" + SORT_NUM + "' THEN music.music_track END ASC")
     List<MusicWithArtists> selectAllMusicsOfAlbum(String sort, String albumName);
 
     @Transaction

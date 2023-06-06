@@ -26,10 +26,8 @@ public class ArtistAsyncTask extends AsyncTask<Object, Object, List<Object>> {
         ArtistDao dao = ((AppDatabase) objects[1]).artistDao();
         query = (String) objects[2];
 
-        if (query.equals("selectAllArtistWithMusics"))//3=sort
+        if (query.equals("selectAllArtistWithMusics"))
             list = (List<Object>) (Object) dao.selectAllArtistWithMusics();
-        else if (query.equals("selectOneArtistWithMusics"))//3=sort 4=artistName
-            list.add((Object) dao.selectOneArtistWithMusics((String) objects[3], (String) objects[4]));
 
         return list;
     }

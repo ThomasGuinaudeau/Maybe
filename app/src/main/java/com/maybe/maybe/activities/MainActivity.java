@@ -21,19 +21,15 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager2.widget.ViewPager2;
 
-import com.maybe.maybe.fragments.CustomViewPager;
 import com.maybe.maybe.R;
 import com.maybe.maybe.database.AppDatabase;
 import com.maybe.maybe.database.async_tasks.FillDbAsyncTask;
 import com.maybe.maybe.database.async_tasks.OnFillDbAsyncTaskFinish;
-import com.maybe.maybe.database.entity.Music;
-import com.maybe.maybe.database.entity.MusicWithArtists;
+import com.maybe.maybe.fragments.CustomViewPager;
 import com.maybe.maybe.fragments.category.CategoryFragment;
 import com.maybe.maybe.fragments.main.MainFragment;
 import com.maybe.maybe.fragments.player.PlayerFragment;
 import com.maybe.maybe.utils.ColorsConstants;
-
-import java.util.ArrayList;
 
 public class MainActivity extends FragmentActivity implements CategoryFragment.CategoryFragmentListener, MainFragment.MainFragmentListener, PlayerFragment.PlayerFragmentListener, OnFillDbAsyncTaskFinish {
 
@@ -74,6 +70,7 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.e(TAG, "main oncreate");
         //Thread.setDefaultUncaughtExceptionHandler(this::handleUncaughtException);
 
         //StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder().detectLeakedClosableObjects().penaltyLog().build());
@@ -82,6 +79,12 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
             ActivityCompat.requestPermissions(this, PERMISSIONS, 1);
         else
             checkForUpdate();
+    }
+
+    @Override
+    public void startActivity(Intent intent) {
+        super.startActivity(intent);
+        Log.e(TAG, "main startActivity");
     }
 
     private int hasPermissions() {
@@ -170,19 +173,24 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
     @Override
     protected void onPause() {
         super.onPause();
+        Log.e(TAG, "main onpause");
         if (pagerAdapter != null) {
-            MainFragment fragment = (MainFragment) pagerAdapter.getRegisteredFragment(MAIN_POS);
-            fragment.onAppBackground();
+            PlayerFragment fragment1 = (PlayerFragment) pagerAdapter.getRegisteredFragment(PLAY_POS);
+            fragment1.onAppBackground();
         }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        Log.e(TAG, "main onresume");
         if (pagerAdapter != null && time != 0) {
-            MainFragment fragment = (MainFragment) pagerAdapter.getRegisteredFragment(MAIN_POS);
-            if (fragment != null)
-                fragment.onAppForeground();
+            PlayerFragment fragment1 = (PlayerFragment) pagerAdapter.getRegisteredFragment(PLAY_POS);
+            if (fragment1 != null)
+                fragment1.onAppForeground();
+            MainFragment fragment2 = (MainFragment) pagerAdapter.getRegisteredFragment(MAIN_POS);
+            if (fragment2 != null)
+                fragment2.onAppForeground();
         }
         time = 1;
     }
@@ -202,39 +210,9 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
     }
 
     @Override
-    public void changeListInMain(int column, String category) {
+    public void changeList(int categoryId, String name) {
         MainFragment fragment = (MainFragment) pagerAdapter.getRegisteredFragment(MAIN_POS);
-        fragment.change2(column, category);
-    }
-
-    @Override
-    public void changeMusicInPlayer(MusicWithArtists musicWithArtists) {
-        PlayerFragment fragment = (PlayerFragment) pagerAdapter.getRegisteredFragment(PLAY_POS);
-        fragment.changeMusic(musicWithArtists);
-    }
-
-    @Override
-    public void addToPlaylist(ArrayList<Music> musics) {
-        CategoryFragment fragment = (CategoryFragment) pagerAdapter.getRegisteredFragment(CAT_POS);
-        fragment.addToPlaylist(musics);
-    }
-
-    @Override
-    public void changeDurationInPlayer(long currentDuration) {
-        PlayerFragment fragment = (PlayerFragment) pagerAdapter.getRegisteredFragment(PLAY_POS);
-        fragment.updateDuration(currentDuration);
-    }
-
-    @Override
-    public void changePlayPauseInPlayer(boolean isPlaying) {
-        PlayerFragment fragment = (PlayerFragment) pagerAdapter.getRegisteredFragment(PLAY_POS);
-        fragment.updatePlayPause(isPlaying);
-    }
-
-    @Override
-    public void action(String action, String value) {
-        MainFragment fragment = (MainFragment) pagerAdapter.getRegisteredFragment(MAIN_POS);
-        fragment.action(action, value);
+        fragment.updateList(categoryId, name, null, false);
     }
 
     @Override
@@ -258,6 +236,18 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
     public void openSettings() {
         Intent intent = new Intent(this, SettingsActivity.class);
         activityResultLauncher.launch(intent);
+    }
+
+    @Override
+    public void changeCurrentMusic(long id) {
+        MainFragment fragment = (MainFragment) pagerAdapter.getRegisteredFragment(MAIN_POS);
+        fragment.changeCurrentMusic(id);
+    }
+
+    @Override
+    public void changeListOrder(String sort) {
+        MainFragment fragment = (MainFragment) pagerAdapter.getRegisteredFragment(MAIN_POS);
+        fragment.updateList(-1, null, sort, false);
     }
 
     //On crash send stack trace

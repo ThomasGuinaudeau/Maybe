@@ -1,20 +1,6 @@
 package com.maybe.maybe.fragments.main.service;
 
 import static android.provider.MediaStore.Files.getContentUri;
-import static com.maybe.maybe.utils.Constants.ACTION_APP_BACKGROUND;
-import static com.maybe.maybe.utils.Constants.ACTION_APP_FOREGROUND;
-import static com.maybe.maybe.utils.Constants.ACTION_CREATE_SERVICE;
-import static com.maybe.maybe.utils.Constants.ACTION_END_SERVICE;
-import static com.maybe.maybe.utils.Constants.ACTION_NEXT;
-import static com.maybe.maybe.utils.Constants.ACTION_PLAY_PAUSE;
-import static com.maybe.maybe.utils.Constants.ACTION_PREVIOUS;
-import static com.maybe.maybe.utils.Constants.ACTION_TO_ACTIVITY;
-import static com.maybe.maybe.utils.Constants.ACTION_TO_SERVICE;
-import static com.maybe.maybe.utils.Constants.ACTION_UPDATE_COLORS;
-import static com.maybe.maybe.utils.Constants.BROADCAST_DESTINATION;
-import static com.maybe.maybe.utils.Constants.BROADCAST_EXTRAS;
-import static com.maybe.maybe.utils.Constants.REPEAT_ALL;
-import static com.maybe.maybe.utils.Constants.REPEAT_NONE;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -27,7 +13,12 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.media.AudioAttributes;
 import android.media.AudioManager;
+import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
@@ -35,102 +26,189 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.MediaDescriptionCompat;
+import android.support.v4.media.MediaMetadataCompat;
+import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyCallback;
 import android.telephony.TelephonyManager;
 import android.util.Log;
-import android.widget.RemoteViews;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 import androidx.documentfile.provider.DocumentFile;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
+import androidx.media.MediaBrowserServiceCompat;
+import androidx.media.app.NotificationCompat.MediaStyle;
+import androidx.media.session.MediaButtonReceiver;
 
 import com.maybe.maybe.R;
 import com.maybe.maybe.activities.MainActivity;
 import com.maybe.maybe.database.entity.Music;
 import com.maybe.maybe.database.entity.MusicWithArtists;
 import com.maybe.maybe.utils.ColorsConstants;
+import com.maybe.maybe.utils.Constants;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
-public class MediaPlayerService extends Service implements MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener, MediaPlayer.OnCompletionListener {
-
+public class MediaPlayerService extends MediaBrowserServiceCompat implements MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener, MediaPlayer.OnCompletionListener {
+    private static final String MY_MEDIA_ROOT_ID = "media_root_id";
     private static final String TAG = "MediaPlayerService";
     private static final String CHANNEL_ID = "musicChannelId";
     private static final int NOTIFICATION_ID = 1338;
     private final Handler mHandler = new Handler();
     private final IntentFilter becomeNoisyIntentFilter = new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
     private final BecomingNoisyReceiver myNoisyAudioStreamReceiver = new BecomingNoisyReceiver();
+    private final IBinder binder = new LocalBinder();
+    protected MutableLiveData<Integer> currentDuration;
+    protected MutableLiveData<String> loopState, playingState;
+    protected MutableLiveData<MusicWithArtists> currentMusic;
+    private MediaDescriptionCompat description;
+    private PlaybackStateCompat.Builder playbackStateBuilder;
+    private MediaSessionCompat mediaSession;
+    private MediaMetadataCompat mediaMetadata;
+    private MediaMetadataCompat.Builder mediaMetadataBuilder;
     private MediaPlayer mediaPlayer;
     //private Equalizer equalizer;
-    private final Runnable updateTimeTask = new Runnable() {
-        public void run() {
-            sendBroadcast("change_duration", mediaPlayer.getCurrentPosition());
-            mHandler.postDelayed(this, 200);
-        }
-    };
-    private boolean isServiceReceiverRegistered, isNoisyAudioStreamReceiverRegistered, callStateListenerRegistered;
-    private String isLoop;
-    private int timestamp, begin; //begin-->> -1 = dont prepare, 0 = prepare but dont play(at start), 1 = prepare and play
+    private Runnable updateTimeTask;
+    private boolean isNoisyAudioStreamReceiverRegistered, callStateListenerRegistered;
+    private int begin; //begin-->> -1 = dont prepare, 0 = prepare but dont play(at start), 1 = prepare and play
     private NotificationManager notificationManager;
-    private MediaSessionCompat mediaSession;
     private MusicList musicList;
     private TelephonyManager telephonyManager;
+    private TelephonyCallback telephonyCallback;
+    private PhoneStateListener callStateListener;
 
     public void onCreate() {
+        super.onCreate();
         Log.d(TAG, "onCreate");
+        callStateListener = (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) ? new PhoneStateListener() {
+            public void onCallStateChanged(int state, String incomingNumber) {
+                if (state == TelephonyManager.CALL_STATE_RINGING) {
+                    if (mediaPlayer.isPlaying())
+                        pauseMedia();
+                }
+            }
+        } : null;
+
+        telephonyCallback = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) ? new CustomTelephonyCallback() {
+            @Override
+            public void onCallStateChanged(int i) {
+                if (i == TelephonyManager.CALL_STATE_RINGING) {
+                    if (mediaPlayer != null && mediaPlayer.isPlaying())
+                        pauseMedia();
+                }
+            }
+        } : null;
+
+        updateTimeTask = new Runnable() {
+            public void run() {
+                currentDuration.setValue(mediaPlayer.getCurrentPosition());
+                mHandler.postDelayed(this, 1000);
+            }
+        };
+
         createNotificationChannel();
 
-        isLoop = REPEAT_ALL;
-        registerServiceReceiver();
+        currentDuration = new MutableLiveData<>();
+        loopState = new MutableLiveData<>();
+        playingState = new MutableLiveData<>();
+        currentMusic = new MutableLiveData<>();
+        loopState.setValue(Constants.REPEAT_ALL);
 
         mediaSession = new MediaSessionCompat(this, TAG);
         mediaSession.setCallback(callback);
         mediaSession.setActive(true);
-        mediaSession.setPlaybackState(buildPlaybackState(PlaybackStateCompat.STATE_PAUSED));
+        setSessionToken(mediaSession.getSessionToken());
+        MediaControllerCompat controller = mediaSession.getController();
+
+        playbackStateBuilder = new PlaybackStateCompat.Builder();
+        playbackStateBuilder.setActions(PlaybackStateCompat.ACTION_PLAY | PlaybackStateCompat.ACTION_PAUSE | PlaybackStateCompat.ACTION_SKIP_TO_NEXT | PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS | PlaybackStateCompat.ACTION_SEEK_TO);
+        playbackStateBuilder.setState(PlaybackStateCompat.STATE_PLAYING, PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1);
+        mediaSession.setPlaybackState(playbackStateBuilder.build());
+
+        mediaMetadataBuilder = new MediaMetadataCompat.Builder();
+        mediaMetadataBuilder.putString(MediaMetadataCompat.METADATA_KEY_TITLE, "Title");
+        mediaMetadataBuilder.putString(MediaMetadataCompat.METADATA_KEY_ARTIST, "Artist");
+        mediaMetadataBuilder.putString(MediaMetadataCompat.METADATA_KEY_ALBUM, "Album");
+        mediaMetadataBuilder.putLong(MediaMetadataCompat.METADATA_KEY_DURATION, -1);
+        mediaMetadataBuilder.putBitmap(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON, null);
+        mediaSession.setMetadata(mediaMetadataBuilder.build());
+        mediaMetadata = controller.getMetadata();
+        description = mediaMetadata.getDescription();
     }
 
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(TAG, "onStartCommand");
         String action = intent.getAction();
+        Log.d(TAG, "onStartCommand " + action);
+        MediaButtonReceiver.handleIntent(mediaSession, intent);
         switch (action) {
-            case ACTION_CREATE_SERVICE:
-                startForeground(NOTIFICATION_ID, buildForegroundNotification("all"));
+            case Constants.ACTION_CREATE_SERVICE:
+                startForeground(NOTIFICATION_ID, buildForegroundNotification());
                 telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
                 registerCallStateListener();
                 break;
-            case ACTION_PREVIOUS:
+            case Constants.ACTION_PREVIOUS:
                 skipToPrevious();
                 break;
-            case ACTION_PLAY_PAUSE:
+            case Constants.ACTION_PLAY_PAUSE:
                 if (mediaPlayer.isPlaying())
                     pauseMedia();
                 else
                     playMedia();
                 break;
-            case ACTION_NEXT:
+            case Constants.ACTION_NEXT:
                 skipToNext();
                 break;
-            case ACTION_APP_BACKGROUND:
+            case Constants.REPEAT_ONE:
+                mediaPlayer.setLooping(true);
+                loopState.setValue(action);
+                break;
+            case Constants.REPEAT_NONE:
+            case Constants.REPEAT_ALL:
+                mediaPlayer.setLooping(false);
+                loopState.setValue(action);
+                break;
+            case Constants.ACTION_SEEK_TO:
+                int position = intent.getExtras().getInt(getString(R.string.key_parcelable_data));
+                mediaPlayer.seekTo(position);
+                callback.onSeekTo(position);
+                break;
+            case Constants.ACTION_CHANGE_LIST:
+                setMusicList(intent.getExtras().getParcelableArrayList(getString(R.string.key_parcelable_data)));
+                break;
+            case Constants.ACTION_CHANGE_MUSIC:
+                begin = 1;
+                Music music = intent.getExtras().getParcelable(getString(R.string.key_parcelable_data));
+                musicList.changeForMusicWithId(music.getMusic_id());
+                initMediaPlayer(musicList.getCurrent().music.getMusic_id());
+                break;
+            case Constants.ACTION_APP_BACKGROUND:
                 onAppBackground();
                 break;
-            case ACTION_APP_FOREGROUND:
+            case Constants.ACTION_APP_FOREGROUND:
                 onAppForeground();
                 break;
-            case ACTION_END_SERVICE:
+            case Constants.ACTION_END_SERVICE:
                 stopForeground(true);
                 stopSelf();
                 break;
-            case ACTION_UPDATE_COLORS:
+            case Constants.ACTION_UPDATE_COLORS:
                 updateColors();
                 break;
         }
-        return START_NOT_STICKY;
+        return super.onStartCommand(intent, flags, startId);
+        //return START_REDELIVER_INTENT;
     }
 
     private void registerCallStateListener() {
@@ -159,20 +237,6 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnPrepare
         }
     }
 
-    private void registerServiceReceiver() {
-        if (!isServiceReceiverRegistered) {
-            LocalBroadcastManager.getInstance(this).registerReceiver(serviceReceiver, new IntentFilter(ACTION_TO_SERVICE));
-            isServiceReceiverRegistered = true;
-        }
-    }
-
-    private void unregisterServiceReceiver() {
-        if (isServiceReceiverRegistered) {
-            LocalBroadcastManager.getInstance(this).unregisterReceiver(serviceReceiver);
-            isServiceReceiverRegistered = false;
-        }
-    }
-
     private void setMusicList(ArrayList<MusicWithArtists> musicWithArtists) {
         if (musicList == null) {
             musicList = new MusicList();
@@ -180,42 +244,42 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnPrepare
             musicList.resetPointer();
             begin = 0;
             SharedPreferences sharedPref = getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE);
-            timestamp = sharedPref.getInt(getString(R.string.current_timestamp), 0);
-            Log.e(TAG, "number loaded:" + sharedPref.getLong(getString(R.string.current_file_id), 0));
-            if (!musicList.changeForMusicWithId(sharedPref.getLong(getString(R.string.current_file_id), 0)))
+            int timestamp = sharedPref.getInt(getString(R.string.current_timestamp), 0);
+            long fileId = sharedPref.getLong(getString(R.string.current_file_id), 0);
+            if (!musicList.changeForMusicWithId(fileId))
                 timestamp = 0;
+            currentDuration.setValue(timestamp);
             initMediaPlayer(musicList.getCurrent().music.getMusic_id());
-            notificationManager.notify(NOTIFICATION_ID, buildForegroundNotification("all"));
+            notificationManager.notify(NOTIFICATION_ID, buildForegroundNotification());
         } else {
+            //MusicWithArtists music = musicList.getCurrent();
             musicList.setMusics(musicWithArtists);
             musicList.resetPointer();
-            musicList.goNext(REPEAT_ALL);
-            sendBroadcast("change_selection", musicList.getCurrent().music);
-            musicList.resetPointer();
+            //musicList.goNext(Constants.REPEAT_ALL);
+            //currentMusic.setValue(musicList.getCurrent());
+            //musicList.resetPointer();
             begin = -1;
         }
     }
 
     @Override
     public IBinder onBind(Intent intent) {
-        return null;
+        return binder;
     }
 
     public void onAppBackground() {
-        Log.d(TAG, "onAppBackground ");// + mediaPlayer.isPlaying());
+        Log.d(TAG, "onAppBackground ");// + mediaPlayer.playingState());
         if (mediaPlayer != null && mediaPlayer.isPlaying()) {
             mHandler.removeCallbacks(updateTimeTask);
             Log.d(TAG, "mHandler = off");
         }
-        unregisterServiceReceiver();
     }
 
     public void onAppForeground() {
         Log.d(TAG, "onAppForeground " + mediaPlayer.isPlaying());
-        registerServiceReceiver();
         updateMetaData();
         if (mediaPlayer.isPlaying()) {
-            mHandler.postDelayed(updateTimeTask, 200);
+            mHandler.postDelayed(updateTimeTask, 0);
             Log.d(TAG, "mHandler = on");
         }
     }
@@ -231,8 +295,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnPrepare
                 editor.putLong(getString(R.string.current_file_id), musicList.getCurrent().music.getMusic_id());
                 editor.putInt(getString(R.string.current_timestamp), mediaPlayer.getCurrentPosition());
                 editor.apply();
-                Log.e(TAG, "number saved:" + sharedPref.getLong(getString(R.string.current_file_id), 0));
             }
+            mediaSession.setActive(false);
             stopMedia();
             /*equalizer.setEnabled(false);
             equalizer.release();
@@ -245,19 +309,18 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnPrepare
             unregisterReceiver(myNoisyAudioStreamReceiver);
             isNoisyAudioStreamReceiverRegistered = false;
         }
-        unregisterServiceReceiver();
         unregisterCallStateListener();
     }
 
     public void onPrepared(MediaPlayer player) {
         Log.d(TAG, "onPrepared, begin = " + begin);
+        mediaPlayer.setLooping(loopState.getValue().equals(Constants.REPEAT_ONE));
         if (begin == 1) {
             playMedia();
         } else if (begin == 0) {
-            begin = 1;
             updateMetaData();
-            mediaPlayer.seekTo(timestamp);
-            sendBroadcast("change_duration", mediaPlayer.getCurrentPosition());
+            mediaPlayer.seekTo(currentDuration.getValue());
+            updateCurrentDuration(-1, mediaPlayer.getCurrentPosition());
         } else {
             begin = 1;
         }
@@ -267,61 +330,32 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnPrepare
     public boolean onError(MediaPlayer mp, int what, int extra) {
         Log.e(TAG, "onError");
         return true;
-    }    public BroadcastReceiver serviceReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            Bundle extras = intent.getExtras();
-            Log.d(TAG, "Brodcast receive, action = " + intent.getAction() + " destination = " + extras.getString(BROADCAST_DESTINATION));
-            Object[] objects = (Object[]) extras.get(BROADCAST_EXTRAS);
-            switch (extras.getString(BROADCAST_DESTINATION)) {
-                case "change_music_list":
-                    setMusicList((ArrayList<MusicWithArtists>) objects[0]);
-                    break;
-                case "change_music":
-                    begin = 1;
-                    Music music = (Music) objects[0];
-                    musicList.changeForMusicWithId(music.getMusic_id());
-                    initMediaPlayer(musicList.getCurrent().music.getMusic_id());
-                    break;
-                case "action":
-                    if (objects[0].equals("change_selection")) {
-                        if (musicList.getPointer() != -1)
-                            sendBroadcast("change_selection", musicList.getCurrent().music);
-                    } else if (objects[0].equals("loop"))
-                        isLoop = (String) objects[1];
-                    else if (objects[0].equals("skip") && objects[1].equals("previous"))
-                        skipToPrevious();
-                    else if (objects[0].equals("skip") && objects[1].equals("next"))
-                        skipToNext();
-                    else if (objects[0].equals("state") && objects[1].equals("play_pause")) {
-                        if (mediaPlayer.isPlaying())
-                            pauseMedia();
-                        else
-                            playMedia();
-                    } else if (objects[0].equals("seekBar"))
-                        mediaPlayer.seekTo(Integer.parseInt((String) objects[1]));
-                    break;
-            }
-        }
-    };
+    }
 
     public void initMediaPlayer(long fileId) {
         if (mediaPlayer == null) {
             mediaPlayer = new MediaPlayer();
-            mediaPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
+            mediaPlayer.setAudioAttributes(
+                    new AudioAttributes.Builder()
+                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                            .setUsage(AudioAttributes.USAGE_MEDIA)
+                            .build()
+            );
+            mediaPlayer.setWakeMode(this, PowerManager.PARTIAL_WAKE_LOCK);
+            mediaPlayer.setOnErrorListener(this);
+            mediaPlayer.setOnPreparedListener(this);
+            mediaPlayer.setOnCompletionListener(this);
+
             /*float volume = 1f;
             mediaPlayer.setVolume(volume, volume);
             equalizer = new Equalizer(0, mediaPlayer.getAudioSessionId());
             equalizer.usePreset((short) 0);
             equalizer.setEnabled(true);*/
-        }
-        if (mediaPlayer.isPlaying())
+        } else if (mediaPlayer.isPlaying()) {
             stopMedia();
-        mediaPlayer.setOnErrorListener(this);
-        mediaPlayer.setOnPreparedListener(this);
-        mediaPlayer.setOnCompletionListener(this);
-        mediaPlayer.reset();
+        }
 
+        mediaPlayer.reset();
         Uri uri = getContentUri("external", fileId);
         DocumentFile sourceFile = DocumentFile.fromSingleUri(this, uri);
         if (sourceFile.exists()) {
@@ -333,15 +367,12 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnPrepare
                 onDestroy();
             }
         } else {
-            mediaPlayer.reset();
-            mediaPlayer.release();
-            mediaPlayer = null;
             skipToNext();
         }
     }
 
     public void updateColors() {
-        notificationManager.notify(NOTIFICATION_ID, buildForegroundNotification("colors"));
+        //notificationManager.notify(NOTIFICATION_ID, buildForegroundNotification("colors"));
     }
 
     private void playMedia() {
@@ -367,36 +398,46 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnPrepare
     @Override
     public void onCompletion(MediaPlayer mp) {
         Log.d(TAG, "onCompletion");
-        stopMedia();
-        skipToNext();
+        if (mediaPlayer.isLooping()) {
+            playMedia();
+        } else {
+            stopMedia();
+            skipToNext();
+        }
     }
 
     public void updateMetaData() {
         Log.d(TAG, "updateMetaData");
-        if (isServiceReceiverRegistered) {
+        mediaMetadataBuilder.putString(MediaMetadataCompat.METADATA_KEY_TITLE, musicList.getCurrent().music.getMusic_title());
+        mediaMetadataBuilder.putString(MediaMetadataCompat.METADATA_KEY_ARTIST, musicList.getCurrent().artistsToString());
+        mediaMetadataBuilder.putString(MediaMetadataCompat.METADATA_KEY_ALBUM, musicList.getCurrent().music.getMusic_album());
+        mediaMetadataBuilder.putLong(MediaMetadataCompat.METADATA_KEY_DURATION, musicList.getCurrent().music.getMusic_duration());
+
+        MediaMetadataRetriever receiver = new MediaMetadataRetriever();
+        receiver.setDataSource(this, Uri.fromFile(new File(musicList.getCurrent().music.getMusic_path())));
+        BitmapDrawable icon = null;
+        byte[] data = receiver.getEmbeddedPicture();
+        if (data != null) {
+            Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+            icon = new BitmapDrawable(getResources(), bitmap);
+        }
+        mediaMetadataBuilder.putBitmap(MediaMetadataCompat.METADATA_KEY_ART, icon.getBitmap());
+
+        mediaSession.setMetadata(mediaMetadataBuilder.build());
+        if (binder.isBinderAlive()) {
             if (musicList.getPointer() != -1)
-                sendBroadcast("change_metadata", musicList.getCurrent());
-            sendBroadcast("change_state", mediaPlayer.isPlaying());
+                currentMusic.setValue(musicList.getCurrent());
         }
     }
 
-    private PlaybackStateCompat buildPlaybackState(int state) {
-        PlaybackStateCompat.Builder builder = new PlaybackStateCompat.Builder();
-        builder.setActions(PlaybackStateCompat.ACTION_PLAY | PlaybackStateCompat.ACTION_PAUSE | PlaybackStateCompat.ACTION_SKIP_TO_NEXT | PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS);
-        builder.setState(state, PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1);
-        return (builder.build());
-    }
-
-    //Notification
-    public PendingIntent pendingIntent(String action) {
-        Intent intent = new Intent(this, MediaPlayerService.class);
-        intent.setAction(action);
-        return PendingIntent.getService(this, (int) System.currentTimeMillis(), intent, PendingIntent.FLAG_MUTABLE);
-    }
-
-    public PendingIntent MainActivityPendingIntent() {
-        Intent intent = new Intent(this, MainActivity.class);
-        return PendingIntent.getActivity(this, (int) System.currentTimeMillis(), intent, PendingIntent.FLAG_MUTABLE);
+    public void updateCurrentDuration(int state, int position) {
+        int newState = state;
+        if (state == -1 && mediaPlayer != null)
+            newState = mediaPlayer.isPlaying() ? PlaybackStateCompat.STATE_PLAYING : PlaybackStateCompat.STATE_PAUSED;
+        playbackStateBuilder.setState(newState, position, 1);
+        mediaSession.setPlaybackState(playbackStateBuilder.build());
+        currentDuration.setValue(position);
+        playingState.setValue(newState == PlaybackStateCompat.STATE_PLAYING ? Constants.ACTION_PLAY : Constants.ACTION_PAUSE);
     }
 
     private void createNotificationChannel() {
@@ -406,147 +447,74 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnPrepare
         channel.setDescription(description);
         notificationManager = (NotificationManager) getSystemService(Service.NOTIFICATION_SERVICE);
         notificationManager.createNotificationChannel(channel);
-    }    private final MediaSessionCompat.Callback callback = new MediaSessionCompat.Callback() {
-        @Override
-        public void onPlay() {
-            Log.d(TAG, "MediaSession onPlay");
-            if (!mediaPlayer.isPlaying()) {
-                mediaPlayer.start();
-                mediaSession.setPlaybackState(buildPlaybackState(PlaybackStateCompat.STATE_PLAYING));
-                //mediaPlayer.setPlaybackParams(mediaPlayer.getPlaybackParams().setSpeed(0.5f));
-                if (!isNoisyAudioStreamReceiverRegistered) {
-                    registerReceiver(myNoisyAudioStreamReceiver, becomeNoisyIntentFilter);
-                    isNoisyAudioStreamReceiverRegistered = true;
-                }
-                if (begin != -1) {
-                    updateMetaData();
-                    notificationManager.notify(NOTIFICATION_ID, buildForegroundNotification("all"));
-                } else {
-                    sendBroadcast("change_state", mediaPlayer.isPlaying());
-                    notificationManager.notify(NOTIFICATION_ID, buildForegroundNotification("none"));
-                }
-                if (isServiceReceiverRegistered) {
-                    mHandler.postDelayed(updateTimeTask, 200);
-                    Log.d(TAG, "mHandler = on");
-                }
-            }
-        }
+    }
 
-        @Override
-        public void onPause() {
-            Log.d(TAG, "MediaSession onPause");
-            if (mediaPlayer.isPlaying()) {
-                mHandler.removeCallbacks(updateTimeTask);
-                Log.d(TAG, "mHandler = off");
-                mediaPlayer.pause();
-                //mediaPlayer = null;
-                mediaSession.setPlaybackState(buildPlaybackState(PlaybackStateCompat.STATE_PAUSED));
-                if (begin != -1) {
-                    updateMetaData();
-                    notificationManager.notify(NOTIFICATION_ID, buildForegroundNotification("all"));
-                } else {
-                    sendBroadcast("change_state", mediaPlayer.isPlaying());
-                    notificationManager.notify(NOTIFICATION_ID, buildForegroundNotification("none"));
-                }
-            }
-        }
-
-        @Override
-        public void onStop() {
-            Log.d(TAG, "MediaSession onStop");
-            if (mediaPlayer.isPlaying()) {
-                Log.d(TAG, "mHandler = off");
-                if (isNoisyAudioStreamReceiverRegistered) {
-                    unregisterReceiver(myNoisyAudioStreamReceiver);
-                    isNoisyAudioStreamReceiverRegistered = false;
-                }
-                mHandler.removeCallbacks(updateTimeTask);
-            }
-            mediaPlayer.stop();
-        }
-
-        @Override
-        public void onSkipToPrevious() {
-            Log.d(TAG, "MediaSession onSkipToPrevious");
-            begin = 1;
-            musicList.goPrevious(isLoop);
-            if (isLoop.equals(REPEAT_NONE))
-                if (musicList.getPointer() == -1) {
-                    begin = 0;
-                    musicList.changeForIndex(musicList.size() - 1);
-                }
-            initMediaPlayer(musicList.getCurrent().music.getMusic_id());
-        }
-
-        @Override
-        public void onSkipToNext() {
-            Log.d(TAG, "MediaSession onSkipToNext");
-            begin = 1;
-            musicList.goNext(isLoop);
-            if (isLoop.equals(REPEAT_NONE))
-                if (musicList.getPointer() == -1) {
-                    begin = 0;
-                    musicList.changeForIndex(0);
-                }
-            initMediaPlayer(musicList.getCurrent().music.getMusic_id());
-        }
-    };
-
-    private Notification buildForegroundNotification(String updateType) {
-        RemoteViews contentView = new RemoteViews(getPackageName(), R.layout.custom_notification);
-        if (mediaPlayer != null && mediaPlayer.isPlaying())
-            contentView.setImageViewResource(R.id.notif_play_pause, R.drawable.round_pause_24);
-        else
-            contentView.setImageViewResource(R.id.notif_play_pause, R.drawable.round_play_arrow_24);
-
-        switch (updateType) {
-            case "all":
-                contentView.setOnClickPendingIntent(R.id.notif_previous, pendingIntent(ACTION_PREVIOUS));
-                contentView.setOnClickPendingIntent(R.id.notif_play_pause, pendingIntent(ACTION_PLAY_PAUSE));
-                contentView.setOnClickPendingIntent(R.id.notif_next, pendingIntent(ACTION_NEXT));
-
-                contentView.setTextViewText(R.id.notif_app_name, getString(R.string.app_name));
-                if (musicList == null) {
-                    contentView.setTextViewText(R.id.notif_title, "Title");
-                    contentView.setTextViewText(R.id.notif_artist, "Artist");
-                } else {
-                    contentView.setTextViewText(R.id.notif_title, musicList.getCurrent().music.getMusic_title());
-                    contentView.setTextViewText(R.id.notif_artist, musicList.getCurrent().artistsToString());
-                }
-            case "colors":
-                contentView.setInt(R.id.notif_layout, "setBackgroundColor", ColorsConstants.NOTIFICATION_BACKGROUND_COLOR);
-                contentView.setInt(R.id.notif_previous, "setColorFilter", ColorsConstants.NOTIFICATION_TEXT_TITLE_COLOR);
-                contentView.setInt(R.id.notif_play_pause, "setColorFilter", ColorsConstants.NOTIFICATION_TEXT_TITLE_COLOR);
-                contentView.setInt(R.id.notif_next, "setColorFilter", ColorsConstants.NOTIFICATION_TEXT_TITLE_COLOR);
-                contentView.setTextColor(R.id.notif_app_name, ColorsConstants.NOTIFICATION_TEXT_TITLE_COLOR);
-                contentView.setTextColor(R.id.notif_title, ColorsConstants.NOTIFICATION_TEXT_TITLE_COLOR);
-                contentView.setTextColor(R.id.notif_artist, ColorsConstants.NOTIFICATION_TEXT_ARTIST_COLOR);
-                contentView.setInt(R.id.notif_icon, "setColorFilter", ColorsConstants.NOTIFICATION_TEXT_TITLE_COLOR);
-            default:
-        }
-
+    public Notification buildForegroundNotification() {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID);
+        builder.setContentTitle(description.getTitle());
+        builder.setContentText(description.getSubtitle());
+        builder.setLargeIcon(mediaMetadata.getBitmap(MediaMetadataCompat.METADATA_KEY_ART));
+
+        Intent intent = new Intent(this, MainActivity.class);
+        builder.setContentIntent(PendingIntent.getActivity(this, (int) System.currentTimeMillis(), intent, PendingIntent.FLAG_IMMUTABLE));
+        builder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
         builder.setSmallIcon(R.drawable.round_music_note_24);
-        builder.setCategory(Notification.CATEGORY_SERVICE);
-        builder.setContentIntent(MainActivityPendingIntent());
-        builder.setContent(contentView);
-        builder.setCustomContentView(contentView);
-        builder.setCustomBigContentView(contentView);
-        builder.setOnlyAlertOnce(true);
+        builder.setColor(ColorsConstants.NOTIFICATION_BACKGROUND_COLOR);
+        builder.addAction(new NotificationCompat.Action(R.drawable.round_skip_previous, "previous", MediaButtonReceiver.buildMediaButtonPendingIntent(this, PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS)));
+        if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+            builder.addAction(new NotificationCompat.Action(R.drawable.ic_round_pause_24, "pause", MediaButtonReceiver.buildMediaButtonPendingIntent(this, PlaybackStateCompat.ACTION_PAUSE)));
+        } else {
+            builder.addAction(new NotificationCompat.Action(R.drawable.ic_round_play_arrow_24, "play", MediaButtonReceiver.buildMediaButtonPendingIntent(this, PlaybackStateCompat.ACTION_PLAY)));
+        }
+        builder.addAction(new NotificationCompat.Action(R.drawable.round_skip_next, "next", MediaButtonReceiver.buildMediaButtonPendingIntent(this, PlaybackStateCompat.ACTION_SKIP_TO_NEXT)));
+
+        MediaStyle mediaStyle = new MediaStyle();
+        mediaStyle.setMediaSession(mediaSession.getSessionToken());
+        mediaStyle.setShowActionsInCompactView(0, 1, 2);
+        mediaStyle.setShowCancelButton(false);
+        builder.setStyle(mediaStyle);
         return (builder.build());
     }
 
-    private void sendBroadcast(String destination, Object... objects) {
-        Intent new_intent = new Intent(ACTION_TO_ACTIVITY);
-        new_intent.putExtra(BROADCAST_DESTINATION, destination);
-        new_intent.putExtra(BROADCAST_EXTRAS, objects);
-        LocalBroadcastManager.getInstance(this).sendBroadcast(new_intent);
+    @Nullable
+    @org.jetbrains.annotations.Nullable
+    @Override
+    public BrowserRoot onGetRoot(@NonNull String clientPackageName, int clientUid, @Nullable @org.jetbrains.annotations.Nullable Bundle rootHints) {
+        return new BrowserRoot(MY_MEDIA_ROOT_ID, null);
+    }
+
+    @Override
+    public void onLoadChildren(@NonNull String parentId, @NonNull Result<List<MediaBrowserCompat.MediaItem>> result) {
+        // https://developer.android.com/guide/topics/media-apps/audio-app/building-a-mediabrowserservice
+        // https://developer.android.com/training/cars/media#build_hierarchy
+    }
+
+    public LiveData<Integer> getCurrentDuration() {
+        return currentDuration;
+    }
+
+    public LiveData<String> getIsLoop() {
+        return loopState;
+    }
+
+    public LiveData<String> getIsPlaying() {
+        return playingState;
+    }
+
+    public LiveData<MusicWithArtists> getCurrentMusic() {
+        return currentMusic;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.S)
     private static abstract class CustomTelephonyCallback extends TelephonyCallback implements TelephonyCallback.CallStateListener {
         @Override
         public void onCallStateChanged(int i) {}
+    }
+
+    public class LocalBinder extends android.os.Binder {
+        public MediaPlayerService getService() {
+            return MediaPlayerService.this;
+        }
     }
 
     private class BecomingNoisyReceiver extends BroadcastReceiver {
@@ -559,28 +527,98 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnPrepare
         }
     }
 
-
-
-
-
-    private final PhoneStateListener callStateListener = (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) ? new PhoneStateListener() {
-        public void onCallStateChanged(int state, String incomingNumber) {
-            if (state == TelephonyManager.CALL_STATE_RINGING) {
-                if (mediaPlayer.isPlaying())
-                    pauseMedia();
-            }
-        }
-    } : null;
-
-    private TelephonyCallback telephonyCallback = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) ? new CustomTelephonyCallback() {
+    private final MediaSessionCompat.Callback callback = new MediaSessionCompat.Callback() {
         @Override
-        public void onCallStateChanged(int i) {
-            if (i == TelephonyManager.CALL_STATE_RINGING) {
-                if (mediaPlayer.isPlaying())
-                    pauseMedia();
+        public void onPlay() {
+            Log.d(TAG, "MediaSession onPlay");
+            if (!mediaPlayer.isPlaying()) {
+                mediaPlayer.start();
+                updateCurrentDuration(PlaybackStateCompat.STATE_PLAYING, mediaPlayer.getCurrentPosition());
+                if (!isNoisyAudioStreamReceiverRegistered) {
+                    registerReceiver(myNoisyAudioStreamReceiver, becomeNoisyIntentFilter);
+                    isNoisyAudioStreamReceiverRegistered = true;
+                }
+                if (begin != -1) {
+                    updateMetaData();
+                    //playingState.setValue(Constants.ACTION_PLAY);
+                    notificationManager.notify(NOTIFICATION_ID, buildForegroundNotification());
+                } else {
+                    notificationManager.notify(NOTIFICATION_ID, buildForegroundNotification());
+                }
+                if (binder.isBinderAlive()) {
+                    mHandler.postDelayed(updateTimeTask, 0);
+                    Log.d(TAG, "mHandler = on");
+                }
+                begin = 1;
             }
         }
-    } : null;
 
-    //Session
+        @Override
+        public void onPause() {
+            Log.d(TAG, "MediaSession onPause");
+            if (mediaPlayer.isPlaying()) {
+                mHandler.removeCallbacks(updateTimeTask);
+                Log.d(TAG, "mHandler = off");
+                mediaPlayer.pause();
+                updateCurrentDuration(PlaybackStateCompat.STATE_PAUSED, mediaPlayer.getCurrentPosition());
+                if (begin != -1) {
+                    updateMetaData();
+                    //playingState.setValue(Constants.ACTION_PAUSE);
+                    notificationManager.notify(NOTIFICATION_ID, buildForegroundNotification());
+                } else {
+                    notificationManager.notify(NOTIFICATION_ID, buildForegroundNotification());
+                }
+            }
+        }
+
+        @Override
+        public void onStop() {
+            Log.d(TAG, "MediaSession onStop");
+            if (mediaPlayer.isPlaying()) {
+                updateCurrentDuration(PlaybackStateCompat.STATE_PAUSED, mediaPlayer.getCurrentPosition());
+                Log.d(TAG, "mHandler = off");
+                if (isNoisyAudioStreamReceiverRegistered) {
+                    unregisterReceiver(myNoisyAudioStreamReceiver);
+                    isNoisyAudioStreamReceiverRegistered = false;
+                }
+                mHandler.removeCallbacks(updateTimeTask);
+            }
+            currentDuration.setValue(0);
+            mediaPlayer.stop();
+        }
+
+        @Override
+        public void onSkipToPrevious() {
+            Log.d(TAG, "MediaSession onSkipToPrevious");
+            begin = 1;
+            musicList.goPrevious(loopState.getValue());
+            if (loopState.getValue().equals(Constants.REPEAT_NONE))
+                if (musicList.getPointer() == -1) {
+                    begin = 0;
+                    musicList.changeForIndex(musicList.size() - 1);
+                }
+            currentDuration.setValue(0);
+            initMediaPlayer(musicList.getCurrent().music.getMusic_id());
+        }
+
+        @Override
+        public void onSkipToNext() {
+            Log.d(TAG, "MediaSession onSkipToNext " + begin);
+            begin = begin == 1 ? 1 : 0;
+            musicList.goNext(loopState.getValue());
+            if (musicList.getPointer() == -1 && loopState.getValue().equals(Constants.REPEAT_NONE)) {
+                begin = 0;
+                musicList.changeForIndex(0);
+            }
+            currentDuration.setValue(0);
+            initMediaPlayer(musicList.getCurrent().music.getMusic_id());
+        }
+
+        @Override
+        public void onSeekTo(long pos) {
+            super.onSeekTo(pos);
+            mediaPlayer.seekTo((int) pos);
+            updateCurrentDuration(-1, (int) pos);
+        }
+    };
 }

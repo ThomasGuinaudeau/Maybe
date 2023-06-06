@@ -3,7 +3,7 @@ package com.maybe.maybe.database.async_tasks.playlist;
 import android.database.Cursor;
 import android.os.AsyncTask;
 
-import com.maybe.maybe.ListItem;
+import com.maybe.maybe.fragments.category.ListItem;
 import com.maybe.maybe.database.AppDatabase;
 import com.maybe.maybe.database.dao.PlaylistDao;
 

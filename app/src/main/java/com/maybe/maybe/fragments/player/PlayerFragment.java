@@ -22,6 +22,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.media.MediaMetadataRetriever;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -44,7 +45,6 @@ import com.maybe.maybe.database.entity.MusicWithArtists;
 import com.maybe.maybe.database.entity.Playlist;
 import com.maybe.maybe.databinding.FragmentPlayerBinding;
 import com.maybe.maybe.fragments.main.service.MediaPlayerService;
-import com.maybe.maybe.utils.ColorsConstants;
 import com.maybe.maybe.utils.Constants;
 import com.maybe.maybe.utils.CycleStateResource;
 import com.maybe.maybe.utils.Methods;
@@ -62,17 +62,27 @@ public class PlayerFragment extends Fragment implements PlaylistAsyncTaskPlaylis
     private SeekValueBinding seekValueBinding;
     private PlayerFragmentListener callback;
     private boolean mBound = false;
+    private boolean isFirstLoad = true;
+    private MediaPlayerService mediaPlayerService;
+    private ArrayList<MusicWithArtists> musicWithArtists;
     private final ServiceConnection connection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+            Log.e(TAG, "onServiceConnected");
             mBound = true;
             MediaPlayerService.LocalBinder binder = (MediaPlayerService.LocalBinder) iBinder;
-            MediaPlayerService mediaPlayerService = binder.getService();
+            mediaPlayerService = binder.getService();
 
             mediaPlayerService.getCurrentDuration().observe(getActivity(), currentDuration -> updateDuration(currentDuration));
             mediaPlayerService.getIsLoop().observe(getActivity(), loopState -> changeState(repeatCycle, loopState));
             mediaPlayerService.getIsPlaying().observe(getActivity(), playingState -> changePlayingState(playingState));
             mediaPlayerService.getCurrentMusic().observe(getActivity(), musicWithArtists -> changeMusic(musicWithArtists));
+
+            if (isFirstLoad && musicWithArtists != null) {
+                isFirstLoad = false;
+                mediaPlayerService.setMusicList(musicWithArtists);
+                musicWithArtists = null;
+            }
         }
 
         @Override
@@ -114,7 +124,7 @@ public class PlayerFragment extends Fragment implements PlaylistAsyncTaskPlaylis
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        Log.e(TAG, "oncreate player");
         bindToService();
         Intent playerIntent = new Intent(getContext(), MediaPlayerService.class);
         playerIntent.setAction(Constants.ACTION_CREATE_SERVICE);
@@ -203,10 +213,10 @@ public class PlayerFragment extends Fragment implements PlaylistAsyncTaskPlaylis
     }
 
     public void updateColors() {
-        binding.setPrimaryTextColor(ColorsConstants.PRIMARY_TEXT_COLOR);
-        binding.setSecondaryTextColor(ColorsConstants.SECONDARY_TEXT_COLOR);
-        binding.setSecondaryColor(ColorsConstants.SECONDARY_COLOR);
-        binding.setSecondaryDarkColor(ColorsConstants.SECONDARY_DARK_COLOR);//was secondarydarktransparent
+        //binding.setPrimaryTextColor(android.R.attr.textColor);
+        //binding.setSecondaryTextColor(android.R.attr.textColor);
+        //binding.setSecondaryColor(android.R.attr.colorSecondary);
+        //binding.setSecondaryDarkColor(android.R.attr.colorSecondary);//was secondarydarktransparent
     }
 
     public void onClick(View v) {
@@ -319,6 +329,14 @@ public class PlayerFragment extends Fragment implements PlaylistAsyncTaskPlaylis
             time = String.format(Locale.getDefault(), "%02d:%02d:%02d", timeArray[0], timeArray[1], timeArray[2]);
         else time = String.format(Locale.getDefault(), "%02d:%02d", timeArray[1], timeArray[2]);
         return time;
+    }
+
+    public void updateListInService(ArrayList<MusicWithArtists> musicWithArtists) {
+        Log.e(TAG, "" + mediaPlayerService);
+        if (!isFirstLoad)
+            mediaPlayerService.setMusicList(musicWithArtists);
+        else
+            this.musicWithArtists = musicWithArtists;
     }
 
     public void disableButtons(boolean buttonEnable) {

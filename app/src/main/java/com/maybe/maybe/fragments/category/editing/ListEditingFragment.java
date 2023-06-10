@@ -21,10 +21,10 @@ import androidx.recyclerview.selection.StorageStrategy;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.maybe.maybe.fragments.category.CategoryItem;
 import com.maybe.maybe.R;
-import com.maybe.maybe.fragments.category.grid.CategoryGridFragment;
 import com.maybe.maybe.database.entity.MusicWithArtists;
+import com.maybe.maybe.fragments.category.CategoryItem;
+import com.maybe.maybe.fragments.category.grid.CategoryGridFragment;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,7 +63,7 @@ public class ListEditingFragment extends Fragment {
         RecyclerView recyclerView = view.findViewById(R.id.editing_lists_recycler_view);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerView.setAdapter(adapter);
-        //recyclerView.setItemAnimator(null);
+        recyclerView.setItemAnimator(null);
 
         ImageButton buttonBack = view.findViewById(R.id.category_editing_list_back);
         buttonBack.setOnClickListener(view1 -> callback.back());

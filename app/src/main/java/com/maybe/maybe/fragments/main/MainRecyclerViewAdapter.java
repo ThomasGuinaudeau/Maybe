@@ -20,7 +20,7 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
     private final OnMusicListItemClick onMusicListItemClick;
     private boolean isEven = false;
     private List<MusicWithArtists> musics;
-    private int currentMusicPosition;
+    private long id;
     private String sort;
 
     public MainRecyclerViewAdapter(OnMusicListItemClick onMusicListItemClick, List<MusicWithArtists> musics) {
@@ -39,14 +39,12 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
         return -1;
     }
 
-    public long getCurrentMusicId() {
-        if(musics.size() > currentMusicPosition)
-            return musics.get(currentMusicPosition).music.getMusic_id();
-        return -1;
+    public long getId() {
+        return id;
     }
 
-    public void setCurrentMusicPosition(int currentMusicPosition) {
-        this.currentMusicPosition = currentMusicPosition;
+    public void setId(long id) {
+        this.id = id;
     }
 
     public void setSort(String sort) {
@@ -66,7 +64,7 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
         holder.getCustomRecyclerViewRow().setMusicWithArtists(musics.get(position));
         //if(position % 2 == 0)
         //    holder.getCustomRecyclerViewRow().setEven(true);
-        holder.getCustomRecyclerViewRow().setSelected(currentMusicPosition == position);
+        holder.getCustomRecyclerViewRow().setSelected(id == musics.get(position).music.getMusic_id());
         holder.setItemClickCallback(musics.get(position).music, onMusicListItemClick);
         holder.setLongItemClickCallback(musics.get(position).music, onMusicListItemClick);
     }

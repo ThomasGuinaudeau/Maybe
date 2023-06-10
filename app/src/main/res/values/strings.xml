@@ -131,12 +131,6 @@
     <string name="desc_current_duration">Current time: %1$d hours %2$d minutes %3$d seconds</string>
     <string name="desc_playlists">Part of those playlists: %1$s</string>
 
-    <!--Color Picker Dialog-->
-    <string name="seek_bar_text_red">Red</string>
-    <string name="seek_bar_text_green">Green</string>
-    <string name="seek_bar_text_blue">Blue</string>
-    <string name="seek_bar_text_alpha">Opacity</string>
-
     <!--Toast-->
     <string name="toast_reset_colors">Colors have been reset!</string>
     <string name="toast_folder_category">Not working yet!</string>
@@ -149,4 +143,24 @@
     <!--Tag-->
     <string name="categories_fragment_tag">categories_fragment_tag</string>
     <string name="lists_fragment_tag">lists_fragment_tag</string>
+
+    <!--Theme-->
+    <string name="key_category_theme">key_category_theme</string>
+    <string name="category_theme_title">Themes</string>
+    <string name="category_theme_subtitle">App restart is needed after changing the theme.</string>
+
+    <string name="key_dark_theme">key_dark_theme</string>
+    <string name="key_light_theme">key_light_theme</string>
+    <string name="key_dark_theme_blue">key_dark_theme_blue</string>
+    <string name="key_light_theme_blue">key_light_theme_blue</string>
+    <string name="key_dark_theme_purple">key_dark_theme_purple</string>
+    <string name="key_light_theme_purple">key_light_theme_purple</string>
+
+    <string name="dark_theme_title">Dark Default</string>
+    <string name="light_theme_title">Light Default</string>
+    <string name="dark_theme_blue_title">Dark Coucher de Soleil</string>
+    <string name="light_theme_blue_title">Light Coucher de Soleil</string>
+    <string name="dark_theme_purple_title">Dark Purple</string>
+    <string name="light_theme_purple_title">Light Purple</string>
+    <string name="key_theme">key_theme</string>
 </resources>

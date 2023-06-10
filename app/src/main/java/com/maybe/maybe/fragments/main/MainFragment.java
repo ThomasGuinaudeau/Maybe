@@ -7,7 +7,6 @@ import static com.maybe.maybe.fragments.category.CategoryItem.CATEGORY_PLAYLIST;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.res.ColorStateList;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
@@ -27,6 +26,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.google.android.material.color.MaterialColors;
 import com.maybe.maybe.R;
 import com.maybe.maybe.database.AppDatabase;
 import com.maybe.maybe.database.async_tasks.MusicAsyncTask;
@@ -36,7 +36,6 @@ import com.maybe.maybe.database.async_tasks.OnSelectMusicAsyncTaskFinish;
 import com.maybe.maybe.database.async_tasks.SaveCurrentListAsyncTask;
 import com.maybe.maybe.database.entity.Music;
 import com.maybe.maybe.database.entity.MusicWithArtists;
-import com.maybe.maybe.utils.ColorsConstants;
 import com.maybe.maybe.utils.Constants;
 import com.maybe.maybe.utils.Methods;
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
@@ -78,9 +77,10 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_main, container, false);
         mainRecyclerView = view.findViewById(R.id.main_recycler_view);
-        mainRecyclerView.setPopupBgColor(ColorsConstants.SECONDARY_COLOR);
-        mainRecyclerView.setThumbColor(ColorsConstants.SECONDARY_COLOR);
-        mainRecyclerView.setThumbInactiveColor(ColorsConstants.SECONDARY_COLOR);
+        int colorSecondary = MaterialColors.getColor(getContext(), R.attr.colorSecondary, 0x00000000);
+        mainRecyclerView.setPopupBgColor(colorSecondary);
+        mainRecyclerView.setThumbColor(colorSecondary);
+        mainRecyclerView.setThumbInactiveColor(colorSecondary);
         sllm = new SpeedyLinearLayoutManager(getContext());
         sllm.setActivity(getActivity());
         mainRecyclerView.setLayoutManager(sllm);
@@ -114,7 +114,7 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
     }
 
     public void updateColors() {
-        main_title.setBackgroundColor(ColorsConstants.PRIMARY_COLOR);//was primaryColorTrans
+        /*main_title.setBackgroundColor(ColorsConstants.PRIMARY_COLOR);//was primaryColorTrans
         main_title.setTextColor(ColorsConstants.SECONDARY_TEXT_COLOR);//was expandableParent
 
         main_search_edit.setBackgroundColor(ColorsConstants.PRIMARY_COLOR);//was primaryColorTrans
@@ -125,7 +125,7 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
         main_search_button.setTextColor(ColorsConstants.SECONDARY_TEXT_COLOR);
         main_progress_bar.setProgressTintList(new ColorStateList(new int[][]{ new int[]{ android.R.attr.state_enabled } }, new int[]{ ColorsConstants.SECONDARY_COLOR }));
 
-        Methods.newServiceIntent(getContext(), Constants.ACTION_UPDATE_COLORS, null);
+        Methods.newServiceIntent(getContext(), Constants.ACTION_UPDATE_COLORS, null);*/
     }
 
     @Override
@@ -227,11 +227,12 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
         } else if (currentCategoryId == CATEGORY_ALBUM) {
             query = "selectAllMusicsOfAlbum";
         }
-        //Log.d(TAG, "category=" + currentCategoryId + " name=" + currentName + " sort=" + sort);
+        Log.d(TAG, "category=" + currentCategoryId + " name=" + currentName + " sort=" + sort + " query=" + query);
         new MusicAsyncTask().execute(this, appDatabase, query, sort, currentName);
     }
 
     public void updateList(int categoryId, String name, String sort, boolean isFirstLoad) {
+        Log.e(TAG, categoryId + " " + name + " " + sort + " " + isFirstLoad);
         currentCategoryId = categoryId != -1 ? categoryId : currentCategoryId;
         currentName = name != null ? name : currentName;
         this.sort = sort != null ? sort : this.sort;
@@ -239,30 +240,35 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
     }
 
     public void changeCurrentMusic(long id) {
+        adapter.setId(id);
+        adapter.notifyDataSetChanged();
         int position = adapter.getMusicPosition(id);
         position = position != -1 ? position : 0;
-        adapter.setCurrentMusicPosition(position);
+        //adapter.setCurrentMusicPosition(position);
         smoothScroll(position);
-        adapter.notifyDataSetChanged();
     }
 
     @Override
     public void onSelectMusicAsyncFinish(List<Object> objects) {
-        List<MusicWithArtists> musicWithArtists = (List<MusicWithArtists>) (Object) objects;
+        ArrayList<MusicWithArtists> musicWithArtists = (ArrayList<MusicWithArtists>) (Object) objects;
         if (musicWithArtists.size() > 0) {
             if (!buttonEnable) {
                 buttonEnable = true;
                 callback.disableButtons(true);
             }
-            long currentMusicId = adapter.getCurrentMusicId();
+            long currentMusicId = adapter.getId();
+            Log.e(TAG, currentMusicId + "");
             adapter.setMusics(musicWithArtists);
             adapter.setSort(sort);
             changeCurrentMusic(currentMusicId);
             //adapter.notifyDataSetChanged();
             main_title.setText(currentName);
-            Bundle bundle = new Bundle();
-            bundle.putParcelableArrayList(getString(R.string.key_parcelable_data), new ArrayList<>(musicWithArtists));
-            Methods.newServiceIntent(getContext(), Constants.ACTION_CHANGE_LIST, bundle);
+
+            callback.updateListInService(musicWithArtists);
+
+            //Bundle bundle = new Bundle();
+            //bundle.putParcelableArrayList(getString(R.string.key_parcelable_data), new ArrayList<>(ma));
+            //Methods.newServiceIntent(getContext(), Constants.ACTION_CHANGE_LIST, bundle);
 
             new SaveCurrentListAsyncTask(musicWithArtists, this).execute(appDatabase, getContext(), currentCategoryId, currentName, sort, isStart);
         } else if (buttonEnable) {
@@ -337,6 +343,8 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
     public interface MainFragmentListener {
 
         void resetList();
+
+        void updateListInService(ArrayList<MusicWithArtists> musicWithArtists);
 
         void disableButtons(boolean enable);
     }

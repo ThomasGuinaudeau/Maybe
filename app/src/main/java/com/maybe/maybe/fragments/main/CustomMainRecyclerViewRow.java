@@ -7,9 +7,9 @@ import android.widget.TextView;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 
+import com.google.android.material.color.MaterialColors;
 import com.maybe.maybe.R;
 import com.maybe.maybe.database.entity.MusicWithArtists;
-import com.maybe.maybe.utils.ColorsConstants;
 
 public class CustomMainRecyclerViewRow extends ConstraintLayout {
 
@@ -38,21 +38,26 @@ public class CustomMainRecyclerViewRow extends ConstraintLayout {
     }
 
     public void setMusicWithArtists(MusicWithArtists musicWithArtists) {
-        track.setTextColor(ColorsConstants.SECONDARY_TEXT_COLOR);//was expandableparent
         track.setText("" + musicWithArtists.music.getMusic_track());
         title.setContentDescription(musicWithArtists.music.getMusic_title());
-        title.setTextColor(ColorsConstants.PRIMARY_TEXT_COLOR);//was expandableparent
         title.setText(musicWithArtists.music.getMusic_title());
         artist.setContentDescription("Artist " + musicWithArtists.artistsToString());
-        artist.setTextColor(ColorsConstants.SECONDARY_TEXT_COLOR);//was expandableparent
         artist.setText(musicWithArtists.artistsToString());
-        setBackgroundColor(ContextCompat.getColor(getContext(), R.color.odd));
+        //setBackgroundColor(ContextCompat.getColor(getContext(), R.color.odd));
+        setBackgroundColor(MaterialColors.getColor(getContext(), android.R.attr.colorBackground, 0x00000000));
+        track.setTextColor(MaterialColors.getColor(getContext(), R.attr.textColorFaded, 0x00000000));
+        title.setTextColor(MaterialColors.getColor(getContext(), android.R.attr.textColor, 0x00000000));
+        artist.setTextColor(MaterialColors.getColor(getContext(), R.attr.textColorFaded, 0x00000000));
     }
 
     public void setSelected(boolean selected) {
         super.setSelected(selected);
-        if (selected)
-            setBackgroundColor(ColorsConstants.SELECTED_COLOR);//was primaryColorTrans : secondaryColorTrans
+        if (selected) {
+            setBackgroundColor(MaterialColors.getColor(getContext(), R.attr.selectedMusicBackground, 0xFFFFFFFF));
+            track.setTextColor(MaterialColors.getColor(getContext(), R.attr.selectedMusicArtist, 0xFF000000));
+            title.setTextColor(MaterialColors.getColor(getContext(), R.attr.selectedMusicTitle, 0xFF000000));
+            artist.setTextColor(MaterialColors.getColor(getContext(), R.attr.selectedMusicArtist, 0xFF000000));
+        }
     }
 
     public void setEven(boolean isEven) {

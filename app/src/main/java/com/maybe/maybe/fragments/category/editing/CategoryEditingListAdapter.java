@@ -4,7 +4,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -92,10 +91,10 @@ public class CategoryEditingListAdapter extends RecyclerView.Adapter<CategoryEdi
                 });
                 if (!isVisible && isActivated == 0) {
                     itemView.setVisibility(View.GONE);
-                    itemView.setLayoutParams(new LinearLayout.LayoutParams(0, 0));
+                    //itemView.setLayoutParams(new LinearLayout.LayoutParams(0, 0));
                 } else if (isVisible || isActivated == 1) {
                     itemView.setVisibility(View.VISIBLE);
-                    itemView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+                    //itemView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
                 }
             }
         }

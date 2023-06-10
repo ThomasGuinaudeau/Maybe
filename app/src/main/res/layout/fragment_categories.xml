@@ -8,9 +8,9 @@
         android:id="@+id/category_main_title"
         android:layout_width="match_parent"
         android:layout_height="26dp"
-        android:background="#207667"
+        android:background="?colorPrimary"
         android:gravity="center"
-        android:textColor="#BBBBBB"
+        android:textColor="?colorOnPrimary"
         app:layout_constraintTop_toTopOf="parent" />
 
     <GridView

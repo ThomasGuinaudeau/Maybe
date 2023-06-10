@@ -49,11 +49,11 @@ import androidx.media.MediaBrowserServiceCompat;
 import androidx.media.app.NotificationCompat.MediaStyle;
 import androidx.media.session.MediaButtonReceiver;
 
+import com.google.android.material.color.MaterialColors;
 import com.maybe.maybe.R;
 import com.maybe.maybe.activities.MainActivity;
 import com.maybe.maybe.database.entity.Music;
 import com.maybe.maybe.database.entity.MusicWithArtists;
-import com.maybe.maybe.utils.ColorsConstants;
 import com.maybe.maybe.utils.Constants;
 
 import java.io.File;
@@ -185,7 +185,8 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
                 callback.onSeekTo(position);
                 break;
             case Constants.ACTION_CHANGE_LIST:
-                setMusicList(intent.getExtras().getParcelableArrayList(getString(R.string.key_parcelable_data)));
+                if (intent.getExtras() != null)
+                    setMusicList(intent.getExtras().getParcelableArrayList(getString(R.string.key_parcelable_data)));
                 break;
             case Constants.ACTION_CHANGE_MUSIC:
                 begin = 1;
@@ -237,7 +238,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         }
     }
 
-    private void setMusicList(ArrayList<MusicWithArtists> musicWithArtists) {
+    public void setMusicList(ArrayList<MusicWithArtists> musicWithArtists) {
         if (musicList == null) {
             musicList = new MusicList();
             musicList.setMusics(musicWithArtists);
@@ -249,6 +250,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
             if (!musicList.changeForMusicWithId(fileId))
                 timestamp = 0;
             currentDuration.setValue(timestamp);
+            updateMetaData();
             initMediaPlayer(musicList.getCurrent().music.getMusic_id());
             notificationManager.notify(NOTIFICATION_ID, buildForegroundNotification());
         } else {
@@ -268,7 +270,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
     }
 
     public void onAppBackground() {
-        Log.d(TAG, "onAppBackground ");// + mediaPlayer.playingState());
+        Log.d(TAG, "onAppBackground ");
         if (mediaPlayer != null && mediaPlayer.isPlaying()) {
             mHandler.removeCallbacks(updateTimeTask);
             Log.d(TAG, "mHandler = off");
@@ -276,7 +278,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
     }
 
     public void onAppForeground() {
-        Log.d(TAG, "onAppForeground " + mediaPlayer.isPlaying());
+        Log.d(TAG, "onAppForeground ");
         updateMetaData();
         if (mediaPlayer.isPlaying()) {
             mHandler.postDelayed(updateTimeTask, 0);
@@ -333,6 +335,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
     }
 
     public void initMediaPlayer(long fileId) {
+        Log.d(TAG, "initMediaPlayer");
         if (mediaPlayer == null) {
             mediaPlayer = new MediaPlayer();
             mediaPlayer.setAudioAttributes(
@@ -415,8 +418,9 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
         MediaMetadataRetriever receiver = new MediaMetadataRetriever();
         receiver.setDataSource(this, Uri.fromFile(new File(musicList.getCurrent().music.getMusic_path())));
-        BitmapDrawable icon = null;
         byte[] data = receiver.getEmbeddedPicture();
+        receiver.release();
+        BitmapDrawable icon = null;
         if (data != null) {
             Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
             icon = new BitmapDrawable(getResources(), bitmap);
@@ -431,6 +435,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
     }
 
     public void updateCurrentDuration(int state, int position) {
+        Log.d(TAG, "updateCurrentDuration");
         int newState = state;
         if (state == -1 && mediaPlayer != null)
             newState = mediaPlayer.isPlaying() ? PlaybackStateCompat.STATE_PLAYING : PlaybackStateCompat.STATE_PAUSED;
@@ -450,6 +455,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
     }
 
     public Notification buildForegroundNotification() {
+        Log.d(TAG, "buildForegroundNotification");
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID);
         builder.setContentTitle(description.getTitle());
         builder.setContentText(description.getSubtitle());
@@ -457,9 +463,12 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
         Intent intent = new Intent(this, MainActivity.class);
         builder.setContentIntent(PendingIntent.getActivity(this, (int) System.currentTimeMillis(), intent, PendingIntent.FLAG_IMMUTABLE));
+        builder.setDeleteIntent(MediaButtonReceiver.buildMediaButtonPendingIntent(this, PlaybackStateCompat.ACTION_PAUSE));
         builder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+        builder.setCategory(NotificationCompat.CATEGORY_SERVICE);
         builder.setSmallIcon(R.drawable.round_music_note_24);
-        builder.setColor(ColorsConstants.NOTIFICATION_BACKGROUND_COLOR);
+        builder.setColorized(true);
+        builder.setColor(MaterialColors.getColor(this, R.attr.backgroundColor, 0x00000000));
         builder.addAction(new NotificationCompat.Action(R.drawable.round_skip_previous, "previous", MediaButtonReceiver.buildMediaButtonPendingIntent(this, PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS)));
         if (mediaPlayer != null && mediaPlayer.isPlaying()) {
             builder.addAction(new NotificationCompat.Action(R.drawable.ic_round_pause_24, "pause", MediaButtonReceiver.buildMediaButtonPendingIntent(this, PlaybackStateCompat.ACTION_PAUSE)));

@@ -12,7 +12,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -30,7 +29,6 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
@@ -56,7 +54,6 @@ import com.maybe.maybe.database.entity.Playlist;
 import com.maybe.maybe.fragments.category.editing.ListEditingFragment;
 import com.maybe.maybe.fragments.category.grid.CategoryGridFragment;
 import com.maybe.maybe.fragments.category.list.ListsFragment;
-import com.maybe.maybe.utils.ColorsConstants;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -284,8 +281,8 @@ public class CategoryFragment extends Fragment implements PlaylistAsyncTaskPlayl
     }
 
     public void updateColors() {
-        Drawable icon = ContextCompat.getDrawable(getContext(), R.drawable.custom_expandable);
-        icon.setTint(ColorsConstants.SECONDARY_TEXT_COLOR);
+        //Drawable icon = ContextCompat.getDrawable(getContext(), R.drawable.custom_expandable);
+        //icon.setTint(ColorsConstants.SECONDARY_TEXT_COLOR);
     }
 
     public void addToPlaylist(ArrayList<Music> musics) {

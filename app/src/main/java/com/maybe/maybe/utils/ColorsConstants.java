@@ -1,13 +1,7 @@
 package com.maybe.maybe.utils;
 
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.graphics.Color;
-
-import com.maybe.maybe.R;
-
 public class ColorsConstants {
-    public static int PRIMARY_COLOR;
+    /*public static int PRIMARY_COLOR;
     public static int PRIMARY_LIGHT_COLOR;
     public static int PRIMARY_DARK_COLOR;
     public static int PRIMARY_TEXT_COLOR;
@@ -69,5 +63,5 @@ public class ColorsConstants {
         editor.putInt(context.getString(R.string.key_background_color), DEFAULT_BACKGROUND_COLOR);
         editor.putInt(context.getString(R.string.key_selected_color), DEFAULT_SELECTED_COLOR);
         editor.apply();
-    }
+    }*/
 }

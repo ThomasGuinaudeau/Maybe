@@ -10,8 +10,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.util.Log;
-import android.view.View;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -19,17 +19,20 @@ import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
+import androidx.preference.PreferenceManager;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.maybe.maybe.R;
 import com.maybe.maybe.database.AppDatabase;
 import com.maybe.maybe.database.async_tasks.FillDbAsyncTask;
 import com.maybe.maybe.database.async_tasks.OnFillDbAsyncTaskFinish;
+import com.maybe.maybe.database.entity.MusicWithArtists;
 import com.maybe.maybe.fragments.CustomViewPager;
 import com.maybe.maybe.fragments.category.CategoryFragment;
 import com.maybe.maybe.fragments.main.MainFragment;
 import com.maybe.maybe.fragments.player.PlayerFragment;
-import com.maybe.maybe.utils.ColorsConstants;
+
+import java.util.ArrayList;
 
 public class MainActivity extends FragmentActivity implements CategoryFragment.CategoryFragmentListener, MainFragment.MainFragmentListener, PlayerFragment.PlayerFragmentListener, OnFillDbAsyncTaskFinish {
 
@@ -69,22 +72,18 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        int currentTheme = PreferenceManager.getDefaultSharedPreferences(this).getInt(getString(R.string.key_theme), R.style.AppTheme_Dark_Default);
+        setTheme(currentTheme);
         super.onCreate(savedInstanceState);
         Log.e(TAG, "main oncreate");
         //Thread.setDefaultUncaughtExceptionHandler(this::handleUncaughtException);
 
-        //StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder().detectLeakedClosableObjects().penaltyLog().build());
+        StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder().detectLeakedClosableObjects().penaltyLog().build());
         int permissionLevel = hasPermissions();
         if (permissionLevel == 0 || permissionLevel == 1)
             ActivityCompat.requestPermissions(this, PERMISSIONS, 1);
         else
             checkForUpdate();
-    }
-
-    @Override
-    public void startActivity(Intent intent) {
-        super.startActivity(intent);
-        Log.e(TAG, "main startActivity");
     }
 
     private int hasPermissions() {
@@ -128,7 +127,7 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
     }
 
     public void start() {
-        ColorsConstants.loadColors(this);
+        //ColorsConstants.loadColors(this);
 
         setContentView(R.layout.activity_main);
 
@@ -142,7 +141,7 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
     }
 
     public void settingsUpdated() {
-        ColorsConstants.loadColors(this);
+        //ColorsConstants.loadColors(this);
 
         updateColors();
 
@@ -157,8 +156,8 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
     }
 
     public void updateColors() {
-        View background = (View) findViewById(R.id.view);
-        background.setBackgroundColor(ColorsConstants.BACKGROUND_COLOR);
+        //View background = (View) findViewById(R.id.view);
+        //background.setBackgroundColor(ColorsConstants.BACKGROUND_COLOR);
     }
 
     @Override
@@ -248,6 +247,12 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
     public void changeListOrder(String sort) {
         MainFragment fragment = (MainFragment) pagerAdapter.getRegisteredFragment(MAIN_POS);
         fragment.updateList(-1, null, sort, false);
+    }
+
+    @Override
+    public void updateListInService(ArrayList<MusicWithArtists> musicWithArtistsList) {
+        PlayerFragment fragment = (PlayerFragment) pagerAdapter.getRegisteredFragment(PLAY_POS);
+        fragment.updateListInService(musicWithArtistsList);
     }
 
     //On crash send stack trace

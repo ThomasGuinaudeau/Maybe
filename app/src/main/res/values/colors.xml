@@ -8,4 +8,39 @@
     <color name="seek_bar_green">#7bd130</color>
     <color name="seek_bar_blue">#429bed</color>
     <color name="seek_bar_alpha">#888888</color>
+
+    <color name="color_primary">#207667</color>
+    <color name="color_primary_dark">#004a3d</color>
+    <color name="color_primary_light">#54a595</color>
+    <color name="color_on_primary">#DDDDDD</color>
+    <color name="color_secondary">#76202e</color>
+    <color name="color_secondary_dark">#450004</color>
+    <color name="color_secondary_light">#a94e57</color>
+    <color name="color_on_secondary">#DDDDDD</color>
+
+    <color name="blue_color_primary">#145589</color>
+    <color name="blue_color_primary_dark">#093457</color>
+    <color name="blue_color_primary_light">#2085bf</color>
+    <color name="blue_color_on_primary">#DDDDDD</color>
+    <color name="blue_color_secondary">#c56806</color>
+    <color name="blue_color_secondary_dark">#9f5308</color>
+    <color name="blue_color_secondary_light">#dc760e</color>
+    <color name="blue_color_on_secondary">#DDDDDD</color>
+
+    <color name="purple_color_primary">#9C27B0</color>
+    <color name="purple_color_primary_dark">#7B1FA2</color>
+    <color name="purple_color_primary_light">#E1BEE7</color>
+    <color name="purple_color_on_primary">#DDDDDD</color>
+    <color name="purple_color_secondary">#7C4DFF</color>
+    <color name="purple_color_secondary_dark">#512DA8</color>
+    <color name="purple_color_secondary_light">#000</color>
+    <color name="purple_color_on_secondary">#DDDDDD</color>
+
+    <color name="light_background">#f0e4e4</color>
+    <color name="dark_background">#2a2828</color>
+
+    <color name="light_text">#DDDDDD</color>
+    <color name="light_text_faded">#AAAAAA</color>
+    <color name="dark_text">#333333</color>
+    <color name="dark_text_faded">#777777</color>
 </resources>

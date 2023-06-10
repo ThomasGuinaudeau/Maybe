@@ -2,6 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:gravity="center"
     android:orientation="horizontal"
     android:paddingVertical="10dp"
     android:paddingEnd="10dp">
@@ -11,8 +12,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_weight="0"
-
-        android:buttonTint="#ffffff"
+        android:buttonTint="?android:textColor"
         android:clickable="false"
         android:longClickable="false" />
 
@@ -21,18 +21,23 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="10dp"
-        android:layout_weight="1"
-        android:text="Perfect timing"
-        android:textColor="#ffffff" />
+        android:layout_weight="0"
+        android:ellipsize="end"
+        android:maxWidth="220dp"
+        android:maxLines="2"
+        android:text="Perfect timing" />
 
     <TextView
         android:id="@+id/category_editing_list_item_artist"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="10dp"
-        android:layout_weight="0"
+        android:layout_weight="1"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:paddingStart="8dp"
         android:text="Hiroyuki Sawano"
-        android:textColor="#ffffff" />
+        android:textAlignment="textEnd" />
 
     <TextView
         android:id="@+id/category_editing_list_item_quantity"
@@ -40,6 +45,5 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="10dp"
         android:layout_weight="0"
-        android:text="1"
-        android:textColor="#bbbbbb" />
+        android:text="1" />
 </LinearLayout>

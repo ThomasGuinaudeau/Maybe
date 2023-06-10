@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <data>
 
@@ -57,22 +58,6 @@
             type="Integer" />
 
         <variable
-            name="primaryTextColor"
-            type="Integer" />
-
-        <variable
-            name="secondaryTextColor"
-            type="Integer" />
-
-        <variable
-            name="secondaryColor"
-            type="Integer" />
-
-        <variable
-            name="secondaryDarkColor"
-            type="Integer" />
-
-        <variable
             name="enable"
             type="Boolean" />
 
@@ -120,7 +105,7 @@
             android:layout_marginTop="8dp"
             android:contentDescription="@{descPlaylists}"
             android:text="@{playlists}"
-            android:textColor="@{secondaryTextColor}"
+            android:textColor="?textColorFaded"
             app:layout_constraintStart_toStartOf="@id/content"
             app:layout_constraintTop_toTopOf="@id/content" />
 
@@ -133,9 +118,9 @@
             android:max="@{totalDuration}"
             android:onProgressChanged="@{seekValue::onValueChanged}"
             android:progress="@{currentDuration}"
-            android:progressBackgroundTint="@{secondaryDarkColor}"
-            android:progressTint="@{secondaryColor}"
-            android:thumbTint="@{secondaryColor}"
+            android:progressBackgroundTint="?colorSecondaryDark"
+            android:progressTint="?colorSecondary"
+            android:thumbTint="?colorSecondary"
             app:layout_constraintBottom_toTopOf="@id/player_layout_ppn"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
@@ -158,7 +143,6 @@
 
             <ImageView
                 android:id="@+id/player_previous"
-                customtint="@{primaryTextColor}"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
@@ -168,11 +152,12 @@
                 android:enabled="@{enable}"
                 android:onClick="@{(v)->fragment.onClick(v)}"
                 android:scaleType="fitCenter"
-                android:src="@{previous}" />
+                android:src="@{previous}"
+                android:tint="?android:textColor"
+                tools:ignore="UseAppTint" />
 
             <ImageView
                 android:id="@+id/player_play"
-                customtint="@{primaryTextColor}"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="0.16"
@@ -181,11 +166,12 @@
                 android:enabled="@{enable}"
                 android:onClick="@{(v)->fragment.onClick(v)}"
                 android:scaleType="fitCenter"
-                android:src="@{state}" />
+                android:src="@{state}"
+                android:tint="?android:textColor"
+                tools:ignore="UseAppTint" />
 
             <ImageView
                 android:id="@+id/player_next"
-                customtint="@{primaryTextColor}"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
@@ -195,7 +181,9 @@
                 android:enabled="@{enable}"
                 android:onClick="@{(v)->fragment.onClick(v)}"
                 android:scaleType="fitCenter"
-                android:src="@{next}" />
+                android:src="@{next}"
+                android:tint="?android:textColor"
+                tools:ignore="UseAppTint" />
 
             <TextView
                 android:layout_width="0dp"
@@ -223,7 +211,6 @@
 
             <ImageView
                 android:id="@+id/player_repeat"
-                customtint="@{primaryTextColor}"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="0.08"
@@ -232,7 +219,9 @@
                 android:enabled="@{enable}"
                 android:onClick="@{(v)->fragment.onClick(v)}"
                 android:scaleType="fitCenter"
-                android:src="@{repeat}" />
+                android:src="@{repeat}"
+                android:tint="?android:textColor"
+                tools:ignore="UseAppTint" />
 
             <TextView
                 android:layout_width="0dp"
@@ -242,7 +231,6 @@
 
             <ImageView
                 android:id="@+id/player_shuffle"
-                customtint="@{primaryTextColor}"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="0.08"
@@ -251,7 +239,9 @@
                 android:enabled="@{enable}"
                 android:onClick="@{(v)->fragment.onClick(v)}"
                 android:scaleType="fitCenter"
-                android:src="@{shuffle}" />
+                android:src="@{shuffle}"
+                android:tint="?android:textColor"
+                tools:ignore="UseAppTint" />
 
             <TextView
                 android:layout_width="0dp"
@@ -268,7 +258,7 @@
             android:paddingStart="14dp"
             android:text="@{currentDurationStr}"
             android:textAlignment="center"
-            android:textColor="@{primaryTextColor}"
+            android:textColor="?textColorFaded"
             app:layout_constraintBottom_toTopOf="@id/player_seekBar"
             app:layout_constraintStart_toStartOf="@id/player_seekBar" />
 
@@ -280,7 +270,7 @@
             android:paddingEnd="14dp"
             android:text="@{totalDurationStr}"
             android:textAlignment="center"
-            android:textColor="@{primaryTextColor}"
+            android:textColor="?textColorFaded"
             app:layout_constraintBottom_toTopOf="@id/player_seekBar"
             app:layout_constraintEnd_toEndOf="@id/player_seekBar" />
 
@@ -291,7 +281,7 @@
             android:contentDescription="@{descAlbum}"
             android:text="@{musicWithArtists.music.music_album}"
             android:textAlignment="center"
-            android:textColor="@{secondaryTextColor}"
+            android:textColor="?textColorFaded"
             app:layout_constraintBottom_toTopOf="@id/player_current_duration"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
@@ -303,7 +293,7 @@
             android:contentDescription="@{descArtist}"
             android:text="@{musicWithArtists.artistsToString()}"
             android:textAlignment="center"
-            android:textColor="@{secondaryTextColor}"
+            android:textColor="?textColorFaded"
             android:textStyle="bold"
             app:layout_constraintBottom_toTopOf="@id/player_album"
             app:layout_constraintEnd_toEndOf="parent"
@@ -316,7 +306,7 @@
             android:contentDescription="@{descTitle}"
             android:text="@{musicWithArtists.music.music_title}"
             android:textAlignment="center"
-            android:textColor="@{primaryTextColor}"
+            android:textColor="?android:textColor"
             android:textSize="22sp"
             app:layout_constraintBottom_toTopOf="@id/player_aritst"
             app:layout_constraintEnd_toEndOf="parent"

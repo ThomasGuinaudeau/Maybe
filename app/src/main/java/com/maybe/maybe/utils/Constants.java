@@ -4,7 +4,9 @@ public class Constants {
     public static final String BROADCAST_DESTINATION = "destination";
     public static final String BROADCAST_EXTRAS = "extras";
     public static final String tab00c0 = "AAAAAAACEEEEIIII" + "DNOOOOO\u00d7\u00d8UUUUYI\u00df" + "aaaaaaaceeeeiiii" + "\u00f0nooooo\u00f7\u00f8uuuuy\u00fey" + "AaAaAaCcCcCcCcDd" + "DdEeEeEeEeEeGgGg" + "GgGgHhHhIiIiIiIi" + "IiJjJjKkkLlLlLlL" + "lLlNnNnNnnNnOoOo" + "OoOoRrRrRrSsSsSs" + "SsTtTtTtUuUuUuUu" + "UuUuWwYyYZzZzZzF";
-    private static final String PACKAGE_NAME = "com.maybe.maybe";
+    public static final int DARK_THEME = 1;
+    public static final int LIGHT_THEME = 2;
+    public static final String PACKAGE_NAME = "com.maybe.maybe";
     public static final String ACTION_CREATE_SERVICE = PACKAGE_NAME + ".ACTION_CREATE_SERVICE";
     public static final String ACTION_END_SERVICE = PACKAGE_NAME + ".ACTION_END_SERVICE";
     public static final String ACTION_TO_ACTIVITY = PACKAGE_NAME + ".ACTION_TO_ACTIVITY";

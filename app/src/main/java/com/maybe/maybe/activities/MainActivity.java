@@ -10,7 +10,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.os.StrictMode;
 import android.util.Log;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -32,7 +31,10 @@ import com.maybe.maybe.fragments.category.CategoryFragment;
 import com.maybe.maybe.fragments.main.MainFragment;
 import com.maybe.maybe.fragments.player.PlayerFragment;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Locale;
 
 public class MainActivity extends FragmentActivity implements CategoryFragment.CategoryFragmentListener, MainFragment.MainFragmentListener, PlayerFragment.PlayerFragmentListener, OnFillDbAsyncTaskFinish {
 
@@ -76,9 +78,9 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
         setTheme(currentTheme);
         super.onCreate(savedInstanceState);
         Log.e(TAG, "main oncreate");
-        //Thread.setDefaultUncaughtExceptionHandler(this::handleUncaughtException);
+        Thread.setDefaultUncaughtExceptionHandler(this::handleUncaughtException);
 
-        StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder().detectLeakedClosableObjects().penaltyLog().build());
+        //StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder().detectLeakedClosableObjects().penaltyLog().build());
         int permissionLevel = hasPermissions();
         if (permissionLevel == 0 || permissionLevel == 1)
             ActivityCompat.requestPermissions(this, PERMISSIONS, 1);
@@ -256,19 +258,18 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
     }
 
     //On crash send stack trace
-    /*public void handleUncaughtException(Thread thread, Throwable e) {
+    public void handleUncaughtException(Thread thread, Throwable e) {
         String exStackTrace = Log.getStackTraceString(e);
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault());
         String currentDate = sdf.format(new Date());
         Intent i = new Intent(Intent.ACTION_SEND);
         i.setType("message/rfc822");
-        i.putExtra(Intent.EXTRA_EMAIL, new String[]{ "guinaudt@hotmail.com" });
         i.putExtra(Intent.EXTRA_SUBJECT, "Crash Logs " + currentDate);
         i.putExtra(Intent.EXTRA_TEXT, "" + exStackTrace);
         try {
-            startActivity(Intent.createChooser(i, "Send mail..."));
+            startActivity(Intent.createChooser(i, "Send"));
         } catch (android.content.ActivityNotFoundException ex) {
-            Log.e(TAG, "Cant send email");
+            Log.e(TAG, "Cant send");
         }
 
         try {
@@ -279,5 +280,5 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
             finish();
             System.exit(0);
         }
-    }*/
+    }
 }

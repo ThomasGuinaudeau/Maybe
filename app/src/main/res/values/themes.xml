@@ -42,7 +42,7 @@
         <item name="colorPrimaryLight">@color/color_primary_light</item>
         <item name="colorOnPrimary">@color/color_on_primary</item>
         <!-- Secondary brand color. -->
-        <item name="colorSecondary">@color/color_primary</item>
+        <item name="colorSecondary">@color/color_secondary</item>
         <item name="colorSecondaryDark">@color/color_secondary_dark</item>
         <item name="colorSecondaryLight">@color/color_secondary_light</item>
         <item name="colorOnSecondary">@color/color_on_secondary</item>

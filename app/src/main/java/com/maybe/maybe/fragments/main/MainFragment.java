@@ -264,11 +264,10 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
             //adapter.notifyDataSetChanged();
             main_title.setText(currentName);
 
-            callback.updateListInService(musicWithArtists);
+            ArrayList<Integer> idList = new ArrayList<>();
+            musicWithArtists.forEach(item -> idList.add((int) item.music.getMusic_id()));
 
-            //Bundle bundle = new Bundle();
-            //bundle.putParcelableArrayList(getString(R.string.key_parcelable_data), new ArrayList<>(ma));
-            //Methods.newServiceIntent(getContext(), Constants.ACTION_CHANGE_LIST, bundle);
+            callback.updateListInService(idList);
 
             new SaveCurrentListAsyncTask(musicWithArtists, this).execute(appDatabase, getContext(), currentCategoryId, currentName, sort, isStart);
         } else if (buttonEnable) {
@@ -344,7 +343,7 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
 
         void resetList();
 
-        void updateListInService(ArrayList<MusicWithArtists> musicWithArtists);
+        void updateListInService(ArrayList<Integer> idList);
 
         void disableButtons(boolean enable);
     }

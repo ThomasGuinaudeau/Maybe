@@ -4,7 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 
-import com.maybe.maybe.fragments.main.service.MediaPlayerService;
+import com.maybe.maybe.fragments.player.service.MediaPlayerService;
 
 public class Methods {
 

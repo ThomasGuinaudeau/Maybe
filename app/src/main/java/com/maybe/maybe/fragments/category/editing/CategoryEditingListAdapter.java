@@ -4,7 +4,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -18,11 +17,12 @@ import com.maybe.maybe.database.entity.MusicWithArtists;
 import java.util.List;
 
 public class CategoryEditingListAdapter extends RecyclerView.Adapter<CategoryEditingListAdapter.ViewHolder> {
+    private final CategoryEditingListCallback callback;
     private List<MusicWithArtists> list;
     private SelectionTracker<Long> tracker;
-    private boolean isVisible;
 
-    public CategoryEditingListAdapter() {
+    public CategoryEditingListAdapter(CategoryEditingListCallback callback) {
+        this.callback = callback;
         setHasStableIds(true);
     }
 
@@ -56,10 +56,6 @@ public class CategoryEditingListAdapter extends RecyclerView.Adapter<CategoryEdi
         this.tracker = tracker;
     }
 
-    public void setVisible(boolean visible) {
-        isVisible = visible;
-    }
-
     public class ViewHolder extends RecyclerView.ViewHolder {
         private final TextView name, artist, quantity;
         private final CheckBox checkBox;
@@ -87,16 +83,14 @@ public class CategoryEditingListAdapter extends RecyclerView.Adapter<CategoryEdi
             } else {
                 checkBox.setChecked(isActivated == 1);
                 itemView.setOnClickListener(view -> {
-                    if (!tracker.hasSelection())
+                    if (!tracker.isSelected(musicWithArtists.music.getMusic_id()))
                         tracker.select(musicWithArtists.music.getMusic_id());
+                    else
+                        tracker.deselect(musicWithArtists.music.getMusic_id());
+                    if (callback != null) {
+                        callback.onCategoryEditingListClick();
+                    }
                 });
-                if (!isVisible && isActivated == 0) {
-                    itemView.setVisibility(View.GONE);
-                    itemView.setLayoutParams(new LinearLayout.LayoutParams(0, 0));
-                } else if (isVisible || isActivated == 1) {
-                    itemView.setVisibility(View.VISIBLE);
-                    itemView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-                }
             }
         }
 

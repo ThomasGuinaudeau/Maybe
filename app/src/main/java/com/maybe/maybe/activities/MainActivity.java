@@ -1,8 +1,8 @@
 package com.maybe.maybe.activities;
 
-import static com.maybe.maybe.fragments.CustomViewPager.CAT_POS;
-import static com.maybe.maybe.fragments.CustomViewPager.MAIN_POS;
-import static com.maybe.maybe.fragments.CustomViewPager.PLAY_POS;
+import static com.maybe.maybe.CustomViewPager.CAT_POS;
+import static com.maybe.maybe.CustomViewPager.MAIN_POS;
+import static com.maybe.maybe.CustomViewPager.PLAY_POS;
 
 import android.app.Activity;
 import android.content.Context;
@@ -25,8 +25,7 @@ import com.maybe.maybe.R;
 import com.maybe.maybe.database.AppDatabase;
 import com.maybe.maybe.database.async_tasks.FillDbAsyncTask;
 import com.maybe.maybe.database.async_tasks.OnFillDbAsyncTaskFinish;
-import com.maybe.maybe.database.entity.MusicWithArtists;
-import com.maybe.maybe.fragments.CustomViewPager;
+import com.maybe.maybe.CustomViewPager;
 import com.maybe.maybe.fragments.category.CategoryFragment;
 import com.maybe.maybe.fragments.main.MainFragment;
 import com.maybe.maybe.fragments.player.PlayerFragment;
@@ -67,7 +66,7 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
             result -> {
                 if (result.getResultCode() == Activity.RESULT_OK) {
                     //Intent data = result.getData();
-                    settingsUpdated();
+                    //If settings have to update something
                 }
             });
     private int time = 0;
@@ -129,11 +128,7 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
     }
 
     public void start() {
-        //ColorsConstants.loadColors(this);
-
         setContentView(R.layout.activity_main);
-
-        updateColors();
         viewPager = findViewById(R.id.pager);
         viewPager.setOffscreenPageLimit(2);
         pagerAdapter = new CustomViewPager(this);
@@ -141,27 +136,6 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
         viewPager.setCurrentItem(MAIN_POS);
         viewPager.registerOnPageChangeCallback(onPageChangeCallback);
     }
-
-    public void settingsUpdated() {
-        //ColorsConstants.loadColors(this);
-
-        updateColors();
-
-        CategoryFragment categoryFragment = (CategoryFragment) pagerAdapter.getRegisteredFragment(CAT_POS);
-        categoryFragment.updateColors();
-
-        MainFragment mainFragment = (MainFragment) pagerAdapter.getRegisteredFragment(MAIN_POS);
-        mainFragment.updateColors();
-
-        PlayerFragment playerFragment = (PlayerFragment) pagerAdapter.getRegisteredFragment(PLAY_POS);
-        playerFragment.updateColors();
-    }
-
-    public void updateColors() {
-        //View background = (View) findViewById(R.id.view);
-        //background.setBackgroundColor(ColorsConstants.BACKGROUND_COLOR);
-    }
-
     @Override
     protected void onDestroy() {
         Log.d(TAG, "onDestroy");
@@ -252,9 +226,9 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
     }
 
     @Override
-    public void updateListInService(ArrayList<MusicWithArtists> musicWithArtistsList) {
+    public void updateListInService(ArrayList<Integer> idList) {
         PlayerFragment fragment = (PlayerFragment) pagerAdapter.getRegisteredFragment(PLAY_POS);
-        fragment.updateListInService(musicWithArtistsList);
+        fragment.updateListInService(idList);
     }
 
     //On crash send stack trace

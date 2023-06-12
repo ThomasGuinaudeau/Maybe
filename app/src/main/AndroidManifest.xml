@@ -16,7 +16,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme.Dark.Default">
         <service
-            android:name=".fragments.main.service.MediaPlayerService"
+            android:name=".fragments.player.service.MediaPlayerService"
             android:enabled="true"
             android:exported="false">
             <intent-filter>

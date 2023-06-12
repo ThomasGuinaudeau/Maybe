@@ -1,4 +1,4 @@
-package com.maybe.maybe.fragments;
+package com.maybe.maybe;
 
 import android.util.SparseArray;
 

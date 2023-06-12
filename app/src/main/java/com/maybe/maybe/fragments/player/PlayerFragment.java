@@ -1,8 +1,5 @@
 package com.maybe.maybe.fragments.player;
 
-import static android.provider.MediaStore.Files.getContentUri;
-import static com.maybe.maybe.utils.Constants.ACTION_PAUSE;
-import static com.maybe.maybe.utils.Constants.ACTION_PLAY;
 import static com.maybe.maybe.utils.Constants.REPEAT_ALL;
 import static com.maybe.maybe.utils.Constants.REPEAT_NONE;
 import static com.maybe.maybe.utils.Constants.REPEAT_ONE;
@@ -13,15 +10,16 @@ import static com.maybe.maybe.utils.Constants.SORT_RANDOM;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.content.res.ColorStateList;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
-import android.media.MediaMetadataRetriever;
+import android.media.AudioManager;
 import android.os.Bundle;
-import android.os.IBinder;
+import android.os.Handler;
+import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.MediaMetadataCompat;
+import android.support.v4.media.session.MediaControllerCompat;
+import android.support.v4.media.session.MediaSessionCompat;
+import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -42,55 +40,108 @@ import com.maybe.maybe.database.async_tasks.playlist.PlaylistAsyncTaskPlaylistRe
 import com.maybe.maybe.database.entity.Artist;
 import com.maybe.maybe.database.entity.Music;
 import com.maybe.maybe.database.entity.MusicWithArtists;
-import com.maybe.maybe.database.entity.Playlist;
 import com.maybe.maybe.databinding.FragmentPlayerBinding;
-import com.maybe.maybe.fragments.main.service.MediaPlayerService;
+import com.maybe.maybe.fragments.player.service.MediaPlayerService;
 import com.maybe.maybe.utils.Constants;
 import com.maybe.maybe.utils.CycleStateResource;
 import com.maybe.maybe.utils.Methods;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
 
-public class PlayerFragment extends Fragment implements PlaylistAsyncTaskPlaylistResponse {
+public class PlayerFragment extends Fragment {
 
     private static final String TAG = "PlayerFragment";
-    private int totalDuration;
-    private CycleStateResource shuffleCycle, repeatCycle, playPauseCycle;
+    private final Handler mHandler = new Handler();
+    private int totalDuration, currentDuration;
+    private boolean isFirstLoad = true;
+    private ArrayList<Integer> idList;
+    private CycleStateResource shuffleCycle, repeatCycle;
     private FragmentPlayerBinding binding;
     private SeekValueBinding seekValueBinding;
     private PlayerFragmentListener callback;
-    private boolean mBound = false;
-    private boolean isFirstLoad = true;
-    private MediaPlayerService mediaPlayerService;
-    private ArrayList<MusicWithArtists> musicWithArtists;
-    private final ServiceConnection connection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-            Log.e(TAG, "onServiceConnected");
-            mBound = true;
-            MediaPlayerService.LocalBinder binder = (MediaPlayerService.LocalBinder) iBinder;
-            mediaPlayerService = binder.getService();
+    private boolean isPlaying;
+    private Runnable updateTimeTask;
+    private MediaBrowserCompat mediaBrowser;
+    private MediaControllerCompat.Callback controllerCallback =
+            new MediaControllerCompat.Callback() {
+                @Override
+                public void onMetadataChanged(MediaMetadataCompat metadata) {
+                    Log.e(TAG, "onMetadataChanged " + metadata.getDescription().getTitle());
+                    binding.setTitle(metadata.getDescription().getTitle().toString());
+                    binding.setArtist(metadata.getDescription().getSubtitle().toString());
+                    binding.setAlbum(metadata.getString(MediaMetadataCompat.METADATA_KEY_ALBUM));
+                    binding.setImage(new BitmapDrawable(getContext().getResources(), metadata.getDescription().getIconBitmap()));
 
-            mediaPlayerService.getCurrentDuration().observe(getActivity(), currentDuration -> updateDuration(currentDuration));
-            mediaPlayerService.getIsLoop().observe(getActivity(), loopState -> changeState(repeatCycle, loopState));
-            mediaPlayerService.getIsPlaying().observe(getActivity(), playingState -> changePlayingState(playingState));
-            mediaPlayerService.getCurrentMusic().observe(getActivity(), musicWithArtists -> changeMusic(musicWithArtists));
+                    totalDuration = (int) metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION);//(int) musicWithArtists.music.getMusic_duration();
+                    binding.setTotalDuration(totalDuration / 1000);
+                    int[] timeArray = convertMilliToTime(totalDuration);
+                    binding.setTotalDurationStr(formatTime(timeArray));
 
-            if (isFirstLoad && musicWithArtists != null) {
-                isFirstLoad = false;
-                mediaPlayerService.setMusicList(musicWithArtists);
-                musicWithArtists = null;
-            }
-        }
+                    binding.setDescTitle(metadata.getDescription().getTitle().toString());
+                    binding.setDescArtist(metadata.getDescription().getSubtitle().toString());
+                    binding.setDescAlbum(metadata.getString(MediaMetadataCompat.METADATA_KEY_ALBUM));
+                    binding.setDescTotalDuration(getString(R.string.desc_total_duration, timeArray[0], timeArray[1], timeArray[2]));
 
-        @Override
-        public void onServiceDisconnected(ComponentName componentName) {
-            //Unbinding works but not but onServiceDisconnected() is not called.
-            mBound = false;
-        }
-    };
+                    long musicId = Long.parseLong(metadata.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID));
+                    callback.changeCurrentMusic(musicId);
+                    updatePlaylist(musicId);
+                }
+
+                @Override
+                public void onPlaybackStateChanged(PlaybackStateCompat state) {
+                    Log.e(TAG, "onPlaybackStateChanged");
+                    if (state.getState() == PlaybackStateCompat.STATE_PLAYING) {
+                        binding.setState(R.drawable.ic_round_pause_24);
+                        isPlaying = true;
+                        addRunnable();
+                    } else {
+                        binding.setState(R.drawable.ic_round_play_arrow_24);
+                        removeRunnable();
+                        isPlaying = false;
+                    }
+                    int position = (int) state.getPosition();
+                    currentDuration = position;
+                    updateDuration(position);
+                }
+
+                @Override
+                public void onShuffleModeChanged(int shuffleMode) {
+                    super.onShuffleModeChanged(shuffleMode);
+                }
+
+                @Override
+                public void onSessionDestroyed() {
+                    mediaBrowser.disconnect();
+                }
+            };
+    private final MediaBrowserCompat.ConnectionCallback connectionCallbacks =
+            new MediaBrowserCompat.ConnectionCallback() {
+                @Override
+                public void onConnected() {
+                    Log.e(TAG, "CONNECTING");
+                    MediaSessionCompat.Token token = mediaBrowser.getSessionToken();
+                    MediaControllerCompat mediaController = new MediaControllerCompat(getContext(), token);
+                    MediaControllerCompat.setMediaController(getActivity(), mediaController);
+                    buildTransportControls();
+
+                    if (isFirstLoad && idList != null) {
+                        sendListToService(idList);
+                        isFirstLoad = false;
+                        idList = null;
+                    }
+                }
+
+                @Override
+                public void onConnectionSuspended() {
+                    // The Service has crashed. Disable transport controls until it automatically reconnects
+                }
+
+                @Override
+                public void onConnectionFailed() {
+                    // The Service has refused our connection
+                }
+            };
 
     public static PlayerFragment newInstance() {
         return new PlayerFragment();
@@ -101,34 +152,24 @@ public class PlayerFragment extends Fragment implements PlaylistAsyncTaskPlaylis
         imageView.setImageResource(resource);
     }
 
-    @BindingAdapter("customtint")
-    public static void setImageTint(ImageView imageView, int color) {
-        imageView.setColorFilter(color);
-    }
-
-    @BindingAdapter("android:progressBackgroundTint")
-    public static void setProgressBackgroundTint(SeekBar seekBarView, int color) {
-        seekBarView.setProgressBackgroundTintList(new ColorStateList(new int[][]{ new int[]{ android.R.attr.state_enabled } }, new int[]{ color }));
-    }
-
-    @BindingAdapter("android:progressTint")
-    public static void setProgressTint(SeekBar seekBarView, int color) {
-        seekBarView.setProgressTintList(new ColorStateList(new int[][]{ new int[]{ android.R.attr.state_enabled } }, new int[]{ color }));
-    }
-
-    @BindingAdapter("android:thumbTint")
-    public static void setThumbTint(SeekBar seekBarView, int color) {
-        seekBarView.setThumbTintList(new ColorStateList(new int[][]{ new int[]{ android.R.attr.state_enabled } }, new int[]{ color }));
-    }
-
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.e(TAG, "oncreate player");
-        bindToService();
+
+        updateTimeTask = new Runnable() {
+            public void run() {
+                currentDuration += 500;
+                updateDuration(currentDuration);
+                mHandler.postDelayed(this, 500);
+            }
+        };
+
         Intent playerIntent = new Intent(getContext(), MediaPlayerService.class);
         playerIntent.setAction(Constants.ACTION_CREATE_SERVICE);
         getContext().startForegroundService(playerIntent);
+
+        mediaBrowser = new MediaBrowserCompat(getContext(), new ComponentName(getContext(), MediaPlayerService.class), connectionCallbacks, null);
 
         String[] states = new String[]{ REPEAT_ALL, REPEAT_ONE, REPEAT_NONE };
         int[] resources = new int[]{ R.drawable.round_repeat_24, R.drawable.round_repeat_one_24, R.drawable.ic_round_horizontal_rule_24 };
@@ -139,10 +180,6 @@ public class PlayerFragment extends Fragment implements PlaylistAsyncTaskPlaylis
         shuffleCycle = new CycleStateResource(states, resources);
         SharedPreferences sharedPref = getContext().getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE);
         shuffleCycle.goToState(sharedPref.getString(getString(R.string.sort), SORT_ALPHA));
-
-        states = new String[]{ ACTION_PLAY, ACTION_PAUSE };
-        resources = new int[]{ R.drawable.round_play_arrow_24, R.drawable.round_pause_24 };
-        playPauseCycle = new CycleStateResource(states, resources);
 
         seekValueBinding = new SeekValueBinding();
     }
@@ -156,19 +193,20 @@ public class PlayerFragment extends Fragment implements PlaylistAsyncTaskPlaylis
         artists.add(new Artist("Artist"));
         MusicWithArtists musicWithArtists = new MusicWithArtists(music, artists);
         totalDuration = (int) music.getMusic_duration();
-        binding.setMusicWithArtists(musicWithArtists);
         binding.setTotalDuration(totalDuration / 1000);
         int[] timeArray = convertMilliToTime(totalDuration);
         binding.setTotalDurationStr(formatTime(timeArray));
         binding.setDescTotalDuration(getString(R.string.desc_total_duration, timeArray[0], timeArray[1], timeArray[2]));
         updateDuration(0);
+        binding.setTitle("Title");
+        binding.setArtist("Artist");
+        binding.setAlbum("Album");
         binding.setImage(null);
-        binding.setState(playPauseCycle.getResource());
+        binding.setState(R.drawable.ic_round_play_arrow_24);
         binding.setPrevious(R.drawable.round_skip_previous);
         binding.setNext(R.drawable.round_skip_next);
         binding.setRepeat(repeatCycle.getResource());
         binding.setShuffle(shuffleCycle.getResource());
-        updateColors();
         binding.setFragment(this);
         binding.setSeekValue(seekValueBinding);
         binding.setEnable(false);
@@ -181,57 +219,103 @@ public class PlayerFragment extends Fragment implements PlaylistAsyncTaskPlaylis
         return binding.getRoot();
     }
 
+    @Override
+    public void onStart() {
+        super.onStart();
+        Log.e(TAG, "onStart");
+        mediaBrowser.connect();
+        addRunnable();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Log.e(TAG, "onResume");
+        getActivity().setVolumeControlStream(AudioManager.STREAM_MUSIC);
+        addRunnable();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        Log.e(TAG, "onPause");
+        removeRunnable();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        Log.e(TAG, "onStop");
+        if (MediaControllerCompat.getMediaController(getActivity()) != null) {
+            MediaControllerCompat.getMediaController(getActivity()).unregisterCallback(controllerCallback);
+        }
+        mediaBrowser.disconnect();
+        removeRunnable();
+    }
+
+    void buildTransportControls() {
+        MediaControllerCompat mediaController = MediaControllerCompat.getMediaController(getActivity());
+
+        // Display the initial state
+        MediaMetadataCompat metadata = mediaController.getMetadata();
+        PlaybackStateCompat pbState = mediaController.getPlaybackState();
+
+        // Register a Callback to stay in sync
+        mediaController.registerCallback(controllerCallback);
+    }
+
+    private void addRunnable() {
+        if (isPlaying && !mHandler.hasCallbacks(updateTimeTask))
+            mHandler.postDelayed(updateTimeTask, 500);
+    }
+
+    private void removeRunnable() {
+        if (mHandler.hasCallbacks(updateTimeTask))
+            mHandler.removeCallbacks(updateTimeTask);
+    }
+
     public void onAppForeground() {
+        Log.e(TAG, "onAppForeground");
         Methods.newServiceIntent(getContext(), Constants.ACTION_APP_FOREGROUND, null);
-        bindToService();
     }
 
     public void onAppBackground() {
-        unbindToService();
         Methods.newServiceIntent(getContext(), Constants.ACTION_APP_BACKGROUND, null);
-    }
-
-    private void bindToService() {
-        if (!mBound) {
-            mBound = true;
-            Intent playerIntent = new Intent(getContext(), MediaPlayerService.class);
-            getContext().bindService(playerIntent, connection, Context.BIND_AUTO_CREATE);
-        }
-    }
-
-    private void unbindToService() {
-        if (mBound) {
-            mBound = false;
-            getContext().unbindService(connection);
-        }
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
         Methods.newServiceIntent(getContext(), Constants.ACTION_END_SERVICE, null);
-    }
-
-    public void updateColors() {
-        //binding.setPrimaryTextColor(android.R.attr.textColor);
-        //binding.setSecondaryTextColor(android.R.attr.textColor);
-        //binding.setSecondaryColor(android.R.attr.colorSecondary);
-        //binding.setSecondaryDarkColor(android.R.attr.colorSecondary);//was secondarydarktransparent
+        removeRunnable();
     }
 
     public void onClick(View v) {
-        String action = null;
-        if (v.getId() == R.id.player_repeat) {
-            action = changeState(repeatCycle, null);
-        } else if (v.getId() == R.id.player_shuffle) {
-            callback.changeListOrder(changeState(shuffleCycle, null));
-            return;
-        } else if (v.getId() == R.id.player_play) {
-            action = Constants.ACTION_PLAY_PAUSE;
-            changePlayingState(playPauseCycle.getState());
-        } else if (v.getId() == R.id.player_previous) action = Constants.ACTION_PREVIOUS;
-        else if (v.getId() == R.id.player_next) action = Constants.ACTION_NEXT;
-        if (action != null) Methods.newServiceIntent(getContext(), action, null);
+        MediaControllerCompat mediaController = MediaControllerCompat.getMediaController(getActivity());
+        switch (v.getId()) {
+            case R.id.player_repeat:
+                Bundle bundle = new Bundle();
+                bundle.putString(getString(R.string.key_parcelable_data), changeState(repeatCycle, null));
+                MediaControllerCompat.getMediaController(getActivity()).sendCommand(Constants.ACTION_SORT, bundle, null);
+                break;
+            case R.id.player_shuffle:
+                callback.changeListOrder(changeState(shuffleCycle, null));
+                break;
+            case R.id.player_play:
+                int pbState = mediaController.getPlaybackState().getState();
+                if (pbState == PlaybackStateCompat.STATE_PLAYING) {
+                    mediaController.getTransportControls().pause();
+                } else {
+                    mediaController.getTransportControls().play();
+                }
+                break;
+            case R.id.player_previous:
+                mediaController.getTransportControls().skipToPrevious();
+                break;
+            case R.id.player_next:
+                mediaController.getTransportControls().skipToNext();
+                break;
+        }
     }
 
     private String changeState(CycleStateResource cycle, String state) {
@@ -241,13 +325,6 @@ public class PlayerFragment extends Fragment implements PlaylistAsyncTaskPlaylis
         if (cycle == repeatCycle) binding.setRepeat(repeatCycle.getResource());
         else if (cycle == shuffleCycle) binding.setShuffle(shuffleCycle.getResource());
         return (cycle.getState());
-    }
-
-    private void changePlayingState(String previousState) {
-        if (previousState.equals(Constants.ACTION_PLAY))
-            playPauseCycle.goToState(Constants.ACTION_PAUSE);
-        else playPauseCycle.goToState(Constants.ACTION_PLAY);
-        binding.setState(playPauseCycle.getResource());
     }
 
     @Override
@@ -266,47 +343,23 @@ public class PlayerFragment extends Fragment implements PlaylistAsyncTaskPlaylis
         callback = null;
     }
 
-    //recieved from CategoryFragment
-    public void changeMusic(MusicWithArtists musicWithArtists) {
-        totalDuration = (int) musicWithArtists.music.getMusic_duration();
-        binding.setTotalDuration(totalDuration / 1000);
-        int[] timeArray = convertMilliToTime(totalDuration);
-        binding.setTotalDurationStr(formatTime(timeArray));
-        binding.setDescTotalDuration(getString(R.string.desc_total_duration, timeArray[0], timeArray[1], timeArray[2]));
-
-        binding.setMusicWithArtists(musicWithArtists);
-        binding.setDescTitle(getString(R.string.desc_title, musicWithArtists.music.getMusic_title()));
-        binding.setDescArtist(getString(R.string.desc_artist, musicWithArtists.artistsToString()));
-        binding.setDescAlbum(getString(R.string.desc_album, musicWithArtists.music.getMusic_album()));
-
-        MediaMetadataRetriever receiver = new MediaMetadataRetriever();
-        receiver.setDataSource(getContext(), getContentUri("external", musicWithArtists.music.getMusic_id()));
-        byte[] data = receiver.getEmbeddedPicture();
-        if (data != null) {
-            Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
-            binding.setImage(new BitmapDrawable(getContext().getResources(), bitmap));
-        } else binding.setImage(null);
-
-        callback.changeCurrentMusic(musicWithArtists.music.getMusic_id());
-
+    //Get which playlist contains this song
+    private void updatePlaylist(long musicId) {
         AppDatabase appDatabase = AppDatabase.getInstance(getContext());
-        new PlaylistAsyncTaskPlaylist().execute(this, appDatabase, "selectAllPlaylistsOfId", musicWithArtists.music.getMusic_id());
-    }
-
-    @Override
-    public void onPlaylistAsyncTaskPlaylistFinish(List<Playlist> playlists) {
-        String playlistStr = "";
-        String descPlaylistsStr = "";
-        for (int i = 0; i < playlists.size(); i++) {
-            playlistStr += playlists.get(i).getPlaylist_name();
-            descPlaylistsStr += playlists.get(i).getPlaylist_name();
-            if (i != playlists.size() - 1) {
-                playlistStr += "\n";
-                descPlaylistsStr += ", ";
+        new PlaylistAsyncTaskPlaylist().execute((PlaylistAsyncTaskPlaylistResponse) playlists -> {
+            String playlistStr = "";
+            String descPlaylistsStr = "";
+            for (int i = 0; i < playlists.size(); i++) {
+                playlistStr += playlists.get(i).getPlaylist_name();
+                descPlaylistsStr += playlists.get(i).getPlaylist_name();
+                if (i != playlists.size() - 1) {
+                    playlistStr += "\n";
+                    descPlaylistsStr += ", ";
+                }
             }
-        }
-        binding.setDescPlaylists(getString(R.string.desc_playlists, descPlaylistsStr));
-        binding.setPlaylists(playlistStr);
+            binding.setDescPlaylists(getString(R.string.desc_playlists, descPlaylistsStr));
+            binding.setPlaylists(playlistStr);
+        }, appDatabase, "selectAllPlaylistsOfId", musicId);
     }
 
     public void updateDuration(int currentDuration) {
@@ -331,12 +384,17 @@ public class PlayerFragment extends Fragment implements PlaylistAsyncTaskPlaylis
         return time;
     }
 
-    public void updateListInService(ArrayList<MusicWithArtists> musicWithArtists) {
-        Log.e(TAG, "" + mediaPlayerService);
+    public void updateListInService(ArrayList<Integer> idList) {
         if (!isFirstLoad)
-            mediaPlayerService.setMusicList(musicWithArtists);
+            sendListToService(idList);
         else
-            this.musicWithArtists = musicWithArtists;
+            this.idList = idList;
+    }
+
+    private void sendListToService(ArrayList<Integer> idList) {
+        Bundle bundle = new Bundle();
+        bundle.putIntegerArrayList(getString(R.string.key_parcelable_data), idList);
+        MediaControllerCompat.getMediaController(getActivity()).sendCommand(Constants.ACTION_CHANGE_LIST, bundle, null);
     }
 
     public void disableButtons(boolean buttonEnable) {
@@ -352,9 +410,7 @@ public class PlayerFragment extends Fragment implements PlaylistAsyncTaskPlaylis
     public class SeekValueBinding {
         public void onValueChanged(SeekBar seekBar, int progressValue, boolean fromUser) {
             if (fromUser) {
-                Bundle bundle = new Bundle();
-                bundle.putInt(getString(R.string.key_parcelable_data), (int) (progressValue * 1000));
-                Methods.newServiceIntent(getContext(), Constants.ACTION_SEEK_TO, bundle);
+                MediaControllerCompat.getMediaController(getActivity()).getTransportControls().seekTo((progressValue * 1000L));
             }
         }
     }

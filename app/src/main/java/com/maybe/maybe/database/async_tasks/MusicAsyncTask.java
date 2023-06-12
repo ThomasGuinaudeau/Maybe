@@ -5,10 +5,10 @@ import static com.maybe.maybe.utils.Constants.SORT_RANDOM;
 import android.database.Cursor;
 import android.os.AsyncTask;
 
-import com.maybe.maybe.fragments.category.ListItem;
 import com.maybe.maybe.database.AppDatabase;
 import com.maybe.maybe.database.dao.MusicDao;
 import com.maybe.maybe.database.entity.MusicWithArtists;
+import com.maybe.maybe.fragments.category.ListItem;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -35,6 +35,11 @@ public class MusicAsyncTask extends AsyncTask<Object, Object, List<Object>> {
         List<MusicWithArtists> musicWithArtists = null;
 
         switch (query) {
+            case "selectMusicFromId": //3=musicId
+                List<MusicWithArtists> tempList = new ArrayList<>();
+                tempList.add(dao.selectMusicFromId((long) objects[3]));
+                musicWithArtists = tempList;
+                break;
             case "selectAll": //3=sort
                 musicWithArtists = dao.selectAll((String) objects[3]);
                 break;
@@ -74,7 +79,7 @@ public class MusicAsyncTask extends AsyncTask<Object, Object, List<Object>> {
                 break;
         }
 
-        if (query.equals("selectAll") || query.equals("selectAllMusicsOfPlaylist") || query.equals("selectAllMusicsOfArtist") || query.equals("selectAllMusicsOfAlbum")) {
+        if (query.equals("selectMusicFromId") || query.equals("selectAll") || query.equals("selectAllMusicsOfPlaylist") || query.equals("selectAllMusicsOfArtist") || query.equals("selectAllMusicsOfAlbum")) {
             onSelectMusicAsyncTaskFinish = (OnSelectMusicAsyncTaskFinish) objects[0];
             if (objects[3].equals(SORT_RANDOM))
                 Collections.shuffle(musicWithArtists);
@@ -88,6 +93,7 @@ public class MusicAsyncTask extends AsyncTask<Object, Object, List<Object>> {
     protected void onPostExecute(List<Object> list) {
         super.onPostExecute(list);
         switch (query) {
+            case "selectMusicFromId":
             case "selectAll":
             case "selectAllMusicsOfPlaylist":
             case "selectAllMusicsOfArtist":

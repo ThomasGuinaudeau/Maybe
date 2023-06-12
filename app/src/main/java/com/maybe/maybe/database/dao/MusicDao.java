@@ -33,6 +33,9 @@ public interface MusicDao {
     @Query("DELETE FROM music")
     void deleteAll();
 
+    @Query("SELECT * FROM music WHERE music_id = :id")
+    MusicWithArtists selectMusicFromId(long id);
+
     @Transaction
     @Query("SELECT * FROM music ORDER BY CASE WHEN :sort = '" + SORT_ALPHA + "' THEN music.music_title END ASC, CASE WHEN :sort = '" + SORT_RANDOM + "' THEN music.music_title END ASC, CASE WHEN :sort = '" + SORT_NUM + "' THEN music.music_track END ASC")
     List<MusicWithArtists> selectAll(String sort);

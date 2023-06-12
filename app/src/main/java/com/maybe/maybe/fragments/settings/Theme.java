@@ -1,7 +1,5 @@
 package com.maybe.maybe.fragments.settings;
 
-import com.maybe.maybe.ColorPreference;
-
 public class Theme {
     private int themeResource, title;
     private String key;

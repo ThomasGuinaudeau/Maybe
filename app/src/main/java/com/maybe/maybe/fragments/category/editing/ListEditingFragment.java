@@ -3,7 +3,6 @@ package com.maybe.maybe.fragments.category.editing;
 import static com.maybe.maybe.fragments.category.CategoryItem.CATEGORY_PLAYLIST;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,16 +28,17 @@ import com.maybe.maybe.fragments.category.grid.CategoryGridFragment;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ListEditingFragment extends Fragment {
+public class ListEditingFragment extends Fragment implements CategoryEditingListCallback {
     private static final String TAG = "ListEditingFragment";
-    private List<MusicWithArtists> list, listAll;
+    private List<MusicWithArtists> listSelected, listAll;
     private CategoryGridFragment.CategoriesFragmentListener callback;
     private SelectionTracker<Long> tracker;
     private ImageButton buttonVisibility;
     private boolean isVisible;
     private String name;
     private CategoryItem categoryItem;
-    private CategoryEditingListAdapter adapter;
+    private CategoryEditingListAdapter adapterSelected, adapterAll;
+    private RecyclerView recyclerViewSelected, recyclerViewAll;
 
     public static ListEditingFragment newInstance() {
         return new ListEditingFragment();
@@ -58,32 +58,37 @@ public class ListEditingFragment extends Fragment {
         TextView title = view.findViewById(R.id.category_editing_list_main_title);
         title.setText(name);
 
-        adapter = new CategoryEditingListAdapter();
-        adapter.setList(listAll);
-        RecyclerView recyclerView = view.findViewById(R.id.editing_lists_recycler_view);
-        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        recyclerView.setAdapter(adapter);
-        recyclerView.setItemAnimator(null);
+        adapterAll = new CategoryEditingListAdapter(null);
+        adapterAll.setList(listAll);
+        recyclerViewAll = view.findViewById(R.id.editing_lists_recycler_view_all);
+        recyclerViewAll.setLayoutManager(new LinearLayoutManager(getContext()));
+        recyclerViewAll.setAdapter(adapterAll);
 
         ImageButton buttonBack = view.findViewById(R.id.category_editing_list_back);
         buttonBack.setOnClickListener(view1 -> callback.back());
 
         ImageButton buttonPlay = view.findViewById(R.id.category_editing_list_play);
         buttonPlay.setOnClickListener(view1 -> callback.changeList(categoryItem.getId(), name));
-        Log.e(TAG, categoryItem.getId() + "");
         if (categoryItem.getId() == CATEGORY_PLAYLIST && !name.equals("All Musics")) {
+            adapterSelected = new CategoryEditingListAdapter(this);
+            adapterSelected.setList(listSelected);
+            recyclerViewSelected = view.findViewById(R.id.editing_lists_recycler_view_selected);
+            recyclerViewSelected.setLayoutManager(new LinearLayoutManager(getContext()));
+            recyclerViewSelected.setAdapter(adapterSelected);
+
             tracker = new SelectionTracker.Builder<>(
                     "my-selection-id",
-                    recyclerView,
+                    recyclerViewAll,
                     new CustomItemKeyProvider(listAll),
-                    new CustomItemsDetailsLookup(recyclerView),
+                    new CustomItemsDetailsLookup(recyclerViewAll),
                     StorageStrategy.createLongStorage())
                     .withSelectionPredicate(SelectionPredicates.createSelectAnything())
                     .build();
-            adapter.setTracker(tracker);
-            tracker.addObserver(new SelectionTracker.SelectionObserver() {
+            adapterAll.setTracker(tracker);
+            adapterSelected.setTracker(tracker);
+            tracker.addObserver(new SelectionTracker.SelectionObserver<Long>() {
                 @Override
-                public void onItemStateChanged(@NonNull Object key, boolean selected) {
+                public void onItemStateChanged(@NonNull Long key, boolean selected) {
                     super.onItemStateChanged(key, selected);
                 }
 
@@ -97,15 +102,14 @@ public class ListEditingFragment extends Fragment {
                     super.onSelectionChanged();
                 }
             });
-            list.forEach((item) -> {
+
+            listSelected.forEach((item) -> {
                 tracker.select(item.music.getMusic_id());
             });
 
             buttonVisibility = view.findViewById(R.id.category_editing_list_visibility);
-            if (list.size() == 0) {
-                isVisible = true;
-                changeVisibility();
-            }
+            isVisible = listSelected.size() == 0;
+            changeVisibility();
             buttonVisibility.setOnClickListener(view1 -> {
                 isVisible = !isVisible;
                 changeVisibility();
@@ -153,8 +157,8 @@ public class ListEditingFragment extends Fragment {
         this.listAll = listAll;
     }
 
-    public void setList(List<MusicWithArtists> list) {
-        this.list = list;
+    public void setList(List<MusicWithArtists> listSelected) {
+        this.listSelected = listSelected;
     }
 
     public void setCategoryAndName(CategoryItem categoryItem, String name) {
@@ -167,9 +171,27 @@ public class ListEditingFragment extends Fragment {
     }
 
     private void changeVisibility() {
-        //getResources().getDrawable(, getContext().getTheme())
+        if (!isVisible) {
+            MutableSelection<Long> snapshot = new MutableSelection<Long>();
+            tracker.copySelection(snapshot);
+            ArrayList<Long> keyList = new ArrayList<>();
+            snapshot.forEach(keyList::add);
+
+            listSelected = new ArrayList<>();
+            listAll.forEach(item -> {
+                if (keyList.contains(item.music.getMusic_id()))
+                    listSelected.add(item);
+            });
+            adapterSelected.setList(listSelected);
+            adapterSelected.notifyDataSetChanged();
+        }
         buttonVisibility.setImageResource(isVisible ? R.drawable.ic_round_visibility_off_24 : R.drawable.ic_round_visibility_24);
-        adapter.setVisible(isVisible);
-        adapter.notifyDataSetChanged();
+        recyclerViewSelected.setVisibility(isVisible ? View.GONE : View.VISIBLE);
+        recyclerViewAll.setVisibility(isVisible ? View.VISIBLE : View.GONE);
+    }
+
+    @Override
+    public void onCategoryEditingListClick() {
+        adapterSelected.notifyDataSetChanged();
     }
 }

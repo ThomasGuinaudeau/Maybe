@@ -1,4 +1,4 @@
-package com.maybe.maybe;
+package com.maybe.maybe.fragments.settings;
 
 import android.content.Context;
 import android.content.res.ColorStateList;
@@ -9,6 +9,8 @@ import android.widget.RadioButton;
 import androidx.preference.CheckBoxPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceViewHolder;
+
+import com.maybe.maybe.R;
 
 public class ColorPreference extends CheckBoxPreference {
     private int[] colors;

@@ -12,9 +12,7 @@ import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 import androidx.preference.PreferenceScreen;
 
-import com.maybe.maybe.ColorPreference;
 import com.maybe.maybe.R;
-import com.maybe.maybe.utils.Constants;
 
 import java.util.ArrayList;
 

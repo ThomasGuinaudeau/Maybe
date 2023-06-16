@@ -99,7 +99,6 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
         main_search_button = (Button) view.findViewById(R.id.main_search_button);
         main_progress_bar = (ProgressBar) view.findViewById(R.id.main_progress_bar);
 
-        updateColors();
         main_title.setContentDescription(currentName);
         main_title.setText(currentName);
         main_search_edit.addTextChangedListener(this);
@@ -113,21 +112,6 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
         return view;
     }
 
-    public void updateColors() {
-        /*main_title.setBackgroundColor(ColorsConstants.PRIMARY_COLOR);//was primaryColorTrans
-        main_title.setTextColor(ColorsConstants.SECONDARY_TEXT_COLOR);//was expandableParent
-
-        main_search_edit.setBackgroundColor(ColorsConstants.PRIMARY_COLOR);//was primaryColorTrans
-        main_search_edit.setTextColor(ColorsConstants.SECONDARY_TEXT_COLOR);//was expandableParent
-        main_search_edit.setHintTextColor(ColorsConstants.SECONDARY_TEXT_COLOR);//was expandableParent
-
-        main_search_button.setBackgroundColor(ColorsConstants.PRIMARY_COLOR);//was primaryColorTrans
-        main_search_button.setTextColor(ColorsConstants.SECONDARY_TEXT_COLOR);
-        main_progress_bar.setProgressTintList(new ColorStateList(new int[][]{ new int[]{ android.R.attr.state_enabled } }, new int[]{ ColorsConstants.SECONDARY_COLOR }));
-
-        Methods.newServiceIntent(getContext(), Constants.ACTION_UPDATE_COLORS, null);*/
-    }
-
     @Override
     public void onItemClick(Music music) {
         changeCurrentMusic(music.getMusic_id());
@@ -138,24 +122,6 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
 
     @Override
     public void onLongItemClick(Music music) {}
-
-    @Override
-    public void onResume() {
-        super.onResume();
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        /*if (main_search_edit.isFocused()) {
-            View view = getActivity().getCurrentFocus();
-            if (view != null) {
-                InputMethodManager manager = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-                manager.hideSoftInputFromWindow(view.getWindowToken(), 0);
-            }
-            main_search_edit.clearFocus();
-        }*/
-    }
 
     public void onAppForeground() {
         Log.d(TAG, "onAppForeground");
@@ -340,8 +306,6 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
 
     //COMMUNICATING
     public interface MainFragmentListener {
-
-        void resetList();
 
         void updateListInService(ArrayList<Integer> idList);
 

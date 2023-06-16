@@ -94,7 +94,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
             public void onCallStateChanged(int state, String incomingNumber) {
                 if (state == TelephonyManager.CALL_STATE_RINGING) {
                     if (mediaPlayer.isPlaying())
-                        pauseMedia();
+                        callback.onPause();
                 }
             }
         } : null;
@@ -104,7 +104,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
             public void onCallStateChanged(int i) {
                 if (i == TelephonyManager.CALL_STATE_RINGING) {
                     if (mediaPlayer != null && mediaPlayer.isPlaying())
-                        pauseMedia();
+                        callback.onPause();
                 }
             }
         } : null;
@@ -153,11 +153,8 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
                 musicList.changeForMusicWithId((int) music.getMusic_id());
                 initMediaPlayer(musicList.getCurrent());
                 break;
-            case Constants.ACTION_APP_BACKGROUND:
-                onAppBackground();
-                break;
             case Constants.ACTION_APP_FOREGROUND:
-                onAppForeground();
+                onConnect();
                 break;
             case Constants.ACTION_END_SERVICE:
                 stopForeground(true);
@@ -206,10 +203,10 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
             if (!musicList.changeForMusicWithId((int) fileId))
                 timestamp = 0;
             currentDuration = timestamp;
-            updateMetaData();
+            updateMetaData(true);
             initMediaPlayer(musicList.getCurrent());
             callback.onSeekTo(currentDuration);
-            notificationManager.notify(NOTIFICATION_ID, buildForegroundNotification());
+            //notificationManager.notify(NOTIFICATION_ID, buildForegroundNotification());
         } else {
             //MusicWithArtists music = musicList.getCurrent();
             musicList.setMusics(idList);
@@ -221,13 +218,10 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         }
     }
 
-    public void onAppBackground() {
-        Log.d(TAG, "onAppBackground ");
-    }
-
-    public void onAppForeground() {
-        Log.d(TAG, "onAppForeground ");
-        updateMetaData();
+    public void onConnect() {
+        Log.d(TAG, "onConnect ");
+        updateMetaData(false);
+        updateCurrentDuration(-1, mediaPlayer.getCurrentPosition());
     }
 
     @Override
@@ -243,7 +237,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
                 editor.apply();
             }
             mediaSession.setActive(false);
-            stopMedia();
+            callback.onStop();
             /*equalizer.setEnabled(false);
             equalizer.release();
             equalizer = null;*/
@@ -262,9 +256,9 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         Log.d(TAG, "onPrepared, begin = " + begin);
         mediaPlayer.setLooping(loopState.equals(Constants.REPEAT_ONE));
         if (begin == 1) {
-            playMedia();
+            callback.onPlay();
         } else if (begin == 0) {
-            updateMetaData();
+            updateMetaData(false);
             mediaPlayer.seekTo(currentDuration);
             updateCurrentDuration(-1, mediaPlayer.getCurrentPosition());
         } else {
@@ -299,7 +293,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
             equalizer.usePreset((short) 0);
             equalizer.setEnabled(true);*/
         } else if (mediaPlayer.isPlaying()) {
-            stopMedia();
+            callback.onStop();
         }
 
         mediaPlayer.reset();
@@ -314,42 +308,22 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
                 onDestroy();
             }
         } else {
-            skipToNext();
+            callback.onSkipToNext();
         }
-    }
-
-    private void playMedia() {
-        callback.onPlay();
-    }
-
-    private void pauseMedia() {
-        callback.onPause();
-    }
-
-    private void stopMedia() {
-        callback.onStop();
-    }
-
-    private void skipToPrevious() {
-        callback.onSkipToPrevious();
-    }
-
-    private void skipToNext() {
-        callback.onSkipToNext();
     }
 
     @Override
     public void onCompletion(MediaPlayer mp) {
         Log.d(TAG, "onCompletion");
         if (mediaPlayer.isLooping()) {
-            playMedia();
+            callback.onPlay();
         } else {
-            stopMedia();
-            skipToNext();
+            callback.onStop();
+            callback.onSkipToNext();
         }
     }
 
-    public void updateMetaData() {
+    public void updateMetaData(boolean buildNotification) {
         Log.d(TAG, "updateMetaData");
         //Get metadata from database only if it's a new music
         if (musicList == null || currentMusic == null || musicList.getCurrent() != (int) currentMusic.music.getMusic_id()) {
@@ -357,13 +331,19 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
                 ArrayList<MusicWithArtists> musicWithArtists = (ArrayList<MusicWithArtists>) (Object) objects;
                 currentMusic = musicWithArtists.get(0);
                 updateMetadata2(currentMusic);
+                if(buildNotification)
+                    notificationManager.notify(NOTIFICATION_ID, buildForegroundNotification());
             }, appDatabase, "selectMusicFromId", (long) musicList.getCurrent());
         } else {
             updateMetadata2(currentMusic);
+            if(buildNotification)
+                notificationManager.notify(NOTIFICATION_ID, buildForegroundNotification());
         }
     }
 
     private void updateMetadata2(MusicWithArtists musicWithArtists) {
+        Log.d(TAG, "updateMetaData2 " + musicWithArtists.music.getMusic_title());
+
         mediaMetadataBuilder.putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, Long.toString(musicWithArtists.music.getMusic_id()));
         mediaMetadataBuilder.putString(MediaMetadataCompat.METADATA_KEY_TITLE, musicWithArtists.music.getMusic_title());
         mediaMetadataBuilder.putString(MediaMetadataCompat.METADATA_KEY_ARTIST, musicWithArtists.artistsToString());
@@ -405,7 +385,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
     }
 
     public Notification buildForegroundNotification() {
-        Log.d(TAG, "buildForegroundNotification");
+        Log.d(TAG, "buildForegroundNotification " + description.getTitle());
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID);
         builder.setContentTitle(description.getTitle());
         builder.setContentText(description.getSubtitle());
@@ -454,18 +434,18 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         public void onCallStateChanged(int i) {}
     }
 
-    public class LocalBinder extends android.os.Binder {
-        public MediaPlayerService getService() {
-            return MediaPlayerService.this;
-        }
-    }
+    //public class LocalBinder extends android.os.Binder {
+    //    public MediaPlayerService getService() {
+    //        return MediaPlayerService.this;
+    //    }
+    //}
 
     private class BecomingNoisyReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (AudioManager.ACTION_AUDIO_BECOMING_NOISY.equals(intent.getAction())) {
                 if (mediaPlayer.isPlaying())
-                    pauseMedia();
+                    callback.onPause();
             }
         }
     }
@@ -482,8 +462,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
                     isNoisyAudioStreamReceiverRegistered = true;
                 }
                 if (begin != -1) {
-                    updateMetaData();
-                    notificationManager.notify(NOTIFICATION_ID, buildForegroundNotification());
+                    updateMetaData(true);
                 } else {
                     notificationManager.notify(NOTIFICATION_ID, buildForegroundNotification());
                 }
@@ -498,8 +477,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
                 mediaPlayer.pause();
                 updateCurrentDuration(PlaybackStateCompat.STATE_PAUSED, mediaPlayer.getCurrentPosition());
                 if (begin != -1) {
-                    updateMetaData();
-                    notificationManager.notify(NOTIFICATION_ID, buildForegroundNotification());
+                    updateMetaData(true);
                 } else {
                     notificationManager.notify(NOTIFICATION_ID, buildForegroundNotification());
                 }

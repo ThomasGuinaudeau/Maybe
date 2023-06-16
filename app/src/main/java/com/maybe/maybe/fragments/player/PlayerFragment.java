@@ -129,6 +129,8 @@ public class PlayerFragment extends Fragment {
                         sendListToService(idList);
                         isFirstLoad = false;
                         idList = null;
+                    } else {
+                        Methods.newServiceIntent(getContext(), Constants.ACTION_APP_FOREGROUND, null);
                     }
                 }
 
@@ -272,15 +274,6 @@ public class PlayerFragment extends Fragment {
     private void removeRunnable() {
         if (mHandler.hasCallbacks(updateTimeTask))
             mHandler.removeCallbacks(updateTimeTask);
-    }
-
-    public void onAppForeground() {
-        Log.e(TAG, "onAppForeground");
-        Methods.newServiceIntent(getContext(), Constants.ACTION_APP_FOREGROUND, null);
-    }
-
-    public void onAppBackground() {
-        Methods.newServiceIntent(getContext(), Constants.ACTION_APP_BACKGROUND, null);
     }
 
     @Override

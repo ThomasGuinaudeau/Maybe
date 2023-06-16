@@ -149,10 +149,6 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
     protected void onPause() {
         super.onPause();
         Log.e(TAG, "main onpause");
-        if (pagerAdapter != null) {
-            PlayerFragment fragment1 = (PlayerFragment) pagerAdapter.getRegisteredFragment(PLAY_POS);
-            fragment1.onAppBackground();
-        }
     }
 
     @Override
@@ -160,9 +156,6 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
         super.onResume();
         Log.e(TAG, "main onresume");
         if (pagerAdapter != null && time != 0) {
-            PlayerFragment fragment1 = (PlayerFragment) pagerAdapter.getRegisteredFragment(PLAY_POS);
-            if (fragment1 != null)
-                fragment1.onAppForeground();
             MainFragment fragment2 = (MainFragment) pagerAdapter.getRegisteredFragment(MAIN_POS);
             if (fragment2 != null)
                 fragment2.onAppForeground();
@@ -188,12 +181,6 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
     public void changeList(int categoryId, String name) {
         MainFragment fragment = (MainFragment) pagerAdapter.getRegisteredFragment(MAIN_POS);
         fragment.updateList(categoryId, name, null, false);
-    }
-
-    @Override
-    public void resetList() {
-        CategoryFragment fragment = (CategoryFragment) pagerAdapter.getRegisteredFragment(CAT_POS);
-        fragment.resetList();
     }
 
     @Override

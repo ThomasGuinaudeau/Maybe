@@ -90,7 +90,7 @@ public class PlayerFragment extends Fragment {
 
                 @Override
                 public void onPlaybackStateChanged(PlaybackStateCompat state) {
-                    Log.e(TAG, "onPlaybackStateChanged");
+                    Log.e(TAG, "onPlaybackStateChanged" + state);
                     if (state.getState() == PlaybackStateCompat.STATE_PLAYING) {
                         binding.setState(R.drawable.ic_round_pause_24);
                         isPlaying = true;
@@ -157,7 +157,7 @@ public class PlayerFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.e(TAG, "oncreate player");
+        Log.d(TAG, "oncreate player");
 
         updateTimeTask = new Runnable() {
             public void run() {
@@ -224,7 +224,7 @@ public class PlayerFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-        Log.e(TAG, "onStart");
+        Log.d(TAG, "onStart");
         mediaBrowser.connect();
         addRunnable();
     }
@@ -232,7 +232,7 @@ public class PlayerFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        Log.e(TAG, "onResume");
+        Log.d(TAG, "onResume");
         getActivity().setVolumeControlStream(AudioManager.STREAM_MUSIC);
         addRunnable();
     }
@@ -240,14 +240,14 @@ public class PlayerFragment extends Fragment {
     @Override
     public void onPause() {
         super.onPause();
-        Log.e(TAG, "onPause");
+        Log.d(TAG, "onPause");
         removeRunnable();
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        Log.e(TAG, "onStop");
+        Log.d(TAG, "onStop");
         if (MediaControllerCompat.getMediaController(getActivity()) != null) {
             MediaControllerCompat.getMediaController(getActivity()).unregisterCallback(controllerCallback);
         }

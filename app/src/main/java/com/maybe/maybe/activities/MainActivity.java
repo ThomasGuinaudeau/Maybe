@@ -21,11 +21,11 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.preference.PreferenceManager;
 import androidx.viewpager2.widget.ViewPager2;
 
+import com.maybe.maybe.CustomViewPager;
 import com.maybe.maybe.R;
 import com.maybe.maybe.database.AppDatabase;
 import com.maybe.maybe.database.async_tasks.FillDbAsyncTask;
 import com.maybe.maybe.database.async_tasks.OnFillDbAsyncTaskFinish;
-import com.maybe.maybe.CustomViewPager;
 import com.maybe.maybe.fragments.category.CategoryFragment;
 import com.maybe.maybe.fragments.main.MainFragment;
 import com.maybe.maybe.fragments.player.PlayerFragment;
@@ -136,6 +136,7 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
         viewPager.setCurrentItem(MAIN_POS);
         viewPager.registerOnPageChangeCallback(onPageChangeCallback);
     }
+
     @Override
     protected void onDestroy() {
         Log.d(TAG, "onDestroy");

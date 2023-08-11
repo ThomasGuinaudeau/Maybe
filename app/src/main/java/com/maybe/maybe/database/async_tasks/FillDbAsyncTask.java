@@ -164,7 +164,7 @@ public class FillDbAsyncTask extends AsyncTask<Object, Integer, Object> {
                             appDatabase.musicArtistCrossRefDao().insertAll(musicArtistCrossRefs);
                         }
                     } else {
-                        Log.d("tag", "update music " + newMusicId);
+                        Log.d("tag", "update music " + music.getMusic_title());
                         appDatabase.musicDao().update(music);
                         deletedMusics[oldMusicsIdPosition] = false;
                     }
@@ -207,7 +207,7 @@ public class FillDbAsyncTask extends AsyncTask<Object, Integer, Object> {
     }
 
     private String stringIsNull(String str) {
-        return str == null || str.equals("<unknown>") ? null : str.replace("'", "''");
+        return str == null || str.equals("<unknown>") ? null : str;//.replace("'", "''");
     }
 
     private int intIsNull(String str) {

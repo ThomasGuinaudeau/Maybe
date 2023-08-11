@@ -35,14 +35,14 @@ public class MusicList {
         pointer = -1;
     }
 
-    public Integer getCurrent() {
+    public int getCurrent() {
         if (pointer == -1)
             pointer = 0;
         return idList.get(pointer);
     }
 
     public boolean changeForMusicWithId(int fileId) {
-        for (Integer id : idList)
+        for (int id : idList)
             if (id == fileId) {
                 pointer = idList.indexOf(id);
                 return true;
@@ -53,6 +53,15 @@ public class MusicList {
 
     public void changeForIndex(int index) {
         pointer = index;
+    }
+
+    public int getNext() {
+        if (pointer == -1)
+            return 0;
+        else if (pointer == idList.size() - 1)
+            return idList.get(0);
+        else
+            return idList.get(pointer + 1);
     }
 
     public void goNext(String loop) {

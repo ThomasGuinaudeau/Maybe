@@ -163,7 +163,8 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Cus
             case Constants.ACTION_CHANGE_MUSIC:
                 begin = 1;
                 Music music = intent.getExtras().getParcelable(getString(R.string.key_parcelable_data));
-                musicList.changeForMusicWithId((int) music.getMusic_id());
+                if (musicList != null)
+                    musicList.changeForMusicWithId((int) music.getMusic_id());
                 initMediaPlayer(true);
                 break;
             case Constants.ACTION_APP_FOREGROUND:
@@ -318,7 +319,6 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Cus
             } else if (mediaPlayer.isPlaying()) {
                 callback.onStop();
             }
-
             mediaPlayer.reset(true);
 
             Uri uri = getContentUri("external", musicList.getCurrent());
@@ -335,8 +335,6 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Cus
                 callback.onSkipToNext();
             }
         }
-
-        mediaPlayer.stop(false);
         mediaPlayer.reset(false);
         Uri uriNext = getContentUri("external", musicList.getNext());
         DocumentFile sourceFileNext = DocumentFile.fromSingleUri(this, uriNext);
@@ -385,6 +383,8 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Cus
     }
 
     private void updateMetadata2(MusicWithArtists musicWithArtists) {
+        if (musicWithArtists == null || musicWithArtists.music == null)
+            return;
         Log.d(TAG, "updateMetaData2 " + musicWithArtists.music.getMusic_title());
 
         mediaMetadataBuilder.putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, Long.toString(musicWithArtists.music.getMusic_id()));
@@ -472,6 +472,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Cus
     public void onLoadChildren(@NonNull String parentId, @NonNull Result<List<MediaBrowserCompat.MediaItem>> result) {
         // https://developer.android.com/guide/topics/media-apps/audio-app/building-a-mediabrowserservice
         // https://developer.android.com/training/cars/media#build_hierarchy
+        result.sendResult(null);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.S)

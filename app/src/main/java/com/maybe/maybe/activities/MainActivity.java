@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -40,7 +41,7 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
     public static final int DATABASE_VERSION = 2;
     private static final String TAG = "MainActivity";
     private static final String[] PERMISSIONS = {
-            android.Manifest.permission.READ_EXTERNAL_STORAGE,
+            Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ? android.Manifest.permission.READ_EXTERNAL_STORAGE : android.Manifest.permission.READ_MEDIA_AUDIO,
             android.Manifest.permission.READ_PHONE_STATE
     };
     private final ViewPager2.OnPageChangeCallback onPageChangeCallback = new ViewPager2.OnPageChangeCallback() {

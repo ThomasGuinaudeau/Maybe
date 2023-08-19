@@ -399,7 +399,11 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Cus
         Uri uri = Uri.fromFile(file);
         receiver.setDataSource(this, uri);
         byte[] data = receiver.getEmbeddedPicture();
-        receiver.release();
+        try {
+            receiver.release();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         BitmapDrawable icon = null;
         if (data != null) {
             Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);

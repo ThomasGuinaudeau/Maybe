@@ -228,6 +228,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Cus
                 timestamp = 0;
             currentDuration = timestamp;
             updateMetaData(true);
+            Log.e(TAG, "setMusicList + " + musicList.size());
             initMediaPlayer(true);
             callback.onSeekTo(currentDuration);
             //notificationManager.notify(NOTIFICATION_ID, buildForegroundNotification());
@@ -394,10 +395,9 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Cus
         mediaMetadataBuilder.putLong(MediaMetadataCompat.METADATA_KEY_DURATION, musicWithArtists.music.getMusic_duration());
 
         MediaMetadataRetriever receiver = new MediaMetadataRetriever();
-        Log.e(TAG, musicWithArtists.music.getMusic_path());
-        File f = new File(musicWithArtists.music.getMusic_path());
-        Uri u = Uri.fromFile(f);
-        receiver.setDataSource(this, u);
+        File file = new File(musicWithArtists.music.getMusic_path());
+        Uri uri = Uri.fromFile(file);
+        receiver.setDataSource(this, uri);
         byte[] data = receiver.getEmbeddedPicture();
         receiver.release();
         BitmapDrawable icon = null;
@@ -431,11 +431,16 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Cus
     }
 
     public Notification buildForegroundNotification() {
-        Log.d(TAG, "buildForegroundNotification " + description.getTitle());
+        Log.d(TAG, "buildForegroundNotification");
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID);
-        builder.setContentTitle(description.getTitle());
-        builder.setContentText(description.getSubtitle());
-        builder.setLargeIcon(description.getIconBitmap());
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q || currentMusic == null) {
+            builder.setContentTitle(description.getTitle());
+            builder.setContentText(description.getSubtitle());
+            builder.setLargeIcon(description.getIconBitmap());
+        } else {
+            builder.setContentTitle(currentMusic.music.getMusic_title());
+            builder.setContentText(currentMusic.artistsToString());
+        }
 
         Intent intent = new Intent(this, MainActivity.class);
         builder.setContentIntent(PendingIntent.getActivity(this, (int) System.currentTimeMillis(), intent, PendingIntent.FLAG_IMMUTABLE));

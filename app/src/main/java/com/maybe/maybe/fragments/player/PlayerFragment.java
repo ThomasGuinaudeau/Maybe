@@ -127,11 +127,11 @@ public class PlayerFragment extends Fragment {
 
                     if (isFirstLoad && idList != null) {
                         sendListToService(idList);
-                        isFirstLoad = false;
                         idList = null;
                     } else {
                         Methods.newServiceIntent(getContext(), Constants.ACTION_APP_FOREGROUND, null);
                     }
+                    isFirstLoad = false;
                 }
 
                 @Override

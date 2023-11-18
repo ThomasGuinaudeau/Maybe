@@ -64,4 +64,9 @@ public class CustomMainRecyclerViewRow extends ConstraintLayout {
         if (isEven)
             setBackgroundColor(ContextCompat.getColor(getContext(), R.color.even));
     }
+
+    public void setFoundColor(boolean isFound) {
+        if (isFound)
+            setBackgroundColor(MaterialColors.getColor(getContext(), android.R.attr.colorPrimary, 0x00000000));
+    }
 }

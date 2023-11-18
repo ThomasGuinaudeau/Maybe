@@ -165,7 +165,7 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
             sllm.setChildCount(mainRecyclerView.getChildCount());
             int currentPosition = ((LinearLayoutManager) mainRecyclerView.getLayoutManager()).findFirstVisibleItemPosition();
             sllm.setPosDiff(Math.abs(position - currentPosition));
-            mainRecyclerView.smoothScrollToPosition(position);
+            mainRecyclerView.smoothScrollToPosition(position + 7 < mainRecyclerView.getChildCount() ? position + 7 : position);
         }
     }
 
@@ -292,6 +292,8 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
                 if (!searchIdList.isEmpty()) {
                     searchEnable = true;
                     currentSearchId = -1;
+                    adapter.setFoundIds(searchIdList);
+                    adapter.notifyDataSetChanged();
                     search();
                 } else {
                     searchEnable = false;

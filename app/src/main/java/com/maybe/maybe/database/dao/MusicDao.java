@@ -58,6 +58,11 @@ public interface MusicDao {
     List<MusicWithArtists> selectAllMusicsOfAlbum(String sort, String albumName);
 
     @Transaction
+    @Query("SELECT *, music_track track, music_title title FROM music WHERE music_folder LIKE :albumName ORDER BY " +
+            "CASE WHEN :sort = '" + SORT_ALPHA + "' THEN music.music_title END ASC, CASE WHEN :sort = '" + SORT_RANDOM + "' THEN music.music_title END ASC, CASE WHEN :sort = '" + SORT_NUM + "' THEN music.music_track END ASC")
+    List<MusicWithArtists> selectAllMusicsOfFolder(String sort, String albumName);
+
+    @Transaction
     @RewriteQueriesToDropUnusedColumns
     @Query("SELECT * FROM music INNER JOIN current_playlist ON music.music_id = current_playlist.current_playlist_file_id ORDER BY current_playlist.current_id ASC")
     List<MusicWithArtists> selectAllMusicsOfCurrentPlaylist();
@@ -74,6 +79,9 @@ public interface MusicDao {
     @Query("SELECT music_path FROM music")
     List<String> selectAllPaths();
 
+    @Query("SELECT music_folder FROM music")
+    List<String> selectAllFolders();
+
     /*@Transaction
     @Query("SELECT * FROM music WHERE music_id IN (:musicFileIds)")
     List<MusicWithArtists> selectAllByIds(List<Integer> musicFileIds);
@@ -87,4 +95,8 @@ public interface MusicDao {
     //ALBUM
     @Query("SELECT music_id, music_album name, COUNT(music_id) count FROM music GROUP BY name ORDER BY name ASC")
     Cursor selectAllAlbumWithCount();
+
+    //FOLDER
+    @Query("SELECT music_id, music_folder name, COUNT(music_id) count FROM music GROUP BY name ORDER BY name ASC")
+    Cursor selectAllFolderWithCount();
 }

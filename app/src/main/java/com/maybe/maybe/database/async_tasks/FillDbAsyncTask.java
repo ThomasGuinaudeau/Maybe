@@ -114,6 +114,7 @@ public class FillDbAsyncTask extends AsyncTask<Object, Integer, Object> {
             maxSet = true;
             List<Long> oldMusicIds = appDatabase.musicDao().selectAllIds();
             List<String> oldMusicPaths = appDatabase.musicDao().selectAllPaths();
+            List<String> oldMusicFolders = appDatabase.musicDao().selectAllFolders();
             boolean[] deletedMusics = new boolean[oldMusicIds.size()];
             Arrays.fill(deletedMusics, true);
 
@@ -124,9 +125,14 @@ public class FillDbAsyncTask extends AsyncTask<Object, Integer, Object> {
                 int oldMusicsIdPosition = oldMusicIds.indexOf(newMusicId);
                 String newMusicPath = stringIsNull(cursor.getString(7));
                 int oldMusicsPathPosition = oldMusicPaths.indexOf(newMusicPath);
-                //Log.d("none", newMusicId + " o " + stringIsNull(cursor.getString(2)));
-                if (newMusicPath != null && oldMusicsPathPosition == -1) {
-                    Music music = new Music(longIsNull(cursor.getString(0)), trackIsNull(cursor.getString(1)), stringIsNull(cursor.getString(2)), stringIsNull(cursor.getString(3)), longIsNull(cursor.getString(4)), stringIsNull(cursor.getString(5)), stringIsNull(cursor.getString(7)));
+
+                String newMusicFolder = stringIsNull(cursor.getString(7));
+                int toIndex = newMusicFolder.lastIndexOf("/");
+                int fromIndex = newMusicFolder.lastIndexOf("/", toIndex - 1);
+                newMusicFolder = newMusicFolder.substring(fromIndex + 1, toIndex);
+                int oldMusicsFolderPosition = oldMusicFolders.indexOf(newMusicFolder);
+                if (newMusicPath != null && (oldMusicsPathPosition == -1 || oldMusicsFolderPosition == -1)) {
+                    Music music = new Music(longIsNull(cursor.getString(0)), trackIsNull(cursor.getString(1)), stringIsNull(cursor.getString(2)), stringIsNull(cursor.getString(3)), longIsNull(cursor.getString(4)), stringIsNull(cursor.getString(5)), stringIsNull(cursor.getString(7)), newMusicFolder);
                     if ((newMusicId != 0 && oldMusicsIdPosition == -1)) {
                         Log.d("tag", "new music " + newMusicId);
                         //Add music

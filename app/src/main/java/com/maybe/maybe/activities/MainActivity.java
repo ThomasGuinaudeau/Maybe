@@ -38,7 +38,7 @@ import java.util.Locale;
 
 public class MainActivity extends FragmentActivity implements CategoryFragment.CategoryFragmentListener, MainFragment.MainFragmentListener, PlayerFragment.PlayerFragmentListener, OnFillDbAsyncTaskFinish {
 
-    public static final int DATABASE_VERSION = 2;
+    public static final int DATABASE_VERSION = 3;
     private static final String TAG = "MainActivity";
     private static final String[] PERMISSIONS = {
             Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ? android.Manifest.permission.READ_EXTERNAL_STORAGE : android.Manifest.permission.READ_MEDIA_AUDIO,

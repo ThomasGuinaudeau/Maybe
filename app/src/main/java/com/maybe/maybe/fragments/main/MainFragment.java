@@ -2,6 +2,7 @@ package com.maybe.maybe.fragments.main;
 
 import static com.maybe.maybe.fragments.category.CategoryItem.CATEGORY_ALBUM;
 import static com.maybe.maybe.fragments.category.CategoryItem.CATEGORY_ARTIST;
+import static com.maybe.maybe.fragments.category.CategoryItem.CATEGORY_FOLDER;
 import static com.maybe.maybe.fragments.category.CategoryItem.CATEGORY_PLAYLIST;
 
 import android.annotation.SuppressLint;
@@ -192,6 +193,8 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
             query = "selectAllMusicsOfArtist";
         } else if (currentCategoryId == CATEGORY_ALBUM) {
             query = "selectAllMusicsOfAlbum";
+        } else if (currentCategoryId == CATEGORY_FOLDER) {
+            query = "selectAllMusicsOfFolder";
         }
         Log.d(TAG, "category=" + currentCategoryId + " name=" + currentName + " sort=" + sort + " query=" + query);
         new MusicAsyncTask().execute(this, appDatabase, query, sort, currentName);

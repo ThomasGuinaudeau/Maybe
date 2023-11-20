@@ -18,6 +18,7 @@ import android.os.Environment;
 import android.os.ParcelFileDescriptor;
 import android.provider.DocumentsContract;
 import android.provider.OpenableColumns;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -140,12 +141,22 @@ public class CategoryFragment extends Fragment implements PlaylistAsyncTaskPlayl
         }, appDatabase, "selectAllAlbumWithCount");
     }
 
+    private void openFolders(CategoryItem categoryItem) {
+        new MusicAsyncTask().execute((OnSelectAlbumAsyncTaskFinish) objects -> {
+            ArrayList<ListItem> folders = new ArrayList<>((List<ListItem>) (Object) objects);
+            Log.e(TAG, "" + folders.size());
+            addFragment(folders, categoryItem);
+        }, appDatabase, "selectAllFolderWithCount");
+    }
+
     private void openMusicsFrom(CategoryItem categoryItem, String name) {
         String select = "selectAll";
         if (categoryItem.getId() == CATEGORY_ARTIST)
             select = "selectAllMusicsOfArtist";
         else if (categoryItem.getId() == CATEGORY_ALBUM)
             select = "selectAllMusicsOfAlbum";
+        else if (categoryItem.getId() == CATEGORY_FOLDER)
+            select = "selectAllMusicsOfFolder";
         else if (categoryItem.getId() == CATEGORY_PLAYLIST && !name.equals("All Musics"))
             select = "selectAllMusicsOfPlaylist";
 
@@ -265,7 +276,7 @@ public class CategoryFragment extends Fragment implements PlaylistAsyncTaskPlayl
         else if (categoryItem.getId() == CATEGORY_ALBUM)
             openAlbums(categoryItem);
         else if (categoryItem.getId() == CATEGORY_FOLDER)
-            Toast.makeText(getContext(), R.string.toast_folder_category, Toast.LENGTH_SHORT).show();
+            openFolders(categoryItem);
         else if (categoryItem.getId() == CATEGORY_SETTING)
             callback.openSettings();
         else if (categoryItem.getId() == CATEGORY_SYNC)

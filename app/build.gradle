@@ -12,13 +12,6 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
-        javaCompileOptions {
-            annotationProcessorOptions {
-                compilerArgumentProviders(
-                        new RoomSchemaArgProvider(new File(projectDir, "schemas"))
-                )
-            }
-        }
     }
 
     buildTypes {
@@ -79,20 +72,4 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
     androidTestImplementation "androidx.test.ext:junit:1.1.3"
-}
-
-class RoomSchemaArgProvider implements CommandLineArgumentProvider {
-
-    @InputDirectory
-    @PathSensitive(PathSensitivity.RELATIVE)
-    File schemaDir
-
-    RoomSchemaArgProvider(File schemaDir) {
-        this.schemaDir = schemaDir
-    }
-
-    @Override
-    Iterable<String> asArguments() {
-        return ["-Aroom.schemaLocation=${schemaDir.path}".toString()]
-    }
 }

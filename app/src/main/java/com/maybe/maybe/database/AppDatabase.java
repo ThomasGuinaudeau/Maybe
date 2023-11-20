@@ -1,10 +1,11 @@
 package com.maybe.maybe.database;
 
 import static com.maybe.maybe.activities.MainActivity.DATABASE_VERSION;
+import static com.maybe.maybe.database.Migrations.MIGRATION_1_2;
+import static com.maybe.maybe.database.Migrations.MIGRATION_2_3;
 
 import android.content.Context;
 
-import androidx.room.AutoMigration;
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
@@ -25,7 +26,7 @@ import com.maybe.maybe.database.entity.Settings;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-@Database(entities = { Music.class, MusicArtistCrossRef.class, Artist.class, Playlist.class, CurrentPlaylist.class, Settings.class }, version = DATABASE_VERSION, exportSchema = true, autoMigrations = {@AutoMigration(from = 1, to = 2)})
+@Database(entities = { Music.class, MusicArtistCrossRef.class, Artist.class, Playlist.class, CurrentPlaylist.class, Settings.class }, version = DATABASE_VERSION)
 public abstract class AppDatabase extends RoomDatabase {
 
     public static final String DATABASE_NAME = "maybe_db";
@@ -44,7 +45,7 @@ public abstract class AppDatabase extends RoomDatabase {
 
     private static AppDatabase buildDatabase(final Context appContext, final Executor thread) {
         //return Room.databaseBuilder(appContext, AppDatabase.class, DATABASE_NAME).fallbackToDestructiveMigration().build();
-        return Room.databaseBuilder(appContext, AppDatabase.class, DATABASE_NAME).build();
+        return Room.databaseBuilder(appContext, AppDatabase.class, DATABASE_NAME).addMigrations(MIGRATION_1_2, MIGRATION_2_3).build();
     }
 
     public abstract MusicDao musicDao();

@@ -166,7 +166,7 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
             sllm.setChildCount(mainRecyclerView.getChildCount());
             int currentPosition = ((LinearLayoutManager) mainRecyclerView.getLayoutManager()).findFirstVisibleItemPosition();
             sllm.setPosDiff(Math.abs(position - currentPosition));
-            mainRecyclerView.smoothScrollToPosition(position + 7 < mainRecyclerView.getChildCount() ? position + 7 : position);
+            mainRecyclerView.smoothScrollToPosition(position);
         }
     }
 

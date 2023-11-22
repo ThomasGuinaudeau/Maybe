@@ -48,9 +48,18 @@ public class SpeedyLinearLayoutManager extends LinearLayoutManager {
             protected float calculateSpeedPerPixel(DisplayMetrics displayMetrics) {
                 float singleHeight = ((float) height) / childCount;
                 float distancePx = singleHeight * posDiff;
+                float ydpi = 0;
+                //wait for api 34
+                /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    WindowMetrics windowMetrics = activity.getWindowManager().getCurrentWindowMetrics();
+                    Insets insets = windowMetrics.getWindowInsets().getInsetsIgnoringVisibility(WindowInsets.Type.systemBars());
+                    ydpi = (windowMetrics.getBounds().height() - insets.top - insets.bottom) / windowMetrics.getDensity();
+                } else {*/
                 DisplayMetrics dm = new DisplayMetrics();
                 activity.getWindowManager().getDefaultDisplay().getMetrics(dm);
-                float distanceIn = (float) distancePx / dm.ydpi;
+                ydpi = dm.ydpi;
+                //}
+                float distanceIn = (float) distancePx / ydpi;
                 float speed = 1000 / distanceIn;//default is 25f
                 return speed / displayMetrics.densityDpi;
             }

@@ -114,6 +114,7 @@
 
     <!--Recycler Row-->
     <string name="recycler_row_track">X</string>
+    <string name="recycler_row_duration">%1$d:%2$s</string>
     <string name="recycler_row_title">Title</string>
     <string name="recycler_row_artist">Artist</string>
 

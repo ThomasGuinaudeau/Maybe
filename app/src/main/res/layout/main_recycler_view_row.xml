@@ -18,6 +18,7 @@
         android:paddingEnd="8dp"
         android:text="@string/recycler_row_track"
         android:textAlignment="textStart"
+        android:textSize="12sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />

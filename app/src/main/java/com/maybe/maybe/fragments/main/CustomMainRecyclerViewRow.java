@@ -11,6 +11,8 @@ import com.google.android.material.color.MaterialColors;
 import com.maybe.maybe.R;
 import com.maybe.maybe.database.entity.MusicWithArtists;
 
+import java.util.Locale;
+
 public class CustomMainRecyclerViewRow extends ConstraintLayout {
 
     private final TextView track;
@@ -38,7 +40,9 @@ public class CustomMainRecyclerViewRow extends ConstraintLayout {
     }
 
     public void setMusicWithArtists(MusicWithArtists musicWithArtists) {
-        track.setText("" + musicWithArtists.music.getMusic_track());
+        long second = (musicWithArtists.music.getMusic_duration() / 1000) % 60;
+        long minute = (musicWithArtists.music.getMusic_duration() / (1000 * 60)) % 60;
+        track.setText(getContext().getString(R.string.recycler_row_duration, minute, String.format(Locale.getDefault(), "%02d", second)));
         title.setContentDescription(musicWithArtists.music.getMusic_title());
         title.setText(musicWithArtists.music.getMusic_title());
         artist.setContentDescription("Artist " + musicWithArtists.artistsToString());

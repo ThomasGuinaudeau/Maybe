@@ -178,7 +178,7 @@ public class PlayerFragment extends Fragment {
         repeatCycle = new CycleStateResource(states, resources);
 
         states = new String[]{ SORT_ALPHA, SORT_RANDOM, SORT_NUM };
-        resources = new int[]{ R.drawable.round_sort_by_alpha_24, R.drawable.round_shuffle_24, R.drawable.round_plus_one_24 };
+        resources = new int[]{ R.drawable.ic_round_sort_by_alpha_24, R.drawable.round_shuffle_24, R.drawable.round_plus_one_24 };
         shuffleCycle = new CycleStateResource(states, resources);
         SharedPreferences sharedPref = getContext().getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE);
         shuffleCycle.goToState(sharedPref.getString(getString(R.string.sort), SORT_ALPHA));

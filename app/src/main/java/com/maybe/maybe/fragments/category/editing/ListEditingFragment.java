@@ -26,6 +26,7 @@ import com.maybe.maybe.fragments.category.CategoryItem;
 import com.maybe.maybe.fragments.category.grid.CategoryGridFragment;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class ListEditingFragment extends Fragment implements CategoryEditingListCallback {
@@ -33,9 +34,9 @@ public class ListEditingFragment extends Fragment implements CategoryEditingList
     private List<MusicWithArtists> listSelected, listAll;
     private CategoryGridFragment.CategoriesFragmentListener callback;
     private SelectionTracker<Long> tracker;
-    private ImageButton buttonVisibility;
+    private ImageButton buttonVisibility, buttonSort;
     private boolean isVisible;
-    private String name;
+    private String name, sortType;
     private CategoryItem categoryItem;
     private CategoryEditingListAdapter adapterSelected, adapterAll;
     private RecyclerView recyclerViewSelected, recyclerViewAll;
@@ -48,6 +49,7 @@ public class ListEditingFragment extends Fragment implements CategoryEditingList
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         isVisible = false;
+        sortType = "title";
     }
 
     @Nullable
@@ -113,6 +115,11 @@ public class ListEditingFragment extends Fragment implements CategoryEditingList
             buttonVisibility.setOnClickListener(view1 -> {
                 isVisible = !isVisible;
                 changeVisibility();
+            });
+
+            buttonSort = view.findViewById(R.id.category_editing_list_sort);
+            buttonSort.setOnClickListener(view1 -> {
+                sort(sortType.equals("title") ? "artist" : "title");
             });
 
             ImageButton buttonSave = view.findViewById(R.id.category_editing_list_save);
@@ -188,6 +195,17 @@ public class ListEditingFragment extends Fragment implements CategoryEditingList
         buttonVisibility.setImageResource(isVisible ? R.drawable.ic_round_visibility_off_24 : R.drawable.ic_round_visibility_24);
         recyclerViewSelected.setVisibility(isVisible ? View.GONE : View.VISIBLE);
         recyclerViewAll.setVisibility(isVisible ? View.VISIBLE : View.GONE);
+    }
+
+    private void sort(String type) {
+        sortType = type;
+        if (type.equals("title"))
+            listAll.sort(Comparator.comparing(s -> s.music.getMusic_title()));
+        else if (type.equals("artist"))
+            listAll.sort(Comparator.comparing(MusicWithArtists::artistsToString));
+        adapterAll.setList(listAll);
+        adapterAll.notifyDataSetChanged();
+        buttonSort.setImageResource(type.equals("title") ? R.drawable.ic_round_sort_by_alpha_24 : R.drawable.ic_round_sort_by_artist_24);
     }
 
     @Override

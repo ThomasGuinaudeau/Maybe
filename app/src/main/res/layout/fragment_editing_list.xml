@@ -59,6 +59,13 @@
             android:src="@drawable/ic_round_upload_24" />
 
         <ImageButton
+            android:id="@+id/category_editing_list_sort"
+            style="@style/AppTheme.TopButton"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:src="@drawable/ic_round_sort_by_alpha_24" />
+
+        <ImageButton
             android:id="@+id/category_editing_list_visibility"
             style="@style/AppTheme.TopButton"
             android:layout_width="wrap_content"
@@ -79,9 +86,9 @@
         android:id="@+id/editing_lists_recycler_view_selected"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/category_editing_list_buttons_layout"
-        android:visibility="gone"/>
+        app:layout_constraintTop_toBottomOf="@id/category_editing_list_buttons_layout" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/editing_lists_recycler_view_all"

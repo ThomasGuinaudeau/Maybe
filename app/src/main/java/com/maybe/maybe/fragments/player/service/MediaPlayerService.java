@@ -292,6 +292,13 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Cus
                 begin = 1;
             }
             mediaPlayer.setLooping(loopState.equals(Constants.REPEAT_ONE));
+            if (musicList.getPointer() != -1) {
+                SharedPreferences sharedPref = getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = sharedPref.edit();
+                editor.putLong(getString(R.string.current_file_id), musicList.getCurrent());
+                editor.putInt(getString(R.string.current_timestamp), 0);
+                editor.apply();
+            }
         } else {
             if (loopState.equals(Constants.REPEAT_NONE) && musicList.getPointer() == musicList.size() - 1)
                 mediaPlayer.setNextMediaPlayer(true);

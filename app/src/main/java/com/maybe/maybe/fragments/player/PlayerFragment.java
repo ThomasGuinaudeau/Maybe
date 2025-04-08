@@ -235,6 +235,11 @@ public class PlayerFragment extends Fragment {
         Log.d(TAG, "onResume");
         getActivity().setVolumeControlStream(AudioManager.STREAM_MUSIC);
         addRunnable();
+
+        MediaControllerCompat mediaController = MediaControllerCompat.getMediaController(getActivity());
+        int position = (int) mediaController.getPlaybackState().getPosition();
+        currentDuration = position;
+        updateDuration(position);
     }
 
     @Override

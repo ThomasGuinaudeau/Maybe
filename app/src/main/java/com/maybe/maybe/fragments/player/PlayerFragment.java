@@ -35,11 +35,10 @@ import androidx.fragment.app.Fragment;
 
 import com.maybe.maybe.R;
 import com.maybe.maybe.database.AppDatabase;
-import com.maybe.maybe.database.async_tasks.playlist.PlaylistAsyncTaskPlaylist;
-import com.maybe.maybe.database.async_tasks.playlist.PlaylistAsyncTaskPlaylistResponse;
 import com.maybe.maybe.database.entity.Artist;
 import com.maybe.maybe.database.entity.Music;
 import com.maybe.maybe.database.entity.MusicWithArtists;
+import com.maybe.maybe.database.runnables.playlist.PlaylistRunnablePlaylist;
 import com.maybe.maybe.databinding.FragmentPlayerBinding;
 import com.maybe.maybe.fragments.player.service.MediaPlayerService;
 import com.maybe.maybe.utils.Constants;
@@ -48,6 +47,7 @@ import com.maybe.maybe.utils.Methods;
 
 import java.util.ArrayList;
 import java.util.Locale;
+import java.util.concurrent.Executors;
 
 public class PlayerFragment extends Fragment {
 
@@ -55,7 +55,7 @@ public class PlayerFragment extends Fragment {
     private final Handler mHandler = new Handler();
     private int totalDuration, currentDuration;
     private boolean isFirstLoad = true;
-    private ArrayList<Integer> idList;
+    private ArrayList<Long> idList;
     private CycleStateResource shuffleCycle, repeatCycle;
     private FragmentPlayerBinding binding;
     private SeekValueBinding seekValueBinding;
@@ -169,6 +169,7 @@ public class PlayerFragment extends Fragment {
 
         Intent playerIntent = new Intent(getContext(), MediaPlayerService.class);
         playerIntent.setAction(Constants.ACTION_CREATE_SERVICE);
+        Log.e(TAG, "test");
         getContext().startForegroundService(playerIntent);
 
         mediaBrowser = new MediaBrowserCompat(getContext(), new ComponentName(getContext(), MediaPlayerService.class), connectionCallbacks, null);
@@ -344,7 +345,7 @@ public class PlayerFragment extends Fragment {
     //Get which playlist contains this song
     private void updatePlaylist(long musicId) {
         AppDatabase appDatabase = AppDatabase.getInstance(getContext());
-        new PlaylistAsyncTaskPlaylist().execute((PlaylistAsyncTaskPlaylistResponse) playlists -> {
+        Executors.newSingleThreadExecutor().execute(new PlaylistRunnablePlaylist(playlists -> {
             String playlistStr = "";
             String descPlaylistsStr = "";
             for (int i = 0; i < playlists.size(); i++) {
@@ -357,7 +358,7 @@ public class PlayerFragment extends Fragment {
             }
             binding.setDescPlaylists(getString(R.string.desc_playlists, descPlaylistsStr));
             binding.setPlaylists(playlistStr);
-        }, appDatabase, "selectAllPlaylistsOfId", musicId);
+        }, appDatabase, "selectAllPlaylistsOfId", musicId));
     }
 
     public void updateDuration(int currentDuration) {
@@ -382,16 +383,20 @@ public class PlayerFragment extends Fragment {
         return time;
     }
 
-    public void updateListInService(ArrayList<Integer> idList) {
+    public void updateListInService(ArrayList<Long> idList) {
         if (!isFirstLoad)
             sendListToService(idList);
         else
             this.idList = idList;
     }
 
-    private void sendListToService(ArrayList<Integer> idList) {
+    private void sendListToService(ArrayList<Long> idList) {
+        long[] tempIdList = new long[idList.size()];
+        for (int i = 0; i < idList.size(); i++) {
+            tempIdList[i] = idList.get(i);
+        }
         Bundle bundle = new Bundle();
-        bundle.putIntegerArrayList(getString(R.string.key_parcelable_data), idList);
+        bundle.putLongArray(getString(R.string.key_parcelable_data), tempIdList);
         MediaControllerCompat.getMediaController(getActivity()).sendCommand(Constants.ACTION_CHANGE_LIST, bundle, null);
     }
 

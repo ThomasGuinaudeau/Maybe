@@ -49,16 +49,16 @@ import com.google.android.material.color.MaterialColors;
 import com.maybe.maybe.R;
 import com.maybe.maybe.activities.MainActivity;
 import com.maybe.maybe.database.AppDatabase;
-import com.maybe.maybe.database.async_tasks.MusicAsyncTask;
-import com.maybe.maybe.database.async_tasks.OnSelectMusicAsyncTaskFinish;
 import com.maybe.maybe.database.entity.Music;
 import com.maybe.maybe.database.entity.MusicWithArtists;
+import com.maybe.maybe.database.runnables.MusicRunnable;
 import com.maybe.maybe.utils.Constants;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executors;
 
 public class MediaPlayerService extends MediaBrowserServiceCompat implements CustomOnPreparedListener, MediaPlayer.OnErrorListener, MediaPlayer.OnCompletionListener, MediaPlayer.OnSeekCompleteListener {
     private static final String MY_MEDIA_ROOT_ID = "media_root_id";
@@ -151,6 +151,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Cus
     }
 
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.e(TAG, "test2");
         String action = intent.getAction();
         Log.d(TAG, "onStartCommand " + action);
         MediaButtonReceiver.handleIntent(mediaSession, intent);
@@ -164,7 +165,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Cus
                 begin = 1;
                 Music music = intent.getExtras().getParcelable(getString(R.string.key_parcelable_data));
                 if (musicList != null)
-                    musicList.changeForMusicWithId((int) music.getMusic_id());
+                    musicList.changeForMusicWithId(music.getMusic_id());
                 initMediaPlayer(true);
                 break;
             case Constants.ACTION_APP_FOREGROUND:
@@ -215,7 +216,11 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Cus
         }
     }
 
-    public void setMusicList(ArrayList<Integer> idList) {
+    public void setMusicList(long[] tempIdList) {
+        ArrayList<Long> idList = new ArrayList<>();
+        for (long id : tempIdList) {
+            idList.add(id);
+        }
         if (musicList == null) {
             musicList = new MusicList();
             musicList.setMusics(idList);
@@ -376,13 +381,13 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Cus
         //Get metadata from database only if it's a new music
         Log.e(TAG, "" + musicList);
         if (musicList == null || currentMusic == null || musicList.getCurrent() != (int) currentMusic.music.getMusic_id()) {
-            new MusicAsyncTask().execute((OnSelectMusicAsyncTaskFinish) objects -> {
+            Executors.newSingleThreadExecutor().execute(new MusicRunnable(this, objects -> {
                 ArrayList<MusicWithArtists> musicWithArtists = (ArrayList<MusicWithArtists>) (Object) objects;
                 currentMusic = musicWithArtists.get(0);
-                updateMetadata2(currentMusic);
+                MediaPlayerService.this.updateMetadata2(currentMusic);
                 if (buildNotification)
-                    notificationManager.notify(NOTIFICATION_ID, buildForegroundNotification());
-            }, appDatabase, "selectMusicFromId", (long) musicList.getCurrent());
+                    notificationManager.notify(NOTIFICATION_ID, MediaPlayerService.this.buildForegroundNotification());
+            }, appDatabase, "selectMusicFromId", (long) musicList.getCurrent(), null, null, null));
         } else {
             updateMetadata2(currentMusic);
             if (buildNotification)
@@ -598,7 +603,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Cus
             Log.d(TAG, "onCommand " + command);
             super.onCommand(command, extras, cb);
             if (command.equals(Constants.ACTION_CHANGE_LIST)) {
-                setMusicList(extras.getIntegerArrayList(getString(R.string.key_parcelable_data)));
+                setMusicList(extras.getLongArray(getString(R.string.key_parcelable_data)));
             } else if (command.equals(Constants.ACTION_SORT)) {
                 String loop = extras.getString(getString(R.string.key_parcelable_data));
                 mediaPlayer.setLooping(loop.equals(Constants.REPEAT_ONE));

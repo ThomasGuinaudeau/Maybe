@@ -7,7 +7,7 @@ import java.util.ArrayList;
 
 public class MusicList {
 
-    private ArrayList<Integer> idList;
+    private ArrayList<Long> idList;
     private int pointer;
 
     public MusicList() {
@@ -15,11 +15,11 @@ public class MusicList {
         pointer = -1;
     }
 
-    public ArrayList<Integer> getMusics() {
+    public ArrayList<Long> getMusics() {
         return idList;
     }
 
-    public void setMusics(ArrayList<Integer> idList) {
+    public void setMusics(ArrayList<Long> idList) {
         this.idList = idList;
     }
 
@@ -35,14 +35,14 @@ public class MusicList {
         pointer = -1;
     }
 
-    public int getCurrent() {
+    public long getCurrent() {
         if (pointer == -1)
             pointer = 0;
         return idList.get(pointer);
     }
 
-    public boolean changeForMusicWithId(int fileId) {
-        for (int id : idList)
+    public boolean changeForMusicWithId(long fileId) {
+        for (long id : idList)
             if (id == fileId) {
                 pointer = idList.indexOf(id);
                 return true;
@@ -55,7 +55,7 @@ public class MusicList {
         pointer = index;
     }
 
-    public int getNext() {
+    public long getNext() {
         if (pointer == -1)
             return 0;
         else if (pointer == idList.size() - 1)

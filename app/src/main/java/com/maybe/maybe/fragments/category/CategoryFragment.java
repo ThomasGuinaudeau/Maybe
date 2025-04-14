@@ -35,23 +35,15 @@ import androidx.fragment.app.FragmentManager;
 
 import com.maybe.maybe.R;
 import com.maybe.maybe.database.AppDatabase;
-import com.maybe.maybe.database.async_tasks.ArtistAsyncTask;
-import com.maybe.maybe.database.async_tasks.FillDbAsyncTask;
-import com.maybe.maybe.database.async_tasks.MusicAsyncTask;
-import com.maybe.maybe.database.async_tasks.OnArtistAsyncTaskFinish;
-import com.maybe.maybe.database.async_tasks.OnFillDbAsyncTaskFinish;
-import com.maybe.maybe.database.async_tasks.OnSearchMusicAsyncTaskFinish;
-import com.maybe.maybe.database.async_tasks.OnSelectAlbumAsyncTaskFinish;
-import com.maybe.maybe.database.async_tasks.OnSelectMusicAsyncTaskFinish;
-import com.maybe.maybe.database.async_tasks.playlist.PlaylistAsyncTaskNull;
-import com.maybe.maybe.database.async_tasks.playlist.PlaylistAsyncTaskNullResponse;
-import com.maybe.maybe.database.async_tasks.playlist.PlaylistAsyncTaskObject;
-import com.maybe.maybe.database.async_tasks.playlist.PlaylistAsyncTaskObjectResponse;
-import com.maybe.maybe.database.async_tasks.playlist.PlaylistAsyncTaskPlaylistResponse;
 import com.maybe.maybe.database.entity.ArtistWithMusics;
 import com.maybe.maybe.database.entity.Music;
 import com.maybe.maybe.database.entity.MusicWithArtists;
 import com.maybe.maybe.database.entity.Playlist;
+import com.maybe.maybe.database.runnables.FillDbRunnable;
+import com.maybe.maybe.database.runnables.MusicRunnable;
+import com.maybe.maybe.database.runnables.playlist.IPlaylistRunnableNull;
+import com.maybe.maybe.database.runnables.playlist.PlaylistRunnableNull;
+import com.maybe.maybe.database.runnables.playlist.PlaylistRunnableObject;
 import com.maybe.maybe.fragments.category.editing.ListEditingFragment;
 import com.maybe.maybe.fragments.category.grid.CategoryGridFragment;
 import com.maybe.maybe.fragments.category.list.ListsFragment;
@@ -65,8 +57,9 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.Executors;
 
-public class CategoryFragment extends Fragment implements PlaylistAsyncTaskPlaylistResponse, PlaylistAsyncTaskNullResponse, OnFillDbAsyncTaskFinish, CategoryGridFragment.CategoriesFragmentListener, ActivityResultCallback<ActivityResult> {
+public class CategoryFragment extends Fragment implements IPlaylistRunnableNull, CategoryGridFragment.CategoriesFragmentListener, ActivityResultCallback<ActivityResult> {
 
     private static final String TAG = "CategoryFragment";
     private ActivityResultLauncher<Intent> activityResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), this);
@@ -114,39 +107,39 @@ public class CategoryFragment extends Fragment implements PlaylistAsyncTaskPlayl
     }
 
     public void syncDatabase() {
-        new FillDbAsyncTask(getContext()).execute(getContext(), this, appDatabase);
+        Executors.newSingleThreadExecutor().execute(new FillDbRunnable(getContext(), () -> {}, appDatabase));
     }
 
     private void openPlaylists(CategoryItem categoryItem) {
-        new PlaylistAsyncTaskObject().execute((PlaylistAsyncTaskObjectResponse) objects -> {
+        Executors.newSingleThreadExecutor().execute(new PlaylistRunnableObject(objects -> {
             addFragment(objects, categoryItem);
-        }, appDatabase, "selectAllPlaylistWithCount");
+        }, appDatabase));
     }
 
     private void openArtists(CategoryItem categoryItem) {
-        new ArtistAsyncTask().execute((OnArtistAsyncTaskFinish) objects -> {
+        Executors.newSingleThreadExecutor().execute(new MusicRunnable(getContext(), objects -> {
             ArrayList<ListItem> artists = new ArrayList<>();
             List<ArtistWithMusics> artistWithMusics = (List<ArtistWithMusics>) (Object) objects;
             for (ArtistWithMusics am : artistWithMusics) {
                 artists.add(new ListItem(am.artist.getArtist_id(), am.artist.getArtist_name(), am.musics.size()));
             }
             addFragment(artists, categoryItem);
-        }, appDatabase, "selectAllArtistWithMusics");
+        }, appDatabase, "selectAllArtistWithMusics", -1, null, null, null));
     }
 
     private void openAlbums(CategoryItem categoryItem) {
-        new MusicAsyncTask().execute((OnSelectAlbumAsyncTaskFinish) objects -> {
+        Executors.newSingleThreadExecutor().execute(new MusicRunnable(getContext(), objects -> {
             ArrayList<ListItem> albums = new ArrayList<>((List<ListItem>) (Object) objects);
             addFragment(albums, categoryItem);
-        }, appDatabase, "selectAllAlbumWithCount");
+        }, appDatabase, "selectAllAlbumWithCount", -1, null, null, null));
     }
 
     private void openFolders(CategoryItem categoryItem) {
-        new MusicAsyncTask().execute((OnSelectAlbumAsyncTaskFinish) objects -> {
+        Executors.newSingleThreadExecutor().execute(new MusicRunnable(getContext(), objects -> {
             ArrayList<ListItem> folders = new ArrayList<>((List<ListItem>) (Object) objects);
             Log.e(TAG, "" + folders.size());
             addFragment(folders, categoryItem);
-        }, appDatabase, "selectAllFolderWithCount");
+        }, appDatabase, "selectAllFolderWithCount", -1, null, null, null));
     }
 
     private void openMusicsFrom(CategoryItem categoryItem, String name) {
@@ -161,7 +154,7 @@ public class CategoryFragment extends Fragment implements PlaylistAsyncTaskPlayl
             select = "selectAllMusicsOfPlaylist";
 
         if (select.equals("selectAllMusicsOfPlaylist")) {
-            new MusicAsyncTask().execute((OnSelectMusicAsyncTaskFinish) objects -> {
+            Executors.newSingleThreadExecutor().execute(new MusicRunnable(getContext(), objects -> {
                 ArrayList<MusicWithArtists> musics = new ArrayList<>((List<MusicWithArtists>) (Object) objects);
                 if (tempMusicsEditList == null)
                     tempMusicsEditList = musics;
@@ -169,8 +162,8 @@ public class CategoryFragment extends Fragment implements PlaylistAsyncTaskPlayl
                     addFragmentEdit(musics, tempMusicsEditList, categoryItem, name);
                     tempMusicsEditList = null;
                 }
-            }, appDatabase, "selectAll", SORT_ALPHA, name);
-            new MusicAsyncTask().execute((OnSelectMusicAsyncTaskFinish) objects -> {
+            }, appDatabase, "selectAll", -1, SORT_ALPHA, name, null));
+            Executors.newSingleThreadExecutor().execute(new MusicRunnable(getContext(), objects -> {
                 ArrayList<MusicWithArtists> musics = new ArrayList<>((List<MusicWithArtists>) (Object) objects);
                 if (tempMusicsEditList == null)
                     tempMusicsEditList = musics;
@@ -178,12 +171,12 @@ public class CategoryFragment extends Fragment implements PlaylistAsyncTaskPlayl
                     addFragmentEdit(tempMusicsEditList, musics, categoryItem, name);
                     tempMusicsEditList = null;
                 }
-            }, appDatabase, select, SORT_ALPHA, name);
+            }, appDatabase, select, -1, SORT_ALPHA, name, null));
         } else {
-            new MusicAsyncTask().execute((OnSelectMusicAsyncTaskFinish) objects -> {
+            Executors.newSingleThreadExecutor().execute(new MusicRunnable(getContext(), objects -> {
                 ArrayList<MusicWithArtists> musics = new ArrayList<>((List<MusicWithArtists>) (Object) objects);
                 addFragmentEdit(musics, null, categoryItem, name);
-            }, appDatabase, select, SORT_ALPHA, name);
+            }, appDatabase, select, -1, SORT_ALPHA, name, null));
         }
     }
 
@@ -224,14 +217,14 @@ public class CategoryFragment extends Fragment implements PlaylistAsyncTaskPlayl
             playlists.add(new Playlist(l, name));
         }
         playlistUpdateAction = "back";
-        new PlaylistAsyncTaskNull().execute(this, appDatabase, "updatePlaylist", playlists, name);
+        Executors.newSingleThreadExecutor().execute(new PlaylistRunnableNull(this, appDatabase, name, playlists));
     }
 
     @Override
     public void exportPlaylist(ArrayList<Long> keyList, String name) {
         tempPlaylistExportName = name;
         tempMusicsExportList = new ArrayList<>();
-        new MusicAsyncTask().execute((OnSelectMusicAsyncTaskFinish) objects -> {
+        Executors.newSingleThreadExecutor().execute(new MusicRunnable(getContext(), objects -> {
             ArrayList<MusicWithArtists> musics = new ArrayList<>((List<MusicWithArtists>) (Object) objects);
             musics.forEach(item -> {
                 if (keyList.contains(item.music.getMusic_id()))
@@ -244,7 +237,7 @@ public class CategoryFragment extends Fragment implements PlaylistAsyncTaskPlayl
             intent.setType("application/x-mpegurl");
             intent.putExtra(Intent.EXTRA_TITLE, name);
             activityResultLauncher.launch(intent);
-        }, appDatabase, "selectAll", SORT_ALPHA);
+        }, appDatabase, "selectAll", -1, SORT_ALPHA, null, null));
     }
 
     @Override
@@ -306,10 +299,6 @@ public class CategoryFragment extends Fragment implements PlaylistAsyncTaskPlayl
     }
 
     @Override
-    public void onFillDbAsyncTaskFinish() {
-    }
-
-    @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         if (context instanceof CategoryFragmentListener) {
@@ -326,20 +315,17 @@ public class CategoryFragment extends Fragment implements PlaylistAsyncTaskPlayl
     }
 
     @Override
-    public void onPlaylistAsyncTaskNullFinish() {
+    public void onFinishNull() {
         //When deleting/inserting musics in a playlist, update the recycler view
-        new PlaylistAsyncTaskObject().execute((PlaylistAsyncTaskObjectResponse) objects -> {
+        new PlaylistRunnableObject(objects -> {
             ListsFragment fragment = ((ListsFragment) getParentFragmentManager().findFragmentByTag(getString(R.string.lists_fragment_tag)));
             fragment.setList(objects);
             fragment.updateRecyclerView();
             if (playlistUpdateAction.equals("back")) {
                 onBack();
             }
-        }, appDatabase, "selectAllPlaylistWithCount");
+        }, appDatabase);
     }
-
-    @Override
-    public void onPlaylistAsyncTaskPlaylistFinish(List<Playlist> playlists) {}
 
     @Override
     public void onActivityResult(ActivityResult result) {
@@ -414,7 +400,7 @@ public class CategoryFragment extends Fragment implements PlaylistAsyncTaskPlayl
             if (lines.size() > 0) {
                 final String playlistName = name;
                 //Get all music ids from the paths
-                new MusicAsyncTask().execute((OnSearchMusicAsyncTaskFinish) objects -> {
+                Executors.newSingleThreadExecutor().execute(new MusicRunnable(getContext(), objects -> {
                     ArrayList<Long> keyList = new ArrayList<>((List<Long>) (Object) objects);
                     List<Playlist> playlists = new ArrayList<>();
                     for (long l : keyList) {
@@ -422,9 +408,9 @@ public class CategoryFragment extends Fragment implements PlaylistAsyncTaskPlayl
                     }
                     //delete/insert all ids in the playlist
                     playlistUpdateAction = "nothing";
-                    new PlaylistAsyncTaskNull().execute(this, appDatabase, "updatePlaylist", playlists, playlistName);
+                    Executors.newSingleThreadExecutor().execute(new PlaylistRunnableNull(this, appDatabase, playlistName, playlists));
                     Toast.makeText(getContext(), R.string.toast_importation_successful, Toast.LENGTH_SHORT).show();
-                }, appDatabase, "selectAllIdsByPath", lines);
+                }, appDatabase, "selectAllIdsByPath", -1, null, null, lines));
             } else {
                 Toast.makeText(getContext(), R.string.toast_invalid_file, Toast.LENGTH_SHORT).show();
             }

@@ -25,8 +25,8 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.maybe.maybe.CustomViewPager;
 import com.maybe.maybe.R;
 import com.maybe.maybe.database.AppDatabase;
-import com.maybe.maybe.database.async_tasks.FillDbAsyncTask;
-import com.maybe.maybe.database.async_tasks.OnFillDbAsyncTaskFinish;
+import com.maybe.maybe.database.runnables.FillDbRunnable;
+import com.maybe.maybe.database.runnables.IFillDbRunnable;
 import com.maybe.maybe.fragments.category.CategoryFragment;
 import com.maybe.maybe.fragments.main.MainFragment;
 import com.maybe.maybe.fragments.player.PlayerFragment;
@@ -35,8 +35,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
+import java.util.concurrent.Executors;
 
-public class MainActivity extends FragmentActivity implements CategoryFragment.CategoryFragmentListener, MainFragment.MainFragmentListener, PlayerFragment.PlayerFragmentListener, OnFillDbAsyncTaskFinish {
+public class MainActivity extends FragmentActivity implements CategoryFragment.CategoryFragmentListener, MainFragment.MainFragmentListener, PlayerFragment.PlayerFragmentListener, IFillDbRunnable {
 
     public static final int DATABASE_VERSION = 3;
     private static final String TAG = "MainActivity";
@@ -119,12 +120,12 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
             editor.apply();
 
             AppDatabase appDatabase = AppDatabase.getInstance(this);
-            new FillDbAsyncTask(this).execute(this, this, appDatabase);
+            Executors.newSingleThreadExecutor().execute(new FillDbRunnable(this, this, appDatabase));
         } else start();
     }
 
     @Override
-    public void onFillDbAsyncTaskFinish() {
+    public void onFinish() {
         start();
     }
 
@@ -216,7 +217,7 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
     }
 
     @Override
-    public void updateListInService(ArrayList<Integer> idList) {
+    public void updateListInService(ArrayList<Long> idList) {
         PlayerFragment fragment = (PlayerFragment) pagerAdapter.getRegisteredFragment(PLAY_POS);
         fragment.updateListInService(idList);
     }

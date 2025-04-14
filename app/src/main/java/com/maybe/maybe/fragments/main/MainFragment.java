@@ -30,21 +30,21 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import com.google.android.material.color.MaterialColors;
 import com.maybe.maybe.R;
 import com.maybe.maybe.database.AppDatabase;
-import com.maybe.maybe.database.async_tasks.MusicAsyncTask;
-import com.maybe.maybe.database.async_tasks.OnSaveCurrentListAsyncTaskFinish;
-import com.maybe.maybe.database.async_tasks.OnSearchMusicAsyncTaskFinish;
-import com.maybe.maybe.database.async_tasks.OnSelectMusicAsyncTaskFinish;
-import com.maybe.maybe.database.async_tasks.SaveCurrentListAsyncTask;
 import com.maybe.maybe.database.entity.Music;
 import com.maybe.maybe.database.entity.MusicWithArtists;
+import com.maybe.maybe.database.runnables.IMusicRunnable;
+import com.maybe.maybe.database.runnables.ISaveCurrentListRunnable;
+import com.maybe.maybe.database.runnables.MusicRunnable;
+import com.maybe.maybe.database.runnables.SaveCurrentListRunnable;
 import com.maybe.maybe.utils.Constants;
 import com.maybe.maybe.utils.Methods;
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executors;
 
-public class MainFragment extends Fragment implements View.OnClickListener, OnMusicListItemClick, OnSelectMusicAsyncTaskFinish, OnSaveCurrentListAsyncTaskFinish, TextWatcher {
+public class MainFragment extends Fragment implements View.OnClickListener, OnMusicListItemClick, IMusicRunnable, ISaveCurrentListRunnable, TextWatcher {
 
     private static final String TAG = "MainFragment";
     private MainFragmentListener callback;
@@ -197,7 +197,7 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
             query = "selectAllMusicsOfFolder";
         }
         Log.d(TAG, "category=" + currentCategoryId + " name=" + currentName + " sort=" + sort + " query=" + query);
-        new MusicAsyncTask().execute(this, appDatabase, query, sort, currentName);
+        Executors.newSingleThreadExecutor().execute(new MusicRunnable(getContext(), this, appDatabase, query, -1, sort, currentName, null));
     }
 
     public void updateList(int categoryId, String name, String sort, boolean isFirstLoad) {
@@ -217,8 +217,9 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
         smoothScroll(position);
     }
 
+    //When Selecting music list from db is finished
     @Override
-    public void onSelectMusicAsyncFinish(List<Object> objects) {
+    public void onFinish(List<Object> objects) {
         ArrayList<MusicWithArtists> musicWithArtists = (ArrayList<MusicWithArtists>) (Object) objects;
         if (musicWithArtists.size() > 0) {
             if (!buttonEnable) {
@@ -233,12 +234,12 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
             //adapter.notifyDataSetChanged();
             main_title.setText(currentName);
 
-            ArrayList<Integer> idList = new ArrayList<>();
-            musicWithArtists.forEach(item -> idList.add((int) item.music.getMusic_id()));
+            ArrayList<Long> idList = new ArrayList<>();
+            musicWithArtists.forEach(item -> idList.add(item.music.getMusic_id()));
 
             callback.updateListInService(idList);
 
-            new SaveCurrentListAsyncTask(musicWithArtists, this).execute(appDatabase, getContext(), currentCategoryId, currentName, sort, isStart);
+            Executors.newSingleThreadExecutor().execute(new SaveCurrentListRunnable(this, musicWithArtists, appDatabase, getContext(), currentCategoryId, currentName, sort, isStart));
         } else if (buttonEnable) {
             buttonEnable = false;
             callback.disableButtons(false);
@@ -247,17 +248,17 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
     }
 
     @Override
-    public void onSaveCurrentListAsyncTaskStart(int max) {
+    public void onSaveCurrentListRunnableStart(int max) {
         main_progress_bar.setMax(max);
     }
 
     @Override
-    public void onSaveCurrentListAsyncTaskProgress(int progress) {
+    public void onSaveCurrentListRunnableProgress(int progress) {
         main_progress_bar.setProgress(progress);
     }
 
     @Override
-    public void onSaveCurrentListAsyncTaskFinish() {
+    public void onSaveCurrentListRunnableFinish() {
         main_progress_bar.setProgress(0);
     }
 
@@ -289,7 +290,7 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
     public void afterTextChanged(Editable s) {
         String search = s.toString();
         if (!search.isEmpty()) {
-            new MusicAsyncTask().execute((OnSearchMusicAsyncTaskFinish) objects -> {
+            Executors.newSingleThreadExecutor().execute(new MusicRunnable(getContext(), objects -> {
                 List<Long> longs = (List<Long>) (Object) objects;
                 searchIdList = new ArrayList<>(longs);
                 if (!searchIdList.isEmpty()) {
@@ -297,12 +298,12 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
                     currentSearchId = -1;
                     adapter.setFoundIds(searchIdList);
                     adapter.notifyDataSetChanged();
-                    search();
+                    MainFragment.this.search();
                 } else {
                     searchEnable = false;
                     main_search_button.setText("-");
                 }
-            }, appDatabase, "selectAllIdsByTitle", search);
+            }, appDatabase, "selectAllIdsByTitle", -1, null, search, null));
         } else {
             searchEnable = false;
             main_search_button.setText("-");
@@ -312,7 +313,7 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
     //COMMUNICATING
     public interface MainFragmentListener {
 
-        void updateListInService(ArrayList<Integer> idList);
+        void updateListInService(ArrayList<Long> idList);
 
         void disableButtons(boolean enable);
     }

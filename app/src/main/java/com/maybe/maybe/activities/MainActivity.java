@@ -167,6 +167,7 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
 
     @Override
     public void onBackPressed() {
+        super.onBackPressed();
         if (viewPager.getCurrentItem() == CAT_POS) {
             CategoryFragment fragment = (CategoryFragment) pagerAdapter.getRegisteredFragment(CAT_POS);
             if (!fragment.onBack()) {

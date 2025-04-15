@@ -16,6 +16,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.ContextCompat;
 
 import com.maybe.maybe.database.AppDatabase;
 import com.maybe.maybe.database.entity.Artist;
@@ -26,6 +27,7 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Executor;
 
 public class FillDbRunnable implements Runnable {
     private static final String TAG = "FillDbRunnable";
@@ -190,7 +192,8 @@ public class FillDbRunnable implements Runnable {
         }
         cursor.close();
         dialog.dismiss();
-        callback.onFinish();
+        Executor mainThreadExecutor = ContextCompat.getMainExecutor(context.get());
+        mainThreadExecutor.execute(callback::onFinish);
     }
 
     private void publishProgress(int value) {

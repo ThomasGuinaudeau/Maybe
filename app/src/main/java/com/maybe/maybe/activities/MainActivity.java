@@ -13,6 +13,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
@@ -137,6 +138,22 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
         viewPager.setAdapter(pagerAdapter);
         viewPager.setCurrentItem(MAIN_POS);
         viewPager.registerOnPageChangeCallback(onPageChangeCallback);
+
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (viewPager.getCurrentItem() == MAIN_POS) {
+                    finish();
+                } else if (viewPager.getCurrentItem() == CAT_POS) {
+                    CategoryFragment fragment = (CategoryFragment) pagerAdapter.getRegisteredFragment(CAT_POS);
+                    if (!fragment.onBack()) {
+                        viewPager.setCurrentItem(MAIN_POS);
+                    }
+                } else {
+                    viewPager.setCurrentItem(MAIN_POS);
+                }
+            }
+        });
     }
 
     @Override
@@ -164,21 +181,6 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
                 fragment2.onAppForeground();
         }
         time = 1;
-    }
-
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-        if (viewPager.getCurrentItem() == CAT_POS) {
-            CategoryFragment fragment = (CategoryFragment) pagerAdapter.getRegisteredFragment(CAT_POS);
-            if (!fragment.onBack()) {
-                if (viewPager.getCurrentItem() == MAIN_POS) {
-                    finish();
-                } else {
-                    viewPager.setCurrentItem(MAIN_POS);
-                }
-            }
-        }
     }
 
     @Override

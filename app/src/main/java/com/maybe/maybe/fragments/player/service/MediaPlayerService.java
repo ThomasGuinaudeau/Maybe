@@ -151,8 +151,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Cus
     }
 
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.e(TAG, "test2");
-        String action = intent.getAction();
+        String action = intent != null ? intent.getAction() : "";
         Log.d(TAG, "onStartCommand " + action);
         MediaButtonReceiver.handleIntent(mediaSession, intent);
         switch (action) {

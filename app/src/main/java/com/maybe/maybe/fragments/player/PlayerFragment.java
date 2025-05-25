@@ -169,7 +169,6 @@ public class PlayerFragment extends Fragment {
 
         Intent playerIntent = new Intent(getContext(), MediaPlayerService.class);
         playerIntent.setAction(Constants.ACTION_CREATE_SERVICE);
-        Log.e(TAG, "test");
         getContext().startForegroundService(playerIntent);
 
         mediaBrowser = new MediaBrowserCompat(getContext(), new ComponentName(getContext(), MediaPlayerService.class), connectionCallbacks, null);
@@ -263,10 +262,6 @@ public class PlayerFragment extends Fragment {
 
     void buildTransportControls() {
         MediaControllerCompat mediaController = MediaControllerCompat.getMediaController(getActivity());
-
-        // Display the initial state
-        MediaMetadataCompat metadata = mediaController.getMetadata();
-        PlaybackStateCompat pbState = mediaController.getPlaybackState();
 
         // Register a Callback to stay in sync
         mediaController.registerCallback(controllerCallback);

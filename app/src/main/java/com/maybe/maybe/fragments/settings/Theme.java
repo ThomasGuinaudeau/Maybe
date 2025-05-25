@@ -4,13 +4,14 @@ public class Theme {
     private int themeResource, title;
     private String key;
     private ColorPreference colorPreference;
-    private boolean isActive;
+    private boolean isActive, isLight;
 
-    public Theme(int themeResource, String key, int title, boolean isActive) {
+    public Theme(int themeResource, String key, int title, boolean isActive, boolean isLight) {
         this.themeResource = themeResource;
         this.key = key;
         this.title = title;
         this.isActive = isActive;
+        this.isLight = isLight;
     }
 
     public int getThemeResource() {
@@ -51,5 +52,13 @@ public class Theme {
 
     public void setActive(boolean active) {
         isActive = active;
+    }
+
+    public boolean isLight() {
+        return isLight;
+    }
+
+    public void setLight(boolean light) {
+        isLight = light;
     }
 }

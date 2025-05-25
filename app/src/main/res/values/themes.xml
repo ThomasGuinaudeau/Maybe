@@ -1,118 +1,188 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="AppTheme.Dark" parent="Theme.AppCompat.DayNight.DarkActionBar">
-        <item name="android:colorBackground">@color/dark_background</item>
-        <item name="android:divider">?textColorFaded</item>
-        <item name="android:textColor">@color/light_text</item>
-        <item name="textColorFaded">@color/light_text_faded</item>
-        <item name="selectedMusicTitle">@color/light_text</item>
-        <item name="selectedMusicArtist">@color/light_text_faded</item>
-    </style>
-
-    <style name="AppTheme.Light" parent="Theme.AppCompat.Light.DarkActionBar">
+    <style name="Light" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:colorBackground">@color/light_background</item>
-        <item name="android:divider">?textColorFaded</item>
         <item name="android:textColor">@color/dark_text</item>
+        <item name="android:textColorSecondary">@color/dark_text_faded</item>
         <item name="textColorFaded">@color/dark_text_faded</item>
-        <item name="selectedMusicTitle">@color/light_text</item>
-        <item name="selectedMusicArtist">@color/light_text_faded</item>
+        <item name="colorOnPrimary">@color/dark_text</item>
+        <item name="colorOnSecondary">@color/dark_text</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
 
-    <style name="AppTheme.Dark.Default" parent="AppTheme.Dark">
-        <!-- Primary brand color. -->
-        <item name="colorPrimary">@color/color_primary</item>
-        <item name="colorPrimaryDark">@color/color_primary_dark</item>
-        <item name="colorPrimaryLight">@color/color_primary_light</item>
-        <item name="colorOnPrimary">@color/color_on_primary</item>
-        <!-- Secondary brand color. -->
-        <item name="colorSecondary">@color/color_secondary</item>
-        <item name="colorSecondaryDark">@color/color_secondary_dark</item>
-        <item name="colorSecondaryLight">@color/color_secondary_light</item>
-        <item name="colorOnSecondary">@color/color_on_secondary</item>
-        <!-- Status bar color. -->
-        <item name="android:statusBarColor">?attr/colorPrimaryDark</item>
-        <item name="selectedMusicBackground">?colorSecondary</item>
+    <style name="Dark" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:colorBackground">@color/dark_background</item>
+        <item name="android:textColor">@color/light_text</item>
+        <item name="android:textColorSecondary">@color/light_text_faded</item>
+        <item name="textColorFaded">@color/light_text_faded</item>
+        <item name="colorOnPrimary">@color/light_text</item>
+        <item name="colorOnSecondary">@color/light_text</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
 
-    <style name="AppTheme.Light.Default" parent="AppTheme.Light">
-        <!-- Primary brand color. -->
-        <item name="colorPrimary">@color/color_primary</item>
-        <item name="colorPrimaryDark">@color/color_primary_dark</item>
-        <item name="colorPrimaryLight">@color/color_primary_light</item>
-        <item name="colorOnPrimary">@color/color_on_primary</item>
-        <!-- Secondary brand color. -->
-        <item name="colorSecondary">@color/color_secondary</item>
-        <item name="colorSecondaryDark">@color/color_secondary_dark</item>
-        <item name="colorSecondaryLight">@color/color_secondary_light</item>
-        <item name="colorOnSecondary">@color/color_on_secondary</item>
-        <!-- Status bar color. -->
-        <item name="android:statusBarColor">?attr/colorPrimaryDark</item>
-        <item name="selectedMusicBackground">?colorSecondaryDark</item>
+    <style name="Light.LightText" parent="Light">
+        <item name="colorOnPrimary">@color/light_text</item>
+        <item name="colorOnSecondary">@color/light_text</item>
     </style>
 
-    <style name="AppTheme.Dark.Blue" parent="AppTheme.Dark">
-        <!-- Primary brand color. -->
+    <style name="Dark.DarkText" parent="Dark">
+        <item name="colorOnPrimary">@color/dark_text</item>
+        <item name="colorOnSecondary">@color/dark_text</item>
+    </style>
+
+    <!--SINGLE COLOR-->
+
+    <style name="Light.Pink" parent="Light">
+        <item name="colorPrimary">@color/pink_color_primary</item>
+        <item name="colorSecondary">@color/pink_color_primary</item>
+    </style>
+
+    <style name="Light.Blue" parent="Light">
         <item name="colorPrimary">@color/blue_color_primary</item>
-        <item name="colorPrimaryDark">@color/blue_color_primary_dark</item>
-        <item name="colorPrimaryLight">@color/blue_color_primary_light</item>
-        <item name="colorOnPrimary">@color/blue_color_on_primary</item>
-        <!-- Secondary brand color. -->
-        <item name="colorSecondary">@color/blue_color_secondary</item>
-        <item name="colorSecondaryDark">@color/blue_color_secondary_dark</item>
-        <item name="colorSecondaryLight">@color/blue_color_secondary_light</item>
-        <item name="colorOnSecondary">@color/blue_color_on_secondary</item>
-        <!-- Status bar color. -->
-        <item name="android:statusBarColor">?attr/colorPrimaryDark</item>
-        <item name="selectedMusicBackground">?colorSecondary</item>
+        <item name="colorSecondary">@color/blue_color_primary</item>
     </style>
 
-    <style name="AppTheme.Light.Blue" parent="AppTheme.Light">
-        <!-- Primary brand color. -->
+    <style name="Light.Green" parent="Light">
+        <item name="colorPrimary">@color/green_color_primary</item>
+        <item name="colorSecondary">@color/green_color_primary</item>
+    </style>
+
+    <style name="Light.Yellow" parent="Light">
+        <item name="colorPrimary">@color/yellow_color_primary</item>
+        <item name="colorSecondary">@color/yellow_color_primary</item>
+    </style>
+
+    <style name="Dark.Pink" parent="Dark.DarkText">
+        <item name="colorPrimary">@color/pink_color_primary</item>
+        <item name="colorSecondary">@color/pink_color_primary</item>
+    </style>
+
+    <style name="Dark.Blue" parent="Dark.DarkText">
         <item name="colorPrimary">@color/blue_color_primary</item>
-        <item name="colorPrimaryDark">@color/blue_color_primary_dark</item>
-        <item name="colorPrimaryLight">@color/blue_color_primary_light</item>
-        <item name="colorOnPrimary">@color/blue_color_on_primary</item>
-        <!-- Secondary brand color. -->
-        <item name="colorSecondary">@color/blue_color_secondary</item>
-        <item name="colorSecondaryDark">@color/blue_color_secondary_dark</item>
-        <item name="colorSecondaryLight">@color/blue_color_secondary_light</item>
-        <item name="colorOnSecondary">@color/blue_color_on_secondary</item>
-        <!-- Status bar color. -->
-        <item name="android:statusBarColor">?attr/colorPrimaryDark</item>
-        <item name="selectedMusicBackground">?colorSecondaryDark</item>
+        <item name="colorSecondary">@color/blue_color_primary</item>
     </style>
 
-    <style name="AppTheme.Dark.Purple" parent="AppTheme.Dark">
-        <!-- Primary brand color. -->
-        <item name="colorPrimary">@color/purple_color_primary</item>
-        <item name="colorPrimaryDark">@color/purple_color_primary_dark</item>
-        <item name="colorPrimaryLight">@color/purple_color_primary_light</item>
-        <item name="colorOnPrimary">@color/purple_color_on_primary</item>
-        <!-- Secondary brand color. -->
-        <item name="colorSecondary">@color/purple_color_secondary</item>
-        <item name="colorSecondaryDark">@color/purple_color_secondary_dark</item>
-        <item name="colorSecondaryLight">@color/purple_color_secondary_light</item>
-        <item name="colorOnSecondary">@color/purple_color_on_secondary</item>
-        <!-- Status bar color. -->
-        <item name="android:statusBarColor">?attr/colorPrimaryDark</item>
-        <item name="selectedMusicBackground">?colorSecondary</item>
+    <style name="Dark.Green" parent="Dark.DarkText">
+        <item name="colorPrimary">@color/green_color_primary</item>
+        <item name="colorSecondary">@color/green_color_primary</item>
     </style>
 
-    <style name="AppTheme.Light.Purple" parent="AppTheme.Light">
-        <!-- Primary brand color. -->
+    <style name="Dark.Yellow" parent="Dark.DarkText">
+        <item name="colorPrimary">@color/yellow_color_primary</item>
+        <item name="colorSecondary">@color/yellow_color_primary</item>
+    </style>
+
+    <!--TWO COLORS-->
+
+    <style name="Light.Default" parent="Light.LightText">
+        <item name="colorPrimary">@color/default_color_primary</item>
+        <item name="colorSecondary">@color/default_color_secondary</item>
+    </style>
+
+    <style name="Dark.Default" parent="Dark">
+        <item name="colorPrimary">@color/default_color_primary</item>
+        <item name="colorSecondary">@color/default_color_secondary</item>
+    </style>
+
+    <style name="Light.Sunset" parent="Light.LightText">
+        <item name="colorPrimary">@color/sunset_color_primary</item>
+        <item name="colorSecondary">@color/sunset_color_secondary</item>
+    </style>
+
+    <style name="Dark.Sunset" parent="Dark">
+        <item name="colorPrimary">@color/sunset_color_primary</item>
+        <item name="colorSecondary">@color/sunset_color_secondary</item>
+    </style>
+
+    <style name="Light.Purple" parent="Light.LightText">
         <item name="colorPrimary">@color/purple_color_primary</item>
-        <item name="colorPrimaryDark">@color/purple_color_primary_dark</item>
-        <item name="colorPrimaryLight">@color/purple_color_primary_light</item>
-        <item name="colorOnPrimary">@color/purple_color_on_primary</item>
-        <!-- Secondary brand color. -->
         <item name="colorSecondary">@color/purple_color_secondary</item>
-        <item name="colorSecondaryDark">@color/purple_color_secondary_dark</item>
-        <item name="colorSecondaryLight">@color/purple_color_secondary_light</item>
-        <item name="colorOnSecondary">@color/purple_color_on_secondary</item>
-        <!-- Status bar color. -->
-        <item name="android:statusBarColor">?attr/colorPrimaryDark</item>
-        <item name="selectedMusicBackground">?colorSecondaryDark</item>
+    </style>
+
+    <style name="Dark.Purple" parent="Dark">
+        <item name="colorPrimary">@color/purple_color_primary</item>
+        <item name="colorSecondary">@color/purple_color_secondary</item>
+    </style>
+
+    <style name="Light.Leather.1" parent="Light.LightText">
+        <item name="colorPrimary">@color/leather_color_primary</item>
+        <item name="colorSecondary">@color/leather_color_secondary</item>
+    </style>
+
+    <style name="Light.Leather.2" parent="Light.LightText">
+        <item name="colorPrimary">@color/leather_color_secondary</item>
+        <item name="colorSecondary">@color/leather_color_primary</item>
+    </style>
+
+    <style name="Dark.Leather.1" parent="Dark">
+        <item name="colorPrimary">@color/leather_color_primary</item>
+        <item name="colorSecondary">@color/leather_color_secondary</item>
+    </style>
+
+    <style name="Dark.Leather.2" parent="Dark">
+        <item name="colorPrimary">@color/leather_color_secondary</item>
+        <item name="colorSecondary">@color/leather_color_primary</item>
+    </style>
+
+    <style name="Light.Mountain.1" parent="Light.LightText">
+        <item name="colorPrimary">@color/mountain_color_primary</item>
+        <item name="colorSecondary">@color/mountain_color_secondary</item>
+    </style>
+
+    <style name="Light.Mountain.2" parent="Light.LightText">
+        <item name="colorPrimary">@color/mountain_color_secondary</item>
+        <item name="colorSecondary">@color/mountain_color_primary</item>
+    </style>
+
+    <style name="Dark.Mountain.1" parent="Dark">
+        <item name="colorPrimary">@color/mountain_color_primary</item>
+        <item name="colorSecondary">@color/mountain_color_secondary</item>
+    </style>
+
+    <style name="Dark.Mountain.2" parent="Dark">
+        <item name="colorPrimary">@color/mountain_color_secondary</item>
+        <item name="colorSecondary">@color/mountain_color_primary</item>
+    </style>
+
+    <!--OTHER COLORS-->
+
+    <style name="Light.Terracotta" parent="Light">
+        <item name="android:colorBackground">@color/terracotta_light_background</item>
+        <item name="android:textColor">@color/terracotta_light_text</item>
+        <item name="textColorFaded">@color/terracotta_light_text_faded</item>
+        <item name="colorOnPrimary">@color/terracotta_light_text</item>
+        <item name="colorOnSecondary">@color/terracotta_light_text</item>
+    </style>
+
+    <style name="Dark.Terracotta" parent="Dark">
+        <item name="android:colorBackground">@color/terracotta_light_text</item>
+        <item name="android:textColor">@color/terracotta_light_background</item>
+        <item name="textColorFaded">@color/terracotta_light_background_faded</item>
+        <item name="colorOnPrimary">@color/terracotta_light_text</item>
+        <item name="colorOnSecondary">@color/terracotta_light_text</item>
+    </style>
+
+    <style name="Light.Terracotta.1" parent="Light.Terracotta">
+        <item name="colorPrimary">@color/terracotta_color_primary</item>
+        <item name="colorSecondary">@color/terracotta_color_secondary</item>
+    </style>
+
+    <style name="Light.Terracotta.2" parent="Light.Terracotta">
+        <item name="colorPrimary">@color/terracotta_color_secondary</item>
+        <item name="colorSecondary">@color/terracotta_color_primary</item>
+    </style>
+
+    <style name="Dark.Terracotta.1" parent="Dark.Terracotta">
+        <item name="colorPrimary">@color/terracotta_color_primary</item>
+        <item name="colorSecondary">@color/terracotta_color_secondary</item>
+    </style>
+
+    <style name="Dark.Terracotta.2" parent="Dark.Terracotta">
+        <item name="colorPrimary">@color/terracotta_color_secondary</item>
+        <item name="colorSecondary">@color/terracotta_color_primary</item>
     </style>
 
 </resources>

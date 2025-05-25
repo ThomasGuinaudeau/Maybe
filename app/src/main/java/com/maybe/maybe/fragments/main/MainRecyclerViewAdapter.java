@@ -69,8 +69,6 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         holder.getCustomRecyclerViewRow().setMusicWithArtists(musics.get(position));
         holder.getCustomRecyclerViewRow().setFoundColor(foundIds.contains(musics.get(position).music.getMusic_id()));
-        //if(position % 2 == 0)
-        //    holder.getCustomRecyclerViewRow().setEven(true);
         holder.getCustomRecyclerViewRow().setSelected(id == musics.get(position).music.getMusic_id());
         holder.setItemClickCallback(musics.get(position).music, onMusicListItemClick);
         holder.setLongItemClickCallback(musics.get(position).music, onMusicListItemClick);

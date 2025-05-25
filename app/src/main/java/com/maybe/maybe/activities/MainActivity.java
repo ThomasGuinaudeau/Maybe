@@ -12,6 +12,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Window;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
@@ -19,6 +20,8 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.fragment.app.FragmentActivity;
 import androidx.preference.PreferenceManager;
 import androidx.viewpager2.widget.ViewPager2;
@@ -76,10 +79,17 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        int currentTheme = PreferenceManager.getDefaultSharedPreferences(this).getInt(getString(R.string.key_theme), R.style.AppTheme_Dark_Default);
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+        int currentTheme = sharedPref.getInt(getString(R.string.key_theme), R.style.Dark_Default);
         setTheme(currentTheme);
         super.onCreate(savedInstanceState);
         Log.e(TAG, "main oncreate");
+
+        Window window = getWindow();
+        WindowCompat.setDecorFitsSystemWindows(window, false);
+        WindowInsetsControllerCompat insetsController = WindowCompat.getInsetsController(window, window.getDecorView());
+        insetsController.setAppearanceLightStatusBars(sharedPref.getBoolean(getString(R.string.key_is_light_theme), false));
+
         Thread.setDefaultUncaughtExceptionHandler(this::handleUncaughtException);
 
         //StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder().detectLeakedClosableObjects().penaltyLog().build());

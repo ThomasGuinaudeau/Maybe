@@ -126,7 +126,7 @@
             android:max="@{totalDuration}"
             android:onProgressChanged="@{seekValue::onValueChanged}"
             android:progress="@{currentDuration}"
-            android:progressBackgroundTint="?colorSecondaryDark"
+            android:progressBackgroundTint="?colorSecondary"
             android:progressTint="?colorSecondary"
             android:thumbTint="?colorSecondary"
             app:layout_constraintBottom_toTopOf="@id/player_layout_ppn"

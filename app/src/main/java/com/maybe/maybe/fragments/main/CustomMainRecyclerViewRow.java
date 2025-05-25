@@ -5,7 +5,6 @@ import android.util.AttributeSet;
 import android.widget.TextView;
 
 import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.core.content.ContextCompat;
 
 import com.google.android.material.color.MaterialColors;
 import com.maybe.maybe.R;
@@ -47,7 +46,6 @@ public class CustomMainRecyclerViewRow extends ConstraintLayout {
         title.setText(musicWithArtists.music.getMusic_title());
         artist.setContentDescription("Artist " + musicWithArtists.artistsToString());
         artist.setText(musicWithArtists.artistsToString());
-        //setBackgroundColor(ContextCompat.getColor(getContext(), R.color.odd));
         setBackgroundColor(MaterialColors.getColor(getContext(), android.R.attr.colorBackground, 0x00000000));
         track.setTextColor(MaterialColors.getColor(getContext(), R.attr.textColorFaded, 0x00000000));
         title.setTextColor(MaterialColors.getColor(getContext(), android.R.attr.textColor, 0x00000000));
@@ -57,16 +55,11 @@ public class CustomMainRecyclerViewRow extends ConstraintLayout {
     public void setSelected(boolean selected) {
         super.setSelected(selected);
         if (selected) {
-            setBackgroundColor(MaterialColors.getColor(getContext(), R.attr.selectedMusicBackground, 0xFFFFFFFF));
-            track.setTextColor(MaterialColors.getColor(getContext(), R.attr.selectedMusicArtist, 0xFF000000));
-            title.setTextColor(MaterialColors.getColor(getContext(), R.attr.selectedMusicTitle, 0xFF000000));
-            artist.setTextColor(MaterialColors.getColor(getContext(), R.attr.selectedMusicArtist, 0xFF000000));
+            setBackgroundColor(MaterialColors.getColor(getContext(), R.attr.colorSecondary, 0xFFFFFFFF));
+            track.setTextColor(MaterialColors.getColor(getContext(), R.attr.colorOnSecondary, 0xFF000000));
+            title.setTextColor(MaterialColors.getColor(getContext(), R.attr.colorOnSecondary, 0xFF000000));
+            artist.setTextColor(MaterialColors.getColor(getContext(), R.attr.colorOnSecondary, 0xFF000000));
         }
-    }
-
-    public void setEven(boolean isEven) {
-        if (isEven)
-            setBackgroundColor(ContextCompat.getColor(getContext(), R.color.even));
     }
 
     public void setFoundColor(boolean isFound) {

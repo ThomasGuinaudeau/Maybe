@@ -100,6 +100,11 @@
     <!--Category Fragment-->
     <string name="category_title">Categories</string>
 
+    <!--Settings Fragment-->
+    <string name="settings_title">Settings</string>
+    <string name="themes_title">Themes</string>
+    <string name="restart_button">Apply &amp; Restart</string>
+
     <!--New Playlist Dialog-->
     <string name="dialog_playlist_name">Playlist Name</string>
     <string name="dialog_button_cancel">Cancel</string>
@@ -150,18 +155,64 @@
     <string name="category_theme_title">Themes</string>
     <string name="category_theme_subtitle">App restart is needed after changing the theme.</string>
 
-    <string name="key_dark_theme">key_dark_theme</string>
-    <string name="key_light_theme">key_light_theme</string>
-    <string name="key_dark_theme_blue">key_dark_theme_blue</string>
+    <string name="key_light_theme_pink">key_light_theme_pink</string>
     <string name="key_light_theme_blue">key_light_theme_blue</string>
+    <string name="key_light_theme_green">key_light_theme_green</string>
+    <string name="key_light_theme_yellow">key_light_theme_yellow</string>
+    <string name="key_dark_theme_pink">key_dark_theme_pink</string>
+    <string name="key_dark_theme_blue">key_dark_theme_blue</string>
+    <string name="key_dark_theme_green">key_dark_theme_green</string>
+    <string name="key_dark_theme_yellow">key_dark_theme_yellow</string>
+
+    <string name="key_light_theme_default">key_light_theme_default</string>
+    <string name="key_dark_theme_default">key_dark_theme_default</string>
+    <string name="key_light_theme_sunset">key_light_theme_sunset</string>
+    <string name="key_dark_theme_sunset">key_dark_theme_sunset</string>
     <string name="key_dark_theme_purple">key_dark_theme_purple</string>
     <string name="key_light_theme_purple">key_light_theme_purple</string>
+    <string name="key_light_theme_leather_1">key_light_theme_leather_1</string>
+    <string name="key_light_theme_leather_2">key_light_theme_leather_2</string>
+    <string name="key_dark_theme_leather_1">key_dark_theme_leather_1</string>
+    <string name="key_dark_theme_leather_2">key_dark_theme_leather_2</string>
+    <string name="key_light_theme_mountain_1">key_light_theme_mountain_1</string>
+    <string name="key_light_theme_mountain_2">key_light_theme_mountain_2</string>
+    <string name="key_dark_theme_mountain_1">key_dark_theme_mountain_1</string>
+    <string name="key_dark_theme_mountain_2">key_dark_theme_mountain_2</string>
+
+    <string name="key_light_theme_terracotta_1">key_light_theme_terracotta_1</string>
+    <string name="key_light_theme_terracotta_2">key_light_theme_terracotta_2</string>
+    <string name="key_dark_theme_terracotta_1">key_dark_theme_terracotta_1</string>
+    <string name="key_dark_theme_terracotta_2">key_dark_theme_terracotta_2</string>
+
+    <string name="light_theme_pink_title">Light Pink</string>
+    <string name="light_theme_blue_title">Light Blue</string>
+    <string name="light_theme_green_title">Light Green</string>
+    <string name="light_theme_yellow_title">Light Yellow</string>
+    <string name="dark_theme_pink_title">Dark Pink</string>
+    <string name="dark_theme_blue_title">Dark Blue</string>
+    <string name="dark_theme_green_title">Dark Green</string>
+    <string name="dark_theme_yellow_title">Dark Yellow</string>
 
     <string name="dark_theme_title">Dark Default</string>
     <string name="light_theme_title">Light Default</string>
-    <string name="dark_theme_blue_title">Dark Coucher de Soleil</string>
-    <string name="light_theme_blue_title">Light Coucher de Soleil</string>
+    <string name="dark_theme_blue2_title">Dark Sunset</string>
+    <string name="light_theme_blue2_title">Light Sunset</string>
     <string name="dark_theme_purple_title">Dark Purple</string>
     <string name="light_theme_purple_title">Light Purple</string>
+    <string name="light_theme_leather_1_title">Light Leather 1</string>
+    <string name="light_theme_leather_2_title">Light Leather 2</string>
+    <string name="dark_theme_leather_1_title">Dark Leather 1</string>
+    <string name="dark_theme_leather_2_title">Dark Leather 2</string>
+    <string name="dark_theme_mountain_1_title">Dark Mountain 1</string>
+    <string name="dark_theme_mountain_2_title">Dark Mountain 2</string>
+    <string name="light_theme_mountain_1_title">Light Mountain 1</string>
+    <string name="light_theme_mountain_2_title">Light Mountain 2</string>
+
+    <string name="light_theme_terracotta_1_title">Terracotta Garden 1</string>
+    <string name="light_theme_terracotta_2_title">Terracotta Garden 2</string>
+    <string name="dark_theme_terracotta_1_title">Attocarret Garden 1</string>
+    <string name="dark_theme_terracotta_2_title">Attocarret Garden 2</string>
+
     <string name="key_theme">key_theme</string>
+    <string name="key_is_light_theme">key_is_light_theme</string>
 </resources>

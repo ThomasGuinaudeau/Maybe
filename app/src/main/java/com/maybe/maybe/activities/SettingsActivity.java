@@ -18,6 +18,7 @@ import com.maybe.maybe.R;
 import com.maybe.maybe.fragments.settings.ITheme;
 import com.maybe.maybe.fragments.settings.SettingsFragment;
 import com.maybe.maybe.fragments.settings.Theme;
+import com.maybe.maybe.utils.CustomButton;
 
 public class SettingsActivity extends AppCompatActivity implements ITheme {
     private Theme newTheme;
@@ -41,7 +42,7 @@ public class SettingsActivity extends AppCompatActivity implements ITheme {
                 .replace(R.id.settings_container, settingsFragment)
                 .commit();
 
-        LinearLayout restartButton = findViewById(R.id.restart_button);
+        CustomButton restartButton = findViewById(R.id.restart_button);
         restartButton.setOnClickListener(view -> {
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
             sharedPreferences.edit()

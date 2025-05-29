@@ -13,17 +13,12 @@ public class CustomMediaPlayer implements MediaPlayer.OnPreparedListener {
     private int currentMediaPlayer;
     private CustomOnPreparedListener customOnPreparedListener;
 
-    public CustomMediaPlayer(Context context) {
+    public CustomMediaPlayer(Context context, AudioAttributes audioAttributes) {
         currentMediaPlayer = 0;
         mediaPlayers = new MediaPlayer[2];
         for (int i = 0; i < mediaPlayers.length; i++) {
             mediaPlayers[i] = new MediaPlayer();
-            mediaPlayers[i].setAudioAttributes(
-                    new AudioAttributes.Builder()
-                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                            .setUsage(AudioAttributes.USAGE_MEDIA)
-                            .build()
-            );
+            mediaPlayers[i].setAudioAttributes(audioAttributes);
             mediaPlayers[i].setWakeMode(context, PowerManager.PARTIAL_WAKE_LOCK);
             mediaPlayers[i].setOnErrorListener((MediaPlayer.OnErrorListener) context);
             mediaPlayers[i].setOnPreparedListener(this);

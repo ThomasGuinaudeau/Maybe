@@ -1,11 +1,14 @@
 package com.maybe.maybe.database.runnables;
 
 import android.content.Context;
+import android.content.res.ColorStateList;
+import android.content.res.Resources;
 import android.database.Cursor;
-import android.graphics.Color;
 import android.net.Uri;
+import android.os.Build;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,6 +21,7 @@ import android.widget.TextView;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
 
+import com.maybe.maybe.R;
 import com.maybe.maybe.database.AppDatabase;
 import com.maybe.maybe.database.entity.Artist;
 import com.maybe.maybe.database.entity.Music;
@@ -47,6 +51,19 @@ public class FillDbRunnable implements Runnable {
 
     private void init() {
         Log.d(TAG, "init");
+        //Get colors
+        Resources.Theme theme = context.get().getTheme();
+        TypedValue typedValueBackground = new TypedValue();
+        TypedValue typedValueText = new TypedValue();
+        TypedValue typedValueProgressBar = new TypedValue();
+        theme.resolveAttribute(android.R.attr.colorBackground, typedValueBackground, true);
+        theme.resolveAttribute(android.R.attr.textColor, typedValueText, true);
+        theme.resolveAttribute(android.R.attr.colorPrimary, typedValueProgressBar, true);
+        int backgroundColor = typedValueBackground.data;
+        int textColor = typedValueText.data;
+        int progressBarColor = typedValueProgressBar.data;
+
+        //Create dialog
         int llPadding = 30;
         LinearLayout ll = new LinearLayout(context.get());
         ll.setOrientation(LinearLayout.VERTICAL);
@@ -54,6 +71,7 @@ public class FillDbRunnable implements Runnable {
         ll.setGravity(Gravity.CENTER);
         LinearLayout.LayoutParams llParam = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         llParam.gravity = Gravity.CENTER;
+        ll.setBackgroundColor(backgroundColor);
         ll.setLayoutParams(llParam);
 
         ProgressBar progressBar = new ProgressBar(context.get(), null, android.R.attr.progressBarStyleHorizontal);
@@ -62,12 +80,13 @@ public class FillDbRunnable implements Runnable {
         progressBar.setPadding(0, 0, 0, 0);
         progressBar.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
         progressBar.setMax(100);
+        progressBar.setProgressTintList(ColorStateList.valueOf(progressBarColor));
 
         llParam = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         llParam.gravity = Gravity.CENTER;
         TextView tvText = new TextView(context.get());
-        tvText.setText("Updating Musics");
-        tvText.setTextColor(Color.parseColor("#32A852"));
+        tvText.setText(R.string.sync_musics_dialog);
+        tvText.setTextColor(textColor);
         tvText.setTextSize(20);
         tvText.setLayoutParams(llParam);
 
@@ -108,6 +127,14 @@ public class FillDbRunnable implements Runnable {
                 MediaStore.Audio.Media.DATA
         };
         String selection = MediaStore.Audio.Media.IS_MUSIC + "!= 0";
+        selection += " AND " + MediaStore.Audio.Media.IS_ALARM + "= 0";
+        selection += " AND " + MediaStore.Audio.Media.IS_AUDIOBOOK + "= 0";
+        selection += " AND " + MediaStore.Audio.Media.IS_NOTIFICATION + "= 0";
+        selection += " AND " + MediaStore.Audio.Media.IS_PODCAST + "= 0";
+        selection += " AND " + MediaStore.Audio.Media.IS_RINGTONE + "= 0";
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            selection += " AND " + MediaStore.Audio.Media.IS_RECORDING + "= 0";
+        }
         Cursor cursor = context.get().getContentResolver().query(uri, projection, selection, null, null);
         Log.d(TAG, "music number = " + cursor.getCount());
         if (cursor.getCount() > 0) {

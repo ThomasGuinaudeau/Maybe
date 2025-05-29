@@ -12,10 +12,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
+import android.media.AudioAttributes;
+import android.media.AudioFocusRequest;
 import android.media.AudioManager;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
@@ -30,16 +31,11 @@ import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
-import android.telephony.PhoneStateListener;
-import android.telephony.TelephonyCallback;
-import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
-import androidx.core.content.ContextCompat;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.media.MediaBrowserServiceCompat;
 import androidx.media.app.NotificationCompat.MediaStyle;
@@ -78,36 +74,28 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Cus
     private MediaMetadataCompat.Builder mediaMetadataBuilder;
     private CustomMediaPlayer mediaPlayer;
     //private Equalizer equalizer;
-    private boolean isNoisyAudioStreamReceiverRegistered, callStateListenerRegistered;
+    private boolean isNoisyAudioStreamReceiverRegistered;
     private int currentDuration, begin; //begin-->> -1 = dont prepare, 0 = prepare but dont play(at start), 1 = prepare and play
     private NotificationManager notificationManager;
     private MusicList musicList;
-    private TelephonyManager telephonyManager;
-    private TelephonyCallback telephonyCallback;
-    private PhoneStateListener callStateListener;
+    private AudioManager audioManager;
+    private AudioFocusRequest audioFocusRequest;
+    private AudioAttributes audioAttributes;
     private MusicWithArtists currentMusic;
 
     public void onCreate() {
         super.onCreate();
         Log.d(TAG, "onCreate");
-        callStateListener = (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) ? new PhoneStateListener() {
-            public void onCallStateChanged(int state, String incomingNumber) {
-                if (state == TelephonyManager.CALL_STATE_RINGING) {
-                    if (mediaPlayer.isPlaying())
-                        callback.onPause();
-                }
-            }
-        } : null;
-
-        telephonyCallback = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) ? new CustomTelephonyCallback() {
-            @Override
-            public void onCallStateChanged(int i) {
-                if (i == TelephonyManager.CALL_STATE_RINGING) {
-                    if (mediaPlayer != null && mediaPlayer.isPlaying())
-                        callback.onPause();
-                }
-            }
-        } : null;
+        audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        audioAttributes = new AudioAttributes.Builder()
+                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .build();
+        audioFocusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+                .setAudioAttributes(audioAttributes)
+                .setWillPauseWhenDucked(true)
+                .setOnAudioFocusChangeListener(audioFocusChangeListener)
+                .build();
 
         updateTimeTask = new Runnable() {
             public void run() {
@@ -134,7 +122,6 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Cus
         MediaControllerCompat controller = mediaSession.getController();
 
         playbackStateBuilder = new PlaybackStateCompat.Builder();
-        //playbackStateBuilder.addCustomAction(CUSTOM_ACTION_REPLAY, getString(R.string.custom_action_replay), R.drawable.ic_replay)
         playbackStateBuilder.setActions(PlaybackStateCompat.ACTION_PLAY | PlaybackStateCompat.ACTION_PAUSE | PlaybackStateCompat.ACTION_SKIP_TO_NEXT | PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS | PlaybackStateCompat.ACTION_SEEK_TO);
         playbackStateBuilder.setState(PlaybackStateCompat.STATE_PLAYING, PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1);
         mediaSession.setPlaybackState(playbackStateBuilder.build());
@@ -157,8 +144,6 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Cus
         switch (action) {
             case Constants.ACTION_CREATE_SERVICE:
                 startForeground(NOTIFICATION_ID, buildForegroundNotification());
-                telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-                registerCallStateListener();
                 break;
             case Constants.ACTION_CHANGE_MUSIC:
                 begin = 1;
@@ -189,32 +174,6 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Cus
             mHandler.removeCallbacks(updateTimeTask);
     }
 
-    private void registerCallStateListener() {
-        if (!callStateListenerRegistered) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
-                    telephonyManager.registerTelephonyCallback(getMainExecutor(), telephonyCallback);
-                    callStateListenerRegistered = true;
-                }
-            } else {
-                telephonyManager.listen(callStateListener, PhoneStateListener.LISTEN_CALL_STATE);
-                callStateListenerRegistered = true;
-            }
-        }
-    }
-
-    private void unregisterCallStateListener() {
-        if (callStateListenerRegistered) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                telephonyManager.unregisterTelephonyCallback(telephonyCallback);
-                callStateListenerRegistered = false;
-            } else {
-                telephonyManager.listen(callStateListener, PhoneStateListener.LISTEN_NONE);
-                callStateListenerRegistered = false;
-            }
-        }
-    }
-
     public void setMusicList(long[] tempIdList) {
         ArrayList<Long> idList = new ArrayList<>();
         for (long id : tempIdList) {
@@ -232,17 +191,11 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Cus
                 timestamp = 0;
             currentDuration = timestamp;
             updateMetaData(true);
-            Log.e(TAG, "setMusicList + " + musicList.size());
             initMediaPlayer(true);
             callback.onSeekTo(currentDuration);
-            //notificationManager.notify(NOTIFICATION_ID, buildForegroundNotification());
         } else {
-            //MusicWithArtists music = musicList.getCurrent();
             musicList.setMusics(idList);
             musicList.resetPointer();
-            //musicList.goNext(Constants.REPEAT_ALL);
-            //currentMusic = musicList.getCurrent();
-            //musicList.resetPointer();
             begin = -1;
         }
     }
@@ -274,11 +227,6 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Cus
             equalizer = null;*/
             mediaPlayer.destroy();
         }
-        if (isNoisyAudioStreamReceiverRegistered) {
-            unregisterReceiver(myNoisyAudioStreamReceiver);
-            isNoisyAudioStreamReceiverRegistered = false;
-        }
-        unregisterCallStateListener();
     }
 
     @Override
@@ -321,7 +269,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Cus
         Log.d(TAG, "initMediaPlayer");
         if (initBoth) {
             if (mediaPlayer == null) {
-                mediaPlayer = new CustomMediaPlayer(this);
+                mediaPlayer = new CustomMediaPlayer(this, audioAttributes);
 
             /*float volume = 1f;
             mediaPlayer.setVolume(volume, volume);
@@ -372,13 +320,12 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Cus
 
     @Override
     public void onSeekComplete(MediaPlayer mediaPlayer) {
-        Log.w(TAG, "WOWOWOW onSeekComplete");
+        Log.d(TAG, "onSeekComplete");
     }
 
     public void updateMetaData(boolean buildNotification) {
         Log.d(TAG, "updateMetaData");
         //Get metadata from database only if it's a new music
-        Log.e(TAG, "" + musicList);
         if (musicList == null || currentMusic == null || musicList.getCurrent() != (int) currentMusic.music.getMusic_id()) {
             Executors.newSingleThreadExecutor().execute(new MusicRunnable(this, objects -> {
                 ArrayList<MusicWithArtists> musicWithArtists = (ArrayList<MusicWithArtists>) (Object) objects;
@@ -495,12 +442,6 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Cus
         result.sendResult(null);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.S)
-    private static abstract class CustomTelephonyCallback extends TelephonyCallback implements TelephonyCallback.CallStateListener {
-        @Override
-        public void onCallStateChanged(int i) {}
-    }
-
     private class BecomingNoisyReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -516,19 +457,22 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Cus
         public void onPlay() {
             Log.d(TAG, "MediaSession onPlay");
             if (!mediaPlayer.isPlaying()) {
-                mediaPlayer.start();
-                updateCurrentDuration(PlaybackStateCompat.STATE_PLAYING, mediaPlayer.getCurrentPosition());
-                addRunnable();
-                if (!isNoisyAudioStreamReceiverRegistered) {
-                    registerReceiver(myNoisyAudioStreamReceiver, becomeNoisyIntentFilter);
-                    isNoisyAudioStreamReceiverRegistered = true;
+                int audioFocusResult = audioManager.requestAudioFocus(audioFocusRequest);
+                if (audioFocusResult == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+                    mediaPlayer.start();
+                    updateCurrentDuration(PlaybackStateCompat.STATE_PLAYING, mediaPlayer.getCurrentPosition());
+                    addRunnable();
+                    if (!isNoisyAudioStreamReceiverRegistered) {
+                        registerReceiver(myNoisyAudioStreamReceiver, becomeNoisyIntentFilter);
+                        isNoisyAudioStreamReceiverRegistered = true;
+                    }
+                    if (begin != -1) {
+                        updateMetaData(true);
+                    } else {
+                        notificationManager.notify(NOTIFICATION_ID, buildForegroundNotification());
+                    }
+                    begin = 1;
                 }
-                if (begin != -1) {
-                    updateMetaData(true);
-                } else {
-                    notificationManager.notify(NOTIFICATION_ID, buildForegroundNotification());
-                }
-                begin = 1;
             }
         }
 
@@ -539,6 +483,10 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Cus
                 mediaPlayer.pause();
                 updateCurrentDuration(PlaybackStateCompat.STATE_PAUSED, mediaPlayer.getCurrentPosition());
                 removeRunnable();
+                if (isNoisyAudioStreamReceiverRegistered) {
+                    unregisterReceiver(myNoisyAudioStreamReceiver);
+                    isNoisyAudioStreamReceiverRegistered = false;
+                }
                 if (begin != -1) {
                     updateMetaData(true);
                 } else {
@@ -560,6 +508,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Cus
             //}
             currentDuration = 0;
             mediaPlayer.stop(true);
+            audioManager.abandonAudioFocusRequest(audioFocusRequest);
         }
 
         @Override
@@ -608,6 +557,21 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Cus
                 mediaPlayer.setLooping(loop.equals(Constants.REPEAT_ONE));
                 loopState = loop;
             }
+        }
+    };
+
+    private final AudioManager.OnAudioFocusChangeListener audioFocusChangeListener = i -> {
+        switch (i) {
+            case AudioManager.AUDIOFOCUS_GAIN:
+                callback.onPlay();
+                break;
+            case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
+            case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
+                callback.onPause();
+                break;
+            case AudioManager.AUDIOFOCUS_LOSS:
+                callback.onStop();
+                break;
         }
     };
 }

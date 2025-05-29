@@ -24,6 +24,7 @@ import com.maybe.maybe.R;
 import com.maybe.maybe.database.entity.MusicWithArtists;
 import com.maybe.maybe.fragments.category.CategoryItem;
 import com.maybe.maybe.fragments.category.grid.CategoryGridFragment;
+import com.maybe.maybe.utils.CustomButton;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -69,8 +70,16 @@ public class ListEditingFragment extends Fragment implements CategoryEditingList
         ImageButton buttonBack = view.findViewById(R.id.category_editing_list_back);
         buttonBack.setOnClickListener(view1 -> callback.back());
 
-        ImageButton buttonPlay = view.findViewById(R.id.category_editing_list_play);
-        buttonPlay.setOnClickListener(view1 -> callback.changeList(categoryItem.getId(), name));
+        buttonSort = view.findViewById(R.id.category_editing_list_sort);
+        buttonSort.setOnClickListener(view1 -> {
+            sort(sortType.equals("title") ? "artist" : "title");
+        });
+
+        CustomButton buttonPlay = view.findViewById(R.id.category_editing_list_play);
+        buttonPlay.setOnClickListener(view1 -> {
+            ArrayList<Long> keyList = getSelectedMusics();
+            callback.changeList(keyList, categoryItem.getId(), name);
+        });
         if (categoryItem.getId() == CATEGORY_PLAYLIST && !name.equals("All Musics")) {
             adapterSelected = new CategoryEditingListAdapter(this);
             adapterSelected.setList(listSelected);
@@ -105,9 +114,7 @@ public class ListEditingFragment extends Fragment implements CategoryEditingList
                 }
             });
 
-            listSelected.forEach((item) -> {
-                tracker.select(item.music.getMusic_id());
-            });
+            listSelected.forEach((item) -> tracker.select(item.music.getMusic_id()));
 
             buttonVisibility = view.findViewById(R.id.category_editing_list_visibility);
             isVisible = listSelected.size() == 0;
@@ -117,24 +124,16 @@ public class ListEditingFragment extends Fragment implements CategoryEditingList
                 changeVisibility();
             });
 
-            buttonSort = view.findViewById(R.id.category_editing_list_sort);
-            buttonSort.setOnClickListener(view1 -> {
-                sort(sortType.equals("title") ? "artist" : "title");
-            });
-
             ImageButton buttonSave = view.findViewById(R.id.category_editing_list_save);
             buttonSave.setOnClickListener(view1 -> {
-                MutableSelection<Long> snapshot = new MutableSelection<Long>();
-                tracker.copySelection(snapshot);
-                ArrayList<Long> keyList = new ArrayList<>();
-                snapshot.forEach(keyList::add);//keyList::add = aLong -> keyList.add(aLong)
-                callback.saveToList(keyList, name);
+                ArrayList<Long> keyList = getSelectedMusics();
+                callback.saveToList(keyList, name, false);
             });
 
             ImageButton buttonDelete = view.findViewById(R.id.category_editing_list_delete);
             buttonDelete.setOnClickListener(view1 -> {
                 ArrayList<Long> keyList = new ArrayList<>();
-                callback.saveToList(keyList, name);
+                callback.saveToList(keyList, name, true);
             });
 
             ImageButton buttonExport = view.findViewById(R.id.category_editing_list_export);
@@ -177,6 +176,14 @@ public class ListEditingFragment extends Fragment implements CategoryEditingList
         this.callback = callback;
     }
 
+    private ArrayList<Long> getSelectedMusics() {
+        MutableSelection<Long> snapshot = new MutableSelection<Long>();
+        tracker.copySelection(snapshot);
+        ArrayList<Long> keyList = new ArrayList<>();
+        snapshot.forEach(keyList::add);//keyList::add = aLong -> keyList.add(aLong)
+        return keyList;
+    }
+
     private void changeVisibility() {
         if (!isVisible) {
             MutableSelection<Long> snapshot = new MutableSelection<Long>();
@@ -192,7 +199,7 @@ public class ListEditingFragment extends Fragment implements CategoryEditingList
             adapterSelected.setList(listSelected);
             adapterSelected.notifyDataSetChanged();
         }
-        buttonVisibility.setImageResource(isVisible ? R.drawable.ic_round_visibility_off_24 : R.drawable.ic_round_visibility_24);
+        buttonVisibility.setImageResource(isVisible ? R.drawable.ic_round_visibility_24 : R.drawable.ic_round_visibility_off_24);
         recyclerViewSelected.setVisibility(isVisible ? View.GONE : View.VISIBLE);
         recyclerViewAll.setVisibility(isVisible ? View.VISIBLE : View.GONE);
     }

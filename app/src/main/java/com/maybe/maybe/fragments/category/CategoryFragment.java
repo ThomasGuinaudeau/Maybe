@@ -18,7 +18,6 @@ import android.os.Environment;
 import android.os.ParcelFileDescriptor;
 import android.provider.DocumentsContract;
 import android.provider.OpenableColumns;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -36,7 +35,6 @@ import androidx.fragment.app.FragmentManager;
 import com.maybe.maybe.R;
 import com.maybe.maybe.database.AppDatabase;
 import com.maybe.maybe.database.entity.ArtistWithMusics;
-import com.maybe.maybe.database.entity.Music;
 import com.maybe.maybe.database.entity.MusicWithArtists;
 import com.maybe.maybe.database.entity.Playlist;
 import com.maybe.maybe.database.runnables.FillDbRunnable;
@@ -65,7 +63,6 @@ public class CategoryFragment extends Fragment implements IPlaylistRunnableNull,
     private ActivityResultLauncher<Intent> activityResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), this);
     private CategoryFragmentListener callback;
     private AppDatabase appDatabase;
-    private ArrayList<Music> addPlaylist;
     private ArrayList<MusicWithArtists> tempMusicsEditList;
     private ArrayList<MusicWithArtists> tempMusicsExportList;
     private String tempPlaylistExportName;
@@ -87,14 +84,12 @@ public class CategoryFragment extends Fragment implements IPlaylistRunnableNull,
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_category, container, false);
 
-        updateColors();
-
         CategoryGridFragment fragment = CategoryGridFragment.newInstance();
         fragment.setCallback(this);
         getParentFragmentManager().beginTransaction()
                 .add(R.id.category_fragment_list, fragment, getString(R.string.categories_fragment_tag))
                 .setReorderingAllowed(true)
-                .addToBackStack(null)
+                .addToBackStack(getString(R.string.categories_fragment_tag))
                 .commit();
 
         return view;
@@ -137,7 +132,6 @@ public class CategoryFragment extends Fragment implements IPlaylistRunnableNull,
     private void openFolders(CategoryItem categoryItem) {
         Executors.newSingleThreadExecutor().execute(new MusicRunnable(getContext(), objects -> {
             ArrayList<ListItem> folders = new ArrayList<>((List<ListItem>) (Object) objects);
-            Log.e(TAG, "" + folders.size());
             addFragment(folders, categoryItem);
         }, appDatabase, "selectAllFolderWithCount", -1, null, null, null));
     }
@@ -188,7 +182,7 @@ public class CategoryFragment extends Fragment implements IPlaylistRunnableNull,
         getParentFragmentManager().beginTransaction()
                 .replace(R.id.category_fragment_list, fragment, getString(R.string.lists_fragment_tag))
                 .setReorderingAllowed(true)
-                .addToBackStack(null)
+                .addToBackStack(getString(R.string.lists_fragment_tag))
                 .commit();
     }
 
@@ -199,9 +193,9 @@ public class CategoryFragment extends Fragment implements IPlaylistRunnableNull,
         fragment.setList(list);
         fragment.setCategoryAndName(categoryItem, name);
         getParentFragmentManager().beginTransaction()
-                .replace(R.id.category_fragment_list, fragment, null)
+                .replace(R.id.category_fragment_list, fragment, getString(R.string.lists_editing_fragment_tag))
                 .setReorderingAllowed(true)
-                .addToBackStack(null)
+                .addToBackStack(getString(R.string.lists_editing_fragment_tag))
                 .commit();
     }
 
@@ -211,13 +205,17 @@ public class CategoryFragment extends Fragment implements IPlaylistRunnableNull,
     }
 
     @Override
-    public void saveToList(ArrayList<Long> keyList, String name) {
+    public void saveToList(ArrayList<Long> keyList, String name, boolean isDelete) {
         List<Playlist> playlists = new ArrayList<>();
         for (long l : keyList) {
             playlists.add(new Playlist(l, name));
         }
         playlistUpdateAction = "back";
         Executors.newSingleThreadExecutor().execute(new PlaylistRunnableNull(this, appDatabase, name, playlists));
+        if (isDelete)
+            Toast.makeText(getContext(), R.string.toast_playlist_deleted, Toast.LENGTH_SHORT).show();
+        else
+            Toast.makeText(getContext(), R.string.toast_playlist_saved, Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -252,10 +250,16 @@ public class CategoryFragment extends Fragment implements IPlaylistRunnableNull,
     }
 
     @Override
-    public void changeList(int categoryId, String name) {
-        callback.changeList(categoryId, name);
-        getParentFragmentManager().popBackStack(1, FragmentManager.POP_BACK_STACK_INCLUSIVE);
-        callback.swipeToMain();
+    public void changeList(ArrayList<Long> keyList, int categoryId, String name) {
+        //save list first then play it
+        List<Playlist> playlists = new ArrayList<>();
+        for (long l : keyList)
+            playlists.add(new Playlist(l, name));
+        Executors.newSingleThreadExecutor().execute(new PlaylistRunnableNull(() -> {
+            callback.changeList(categoryId, name);
+            callback.swipeToMain();
+            getParentFragmentManager().popBackStack(getString(R.string.categories_fragment_tag), 0);
+        }, appDatabase, name, playlists));
     }
 
     @Override
@@ -284,20 +288,6 @@ public class CategoryFragment extends Fragment implements IPlaylistRunnableNull,
         return true;
     }
 
-    public void updateColors() {
-        //Drawable icon = ContextCompat.getDrawable(getContext(), R.drawable.custom_expandable);
-        //icon.setTint(ColorsConstants.SECONDARY_TEXT_COLOR);
-    }
-
-    public void addToPlaylist(ArrayList<Music> musics) {
-        addPlaylist = musics;
-    }
-
-    public void resetList() {
-        if (addPlaylist != null)
-            addPlaylist.clear();
-    }
-
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
@@ -317,14 +307,16 @@ public class CategoryFragment extends Fragment implements IPlaylistRunnableNull,
     @Override
     public void onFinishNull() {
         //When deleting/inserting musics in a playlist, update the recycler view
-        new PlaylistRunnableObject(objects -> {
-            ListsFragment fragment = ((ListsFragment) getParentFragmentManager().findFragmentByTag(getString(R.string.lists_fragment_tag)));
-            fragment.setList(objects);
-            fragment.updateRecyclerView();
-            if (playlistUpdateAction.equals("back")) {
-                onBack();
-            }
-        }, appDatabase);
+        Executors.newSingleThreadExecutor().execute(new PlaylistRunnableObject(objects -> {
+            getActivity().runOnUiThread(() -> {
+                ListsFragment fragment = ((ListsFragment) CategoryFragment.this.getParentFragmentManager().findFragmentByTag(CategoryFragment.this.getString(R.string.lists_fragment_tag)));
+                fragment.setList(objects);
+                fragment.updateRecyclerView();
+                if (playlistUpdateAction.equals("back")) {
+                    onBack();
+                }
+            });
+        }, appDatabase));
     }
 
     @Override

@@ -20,6 +20,7 @@
 
     <!--Category Fragment-->
     <string name="category_title">Categories</string>
+    <string name="category_button_play">Play</string>
 
     <!--Settings Fragment-->
     <string name="settings_title">Settings</string>
@@ -56,11 +57,15 @@
     <string name="toast_invalid_file">Invalid/Empty file!</string>
     <string name="toast_exportation_successful">Playlist exportation successful!</string>
     <string name="toast_importation_successful">Playlist importation successful!</string>
+    <string name="toast_playlist_saved">Playlist saved!</string>
+    <string name="toast_playlist_deleted">Playlist deleted!</string>
+    <string name="toast_playlist_added">Playlist added!</string>
     <string name="toast_invalid_name">Invalid name!</string>
 
     <!--Tag-->
     <string name="categories_fragment_tag">categories_fragment_tag</string>
     <string name="lists_fragment_tag">lists_fragment_tag</string>
+    <string name="lists_editing_fragment_tag">lists_editing_fragment_tag</string>
 
     <!--Theme-->
     <string name="key_category_theme">key_category_theme</string>
@@ -127,4 +132,7 @@
 
     <string name="key_theme">key_theme</string>
     <string name="key_is_light_theme">key_is_light_theme</string>
+
+    <!--Other-->
+    <string name="sync_musics_dialog">Syncing Musics</string>
 </resources>

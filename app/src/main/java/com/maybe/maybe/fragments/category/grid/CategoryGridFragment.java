@@ -79,9 +79,9 @@ public class CategoryGridFragment extends Fragment implements AdapterView.OnItem
         //void changeFragmentToMusicList(int categoryIndex, String which, String name);
         void changeFragment(CategoryItem categoryItem, String name, boolean isEditable);
 
-        void changeList(int categoryId, String name);
+        void changeList(ArrayList<Long> keyList, int categoryId, String name);
 
-        void saveToList(ArrayList<Long> keyList, String name);
+        void saveToList(ArrayList<Long> keyList, String name, boolean isDelete);
 
         void exportPlaylist(ArrayList<Long> keyList, String name);
 

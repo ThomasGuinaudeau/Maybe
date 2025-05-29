@@ -67,7 +67,7 @@ public class PlayerFragment extends Fragment {
             new MediaControllerCompat.Callback() {
                 @Override
                 public void onMetadataChanged(MediaMetadataCompat metadata) {
-                    Log.e(TAG, "onMetadataChanged " + metadata.getDescription().getTitle());
+                    Log.d(TAG, "onMetadataChanged " + metadata.getDescription().getTitle());
                     binding.setTitle(metadata.getDescription().getTitle().toString());
                     binding.setArtist(metadata.getDescription().getSubtitle().toString());
                     binding.setAlbum(metadata.getString(MediaMetadataCompat.METADATA_KEY_ALBUM));
@@ -90,7 +90,7 @@ public class PlayerFragment extends Fragment {
 
                 @Override
                 public void onPlaybackStateChanged(PlaybackStateCompat state) {
-                    Log.e(TAG, "onPlaybackStateChanged" + state);
+                    Log.d(TAG, "onPlaybackStateChanged" + state);
                     if (state.getState() == PlaybackStateCompat.STATE_PLAYING) {
                         binding.setState(R.drawable.ic_round_pause_24);
                         isPlaying = true;
@@ -119,7 +119,7 @@ public class PlayerFragment extends Fragment {
             new MediaBrowserCompat.ConnectionCallback() {
                 @Override
                 public void onConnected() {
-                    Log.e(TAG, "CONNECTING");
+                    Log.d(TAG, "CONNECTING");
                     MediaSessionCompat.Token token = mediaBrowser.getSessionToken();
                     MediaControllerCompat mediaController = new MediaControllerCompat(getContext(), token);
                     MediaControllerCompat.setMediaController(getActivity(), mediaController);

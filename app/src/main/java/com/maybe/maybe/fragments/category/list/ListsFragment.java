@@ -3,11 +3,11 @@ package com.maybe.maybe.fragments.category.list;
 import static com.maybe.maybe.fragments.category.CategoryItem.CATEGORY_PLAYLIST;
 
 import android.os.Bundle;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -21,12 +21,13 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.maybe.maybe.fragments.category.CategoryItem;
-import com.maybe.maybe.fragments.category.ListItem;
 import com.maybe.maybe.R;
+import com.maybe.maybe.fragments.category.CategoryItem;
 import com.maybe.maybe.fragments.category.CategoryRecyclerViewAdapter;
+import com.maybe.maybe.fragments.category.ListItem;
 import com.maybe.maybe.fragments.category.OnListItemClick;
 import com.maybe.maybe.fragments.category.grid.CategoryGridFragment;
+import com.maybe.maybe.utils.CustomButton;
 
 import java.util.ArrayList;
 
@@ -70,10 +71,9 @@ public class ListsFragment extends Fragment implements OnListItemClick {
                 //Create AlertDialog to choose a playlist name
                 AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
                 AlertDialog alertDialog = builder.create();//Used to be able to dismiss the dialog
-                EditText editText = new EditText(getContext());
-                editText.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-                editText.setGravity(Gravity.CENTER);
-                editText.setSingleLine(true);
+                View dialogView = inflater.inflate(R.layout.new_playlist_dialog, null);
+
+                EditText editText = dialogView.findViewById(R.id.new_playlist_dialog_playlist_name);
                 editText.setImeOptions(EditorInfo.IME_ACTION_DONE);
                 editText.setOnEditorActionListener((v, actionId, event) -> {
                     if (actionId == EditorInfo.IME_ACTION_DONE) {
@@ -84,19 +84,18 @@ public class ListsFragment extends Fragment implements OnListItemClick {
                     }
                     return false;
                 });
-                LinearLayout ll = new LinearLayout(getContext());
-                ll.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-                ll.setPadding(80, 0, 80, 0);
-                ll.setGravity(Gravity.CENTER);
-                ll.addView(editText);
-                builder.setView(ll);
-                builder.setTitle(R.string.dialog_playlist_name);
-                builder.setPositiveButton(R.string.dialog_button_add, (dialog, id) -> {
+
+                CustomButton btnAdd = dialogView.findViewById(R.id.new_playlist_dialog_add);
+                btnAdd.setOnClickListener(v -> {
                     String name = editText.getText().toString();
                     ListsFragment.this.onAdd(name);
+                    alertDialog.dismiss();
                 });
-                builder.setNegativeButton(R.string.dialog_button_cancel, (dialog, id) -> {});
-                builder.create().show();
+                Button btnCancel = dialogView.findViewById(R.id.new_playlist_dialog_cancel);
+                btnCancel.setOnClickListener(v -> alertDialog.dismiss());
+
+                alertDialog.setView(dialogView);
+                alertDialog.show();
             });
 
             ImageButton buttonImport = view.findViewById(R.id.category_list_import);
@@ -113,17 +112,16 @@ public class ListsFragment extends Fragment implements OnListItemClick {
     }
 
     private void onAdd(String name) {
-        if (!name.equals("") && !name.equals("All Musics")) {
+        if (!name.equals("") && !name.equals("All Musics"))
             callback.changeFragment(categoryItem, name, true);
-        } else
+        else
             Toast.makeText(getContext(), R.string.toast_invalid_name, Toast.LENGTH_SHORT).show();
     }
 
     public void setList(ArrayList<ListItem> list) {
         this.list = list;
-        if (adapter != null) {
+        if (adapter != null)
             adapter.setList(this.list);
-        }
     }
 
     public void setCategory(CategoryItem categoryItem) {

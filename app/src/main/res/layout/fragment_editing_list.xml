@@ -72,14 +72,6 @@
             android:layout_height="match_parent"
             android:src="@drawable/ic_round_visibility_24" />
 
-        <ImageButton
-            android:id="@+id/category_editing_list_play"
-            style="@style/AppTheme.TopButton"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:paddingVertical="2dp"
-            android:src="@drawable/ic_round_play_arrow_24" />
-
     </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView
@@ -96,5 +88,18 @@
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@id/category_editing_list_buttons_layout" />
+
+    <com.maybe.maybe.utils.CustomButton
+        android:id="@+id/category_editing_list_play"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        app:background="?colorSecondary"
+        app:hasIcon="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:src="@drawable/ic_round_play_arrow_24"
+        app:text="@string/category_button_play"
+        app:textColor="?colorOnSecondary" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

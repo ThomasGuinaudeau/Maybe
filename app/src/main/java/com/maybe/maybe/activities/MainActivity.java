@@ -83,7 +83,7 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
         int currentTheme = sharedPref.getInt(getString(R.string.key_theme), R.style.Dark_Default);
         setTheme(currentTheme);
         super.onCreate(savedInstanceState);
-        Log.e(TAG, "main oncreate");
+        Log.d(TAG, "main oncreate");
 
         Window window = getWindow();
         WindowCompat.setDecorFitsSystemWindows(window, false);
@@ -129,10 +129,9 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
             SharedPreferences.Editor editor = sharedPref.edit();
             editor.putInt(getString(R.string.db_version), DATABASE_VERSION);
             editor.apply();
-
-            AppDatabase appDatabase = AppDatabase.getInstance(this);
-            Executors.newSingleThreadExecutor().execute(new FillDbRunnable(this, this, appDatabase));
-        } else start();
+        }
+        AppDatabase appDatabase = AppDatabase.getInstance(this);
+        Executors.newSingleThreadExecutor().execute(new FillDbRunnable(this, this, appDatabase));
     }
 
     @Override
@@ -146,7 +145,7 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
         viewPager.setOffscreenPageLimit(2);
         pagerAdapter = new CustomViewPager(this);
         viewPager.setAdapter(pagerAdapter);
-        viewPager.setCurrentItem(MAIN_POS);
+        viewPager.setCurrentItem(MAIN_POS, false);
         viewPager.registerOnPageChangeCallback(onPageChangeCallback);
 
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
@@ -157,10 +156,10 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
                 } else if (viewPager.getCurrentItem() == CAT_POS) {
                     CategoryFragment fragment = (CategoryFragment) pagerAdapter.getRegisteredFragment(CAT_POS);
                     if (!fragment.onBack()) {
-                        viewPager.setCurrentItem(MAIN_POS);
+                        viewPager.setCurrentItem(MAIN_POS, true);
                     }
                 } else {
-                    viewPager.setCurrentItem(MAIN_POS);
+                    viewPager.setCurrentItem(MAIN_POS, true);
                 }
             }
         });
@@ -178,13 +177,13 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
     @Override
     protected void onPause() {
         super.onPause();
-        Log.e(TAG, "main onpause");
+        Log.d(TAG, "main onpause");
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        Log.e(TAG, "main onresume");
+        Log.d(TAG, "main onresume");
         if (pagerAdapter != null && time != 0) {
             MainFragment fragment2 = (MainFragment) pagerAdapter.getRegisteredFragment(MAIN_POS);
             if (fragment2 != null)
@@ -207,6 +206,8 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
 
     @Override
     public void swipeToMain() {
+        if (viewPager.getCurrentItem() == MAIN_POS)
+            viewPager.setCurrentItem(CAT_POS, false);
         viewPager.setCurrentItem(MAIN_POS, true);
     }
 
@@ -234,7 +235,7 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
         fragment.updateListInService(idList);
     }
 
-    //On crash send stack trace
+    //On crash copy stack trace
     public void handleUncaughtException(Thread thread, Throwable e) {
         String exStackTrace = Log.getStackTraceString(e);
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault());

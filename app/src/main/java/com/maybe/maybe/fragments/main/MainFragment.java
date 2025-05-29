@@ -179,6 +179,7 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
                 query = "selectAll";
                 currentCategoryId = CATEGORY_PLAYLIST;
                 currentName = "All Musics";
+                isStart = false;
             } else {
                 query = "selectAllMusicsOfCurrentPlaylist";
                 currentCategoryId = sharedPref.getInt(getString(R.string.current_category_id), CATEGORY_PLAYLIST);
@@ -201,7 +202,6 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
     }
 
     public void updateList(int categoryId, String name, String sort, boolean isFirstLoad) {
-        Log.e(TAG, categoryId + " " + name + " " + sort + " " + isFirstLoad);
         currentCategoryId = categoryId != -1 ? categoryId : currentCategoryId;
         currentName = name != null ? name : currentName;
         this.sort = sort != null ? sort : this.sort;
@@ -213,7 +213,6 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
         adapter.notifyDataSetChanged();
         int position = adapter.getMusicPosition(id);
         position = position != -1 ? position : 0;
-        //adapter.setCurrentMusicPosition(position);
         smoothScroll(position);
     }
 
@@ -227,11 +226,9 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
                 callback.disableButtons(true);
             }
             long currentMusicId = adapter.getId();
-            Log.e(TAG, currentMusicId + "");
             adapter.setMusics(musicWithArtists);
             adapter.setSort(sort);
             changeCurrentMusic(currentMusicId);
-            //adapter.notifyDataSetChanged();
             main_title.setText(currentName);
 
             ArrayList<Long> idList = new ArrayList<>();

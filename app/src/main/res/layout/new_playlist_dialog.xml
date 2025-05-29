@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?android:colorBackground"
+    android:orientation="vertical"
+    android:paddingHorizontal="32dp"
+    android:paddingVertical="16dp">
+
+    <TextView
+        android:id="@+id/new_playlist_dialog_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/dialog_playlist_name"
+        android:textSize="24sp" />
+
+    <EditText
+        android:id="@+id/new_playlist_dialog_playlist_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:backgroundTint="?colorSecondary"
+        android:gravity="center"
+        android:inputType="textEmailAddress"
+        android:singleLine="true"
+        android:textColor="?android:textColor" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:gravity="end"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/new_playlist_dialog_cancel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:background="@null"
+            android:paddingHorizontal="32dp"
+            android:paddingVertical="12dp"
+            android:text="@string/dialog_button_cancel"
+            android:textAllCaps="false" />
+
+        <com.maybe.maybe.utils.CustomButton
+            android:id="@+id/new_playlist_dialog_add"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:background="?colorSecondary"
+            app:hasIcon="true"
+            app:src="@drawable/round_check_24"
+            app:text="@string/dialog_button_add"
+            app:textColor="?colorOnSecondary" />
+    </LinearLayout>
+</LinearLayout>

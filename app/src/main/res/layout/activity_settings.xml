@@ -26,37 +26,19 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toBottomOf="@id/settings_title" />
 
-        <LinearLayout
+        <com.maybe.maybe.utils.CustomButton
             android:id="@+id/restart_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
-            android:background="@drawable/custom_floating_action_button"
-            android:contentDescription="@string/restart_button"
-            android:elevation="4dp"
-            android:foreground="?android:attr/selectableItemBackground"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingHorizontal="32dp"
-            android:paddingVertical="12dp"
             android:visibility="gone"
+            app:background="?colorSecondary"
+            app:hasIcon="true"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
-
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/ic_round_sync_24"
-                app:tint="?colorOnSecondary" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:text="@string/restart_button"
-                android:textColor="?colorOnSecondary"
-                android:textSize="16sp" />
-        </LinearLayout>
+            app:layout_constraintEnd_toEndOf="parent"
+            app:src="@drawable/ic_round_sync_24"
+            app:text="@string/restart_button"
+            app:textColor="?colorOnSecondary" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

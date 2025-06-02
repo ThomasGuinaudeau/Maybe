@@ -77,7 +77,10 @@ public class ListEditingFragment extends Fragment implements CategoryEditingList
 
         CustomButton buttonPlay = view.findViewById(R.id.category_editing_list_play);
         buttonPlay.setOnClickListener(view1 -> {
-            ArrayList<Long> keyList = getSelectedMusics();
+            ArrayList<Long> keyList = null;
+            if(!name.equals("All Musics")) {
+                keyList = getSelectedMusics();
+            }
             callback.changeList(keyList, categoryItem.getId(), name);
         });
         if (categoryItem.getId() == CATEGORY_PLAYLIST && !name.equals("All Musics")) {

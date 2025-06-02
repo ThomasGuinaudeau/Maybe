@@ -251,15 +251,21 @@ public class CategoryFragment extends Fragment implements IPlaylistRunnableNull,
 
     @Override
     public void changeList(ArrayList<Long> keyList, int categoryId, String name) {
-        //save list first then play it
-        List<Playlist> playlists = new ArrayList<>();
-        for (long l : keyList)
-            playlists.add(new Playlist(l, name));
-        Executors.newSingleThreadExecutor().execute(new PlaylistRunnableNull(() -> {
-            callback.changeList(categoryId, name);
-            callback.swipeToMain();
-            getParentFragmentManager().popBackStack(getString(R.string.categories_fragment_tag), 0);
-        }, appDatabase, name, playlists));
+        if (keyList != null) {
+            //save list first then play it
+            List<Playlist> playlists = new ArrayList<>();
+            for (long l : keyList)
+                playlists.add(new Playlist(l, name));
+            Executors.newSingleThreadExecutor().execute(new PlaylistRunnableNull(() -> goToMainAndPlay(categoryId, name), appDatabase, name, playlists));
+        } else {
+            goToMainAndPlay(categoryId, name);
+        }
+    }
+
+    private void goToMainAndPlay(int categoryId, String name) {
+        callback.changeList(categoryId, name);
+        callback.swipeToMain();
+        getParentFragmentManager().popBackStack(getString(R.string.categories_fragment_tag), 0);
     }
 
     @Override

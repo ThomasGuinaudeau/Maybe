@@ -190,7 +190,7 @@ public class PlayerFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_player, container, false);
 
-        Music music = new Music(0, 0, "Title", "Album", 60000, "Title.mp3", "path/Title.mp3", "folder");
+        Music music = new Music(0, 0, "Title", "Album", 60000, "Title.mp3", "path/Title.mp3", "folder", 0);
         ArrayList<Artist> artists = new ArrayList<>();
         artists.add(new Artist("Artist"));
         MusicWithArtists musicWithArtists = new MusicWithArtists(music, artists);

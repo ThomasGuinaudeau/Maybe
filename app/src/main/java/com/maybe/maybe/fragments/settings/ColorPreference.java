@@ -7,7 +7,6 @@ import android.view.View;
 import android.widget.RadioButton;
 
 import androidx.preference.CheckBoxPreference;
-import androidx.preference.Preference;
 import androidx.preference.PreferenceViewHolder;
 
 import com.maybe.maybe.R;
@@ -54,7 +53,7 @@ public class ColorPreference extends CheckBoxPreference {
         View colorViewBackground = (View) holder.findViewById(R.id.color_square_background);
         colorViewBackground.setBackgroundTintList(getColorStateList(colors[2]));
 
-        radioButton = (RadioButton) holder.findViewById(R.id.radio_button);
+        radioButton = (RadioButton) holder.findViewById(R.id.color_radio_button);
         radioButton.setChecked(isSelected);
         //updateColor();
     }

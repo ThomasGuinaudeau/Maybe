@@ -7,7 +7,6 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.view.Window;
-import android.widget.LinearLayout;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.WindowCompat;
@@ -15,13 +14,15 @@ import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.preference.PreferenceManager;
 
 import com.maybe.maybe.R;
+import com.maybe.maybe.fragments.settings.IArtist;
 import com.maybe.maybe.fragments.settings.ITheme;
 import com.maybe.maybe.fragments.settings.SettingsFragment;
 import com.maybe.maybe.fragments.settings.Theme;
 import com.maybe.maybe.utils.CustomButton;
 
-public class SettingsActivity extends AppCompatActivity implements ITheme {
+public class SettingsActivity extends AppCompatActivity implements ITheme, IArtist {
     private Theme newTheme;
+    private Intent resultIntent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,7 +36,9 @@ public class SettingsActivity extends AppCompatActivity implements ITheme {
         WindowInsetsControllerCompat insetsController = WindowCompat.getInsetsController(window, window.getDecorView());
         insetsController.setAppearanceLightStatusBars(sharedPref.getBoolean(getString(R.string.key_is_light_theme), false));
 
-        SettingsFragment settingsFragment = new SettingsFragment(this);
+        resultIntent = new Intent(SettingsActivity.this, MainActivity.class);
+
+        SettingsFragment settingsFragment = new SettingsFragment(this, this);
         setContentView(R.layout.activity_settings);
         getSupportFragmentManager()
                 .beginTransaction()
@@ -65,5 +68,16 @@ public class SettingsActivity extends AppCompatActivity implements ITheme {
     @Override
     public void setTheme(Theme theme) {
         newTheme = theme;
+    }
+
+    @Override
+    public void setArtistPref(int artistView) {
+        SharedPreferences sharedPreferences = this.getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE);
+        sharedPreferences.edit()
+                .putInt(getString(R.string.artist_view), artistView)
+                .apply();
+
+        resultIntent.putExtra(getString(R.string.artist_view), artistView);
+        setResult(RESULT_OK, resultIntent);
     }
 }

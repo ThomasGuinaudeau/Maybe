@@ -45,8 +45,7 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
     public static final int DATABASE_VERSION = 4;
     private static final String TAG = "MainActivity";
     private static final String[] PERMISSIONS = {
-            Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ? android.Manifest.permission.READ_EXTERNAL_STORAGE : android.Manifest.permission.READ_MEDIA_AUDIO,
-            android.Manifest.permission.READ_PHONE_STATE
+            Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ? android.Manifest.permission.READ_EXTERNAL_STORAGE : android.Manifest.permission.READ_MEDIA_AUDIO
     };
     private final ViewPager2.OnPageChangeCallback onPageChangeCallback = new ViewPager2.OnPageChangeCallback() {
         @Override
@@ -66,12 +65,16 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
     };
     private ViewPager2 viewPager;
     private CustomViewPager pagerAdapter;
-    private ActivityResultLauncher<Intent> activityResultLauncher = registerForActivityResult(
+    private final ActivityResultLauncher<Intent> activityResultLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
                 if (result.getResultCode() == Activity.RESULT_OK) {
-                    //Intent data = result.getData();
-                    //If settings have to update something
+                    Intent data = result.getData();
+                    if (data.hasExtra(getString(R.string.artist_view))) {
+                        int artistView = data.getIntExtra(getString(R.string.artist_view), 0);
+                        MainFragment fragment = (MainFragment) pagerAdapter.getRegisteredFragment(MAIN_POS);
+                        fragment.updateArtistView(artistView);
+                    }
                 }
             });
     private int time = 0;
@@ -101,13 +104,8 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
 
     private int hasPermissions() {
         boolean permStorage = ContextCompat.checkSelfPermission(this, PERMISSIONS[0]) == PackageManager.PERMISSION_GRANTED;
-        boolean permPhone = ContextCompat.checkSelfPermission(this, PERMISSIONS[1]) == PackageManager.PERMISSION_GRANTED;
-        if (!permStorage && !permPhone) {
+        if (!permStorage) {
             return 0;
-        } else if (!permStorage) {
-            return 1;
-        } else if (!permPhone) {
-            return 2;
         }
         return 3;
     }
@@ -116,7 +114,7 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         int permissionLevel = hasPermissions();
-        if (permissionLevel == 2 || permissionLevel == 3)
+        if (permissionLevel == 3)
             checkForUpdate();
     }
 

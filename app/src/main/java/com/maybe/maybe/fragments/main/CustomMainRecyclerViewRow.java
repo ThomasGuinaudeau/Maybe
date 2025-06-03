@@ -38,14 +38,23 @@ public class CustomMainRecyclerViewRow extends ConstraintLayout {
         artist = (TextView) findViewById(R.id.main_item_artist);
     }
 
-    public void setMusicWithArtists(MusicWithArtists musicWithArtists) {
+    public void setMusicWithArtists(MusicWithArtists musicWithArtists, int artistView) {
         long second = (musicWithArtists.music.getMusic_duration() / 1000) % 60;
         long minute = (musicWithArtists.music.getMusic_duration() / (1000 * 60)) % 60;
         track.setText(getContext().getString(R.string.recycler_row_duration, minute, String.format(Locale.getDefault(), "%02d", second)));
         title.setContentDescription(musicWithArtists.music.getMusic_title());
         title.setText(musicWithArtists.music.getMusic_title());
         artist.setContentDescription("Artist " + musicWithArtists.artistsToString());
-        artist.setText(musicWithArtists.artistsToString());
+        switch (artistView) {
+            case 1:
+                artist.setText(musicWithArtists.music.getMusic_album());
+                break;
+            case 2:
+                artist.setText(musicWithArtists.artistsToString() + " / " + musicWithArtists.music.getMusic_album());
+                break;
+            default:
+                artist.setText(musicWithArtists.artistsToString());
+        }
         setBackgroundColor(MaterialColors.getColor(getContext(), android.R.attr.colorBackground, 0x00000000));
         track.setTextColor(MaterialColors.getColor(getContext(), R.attr.textColorFaded, 0x00000000));
         title.setTextColor(MaterialColors.getColor(getContext(), android.R.attr.textColor, 0x00000000));

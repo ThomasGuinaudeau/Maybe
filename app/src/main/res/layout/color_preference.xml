@@ -80,7 +80,7 @@
     </RelativeLayout>
 
     <RadioButton
-        android:id="@+id/radio_button"
+        android:id="@+id/color_radio_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:buttonTint="?android:textColor"

@@ -57,7 +57,7 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
     private AppDatabase appDatabase;
     private boolean searchEnable = false, buttonEnable = false, isStart = true;
     private String sort, currentName;
-    private int currentSearchId, currentCategoryId;
+    private int currentSearchId, currentCategoryId, artistView;
     private ArrayList<Long> searchIdList;
     private SpeedyLinearLayoutManager sllm;
 
@@ -72,6 +72,7 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
 
         SharedPreferences sharedPref = getContext().getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE);
         sort = sharedPref.getString(getString(R.string.sort), Constants.SORT_ALPHA);
+        artistView = sharedPref.getInt(getString(R.string.artist_view), 0);
     }
 
     @Override
@@ -85,7 +86,7 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
         sllm = new SpeedyLinearLayoutManager(getContext());
         sllm.setActivity(getActivity());
         mainRecyclerView.setLayoutManager(sllm);
-        adapter = new MainRecyclerViewAdapter(this, new ArrayList<>());
+        adapter = new MainRecyclerViewAdapter(this, new ArrayList<>(), artistView);
         mainRecyclerView.setAdapter(adapter);
         mainRecyclerView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
@@ -168,6 +169,11 @@ public class MainFragment extends Fragment implements View.OnClickListener, OnMu
             sllm.setPosDiff(Math.abs(position - currentPosition));
             mainRecyclerView.smoothScrollToPosition(position);
         }
+    }
+
+    public void updateArtistView(int artistView) {
+        this.artistView = artistView;
+        adapter.setArtistView(artistView);
     }
 
     public void changeList(boolean isFirstLoad) {

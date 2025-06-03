@@ -23,10 +23,12 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
     private long id;
     private String sort;
     private ArrayList<Long> foundIds;
+    private int artistView;
 
-    public MainRecyclerViewAdapter(OnMusicListItemClick onMusicListItemClick, List<MusicWithArtists> musics) {
+    public MainRecyclerViewAdapter(OnMusicListItemClick onMusicListItemClick, List<MusicWithArtists> musics, int artistView) {
         this.musics = musics;
         this.onMusicListItemClick = onMusicListItemClick;
+        this.artistView = artistView;
         foundIds = new ArrayList<>();
     }
 
@@ -53,6 +55,10 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
         this.sort = sort;
     }
 
+    public void setArtistView(int artistView) {
+        this.artistView = artistView;
+    }
+
     public void setFoundIds(ArrayList<Long> foundIds) {
         this.foundIds = foundIds;
     }
@@ -67,7 +73,7 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        holder.getCustomRecyclerViewRow().setMusicWithArtists(musics.get(position));
+        holder.getCustomRecyclerViewRow().setMusicWithArtists(musics.get(position), artistView);
         holder.getCustomRecyclerViewRow().setFoundColor(foundIds.contains(musics.get(position).music.getMusic_id()));
         holder.getCustomRecyclerViewRow().setSelected(id == musics.get(position).music.getMusic_id());
         holder.setItemClickCallback(musics.get(position).music, onMusicListItemClick);

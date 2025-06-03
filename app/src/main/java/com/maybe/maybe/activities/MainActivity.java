@@ -66,12 +66,16 @@ public class MainActivity extends FragmentActivity implements CategoryFragment.C
     };
     private ViewPager2 viewPager;
     private CustomViewPager pagerAdapter;
-    private ActivityResultLauncher<Intent> activityResultLauncher = registerForActivityResult(
+    private final ActivityResultLauncher<Intent> activityResultLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
                 if (result.getResultCode() == Activity.RESULT_OK) {
-                    //Intent data = result.getData();
-                    //If settings have to update something
+                    Intent data = result.getData();
+                    if (data.hasExtra(getString(R.string.artist_view))) {
+                        int artistView = data.getIntExtra(getString(R.string.artist_view), 0);
+                        MainFragment fragment = (MainFragment) pagerAdapter.getRegisteredFragment(MAIN_POS);
+                        fragment.updateArtistView(artistView);
+                    }
                 }
             });
     private int time = 0;

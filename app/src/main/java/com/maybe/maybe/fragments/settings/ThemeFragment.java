@@ -8,7 +8,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -18,11 +17,12 @@ import androidx.preference.PreferenceManager;
 import androidx.preference.PreferenceScreen;
 
 import com.maybe.maybe.R;
+import com.maybe.maybe.utils.CustomButton;
 
 import java.util.ArrayList;
 
 public class ThemeFragment extends PreferenceFragmentCompat {
-    private LinearLayout restartButton;
+    private CustomButton restartButton;
     private ITheme themeCallback;
     private ArrayList<Theme> themeList;
     private int currentTheme;
@@ -104,7 +104,7 @@ public class ThemeFragment extends PreferenceFragmentCompat {
         setPreferenceScreen(screen);
     }
 
-    public ThemeFragment(LinearLayout restartButton, ITheme themeCallback) {
+    public ThemeFragment(CustomButton restartButton, ITheme themeCallback) {
         this.restartButton = restartButton;
         this.themeCallback = themeCallback;
     }

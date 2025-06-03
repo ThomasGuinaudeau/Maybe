@@ -8,8 +8,11 @@
     <string name="current_category_id">current_category_id</string>
     <string name="current_name">current_name</string>
     <string name="sort">sort</string>
+    <string name="artist_view">artist_view</string>
     <string name="current_file_id">current_file_id</string>
     <string name="current_timestamp">current_timestamp</string>
+    <string name="key_theme">key_theme</string>
+    <string name="key_is_light_theme">key_is_light_theme</string>
 
     <!--Keys-->
     <string name="key_parcelable_data">key_parcelable_data</string>
@@ -24,7 +27,8 @@
 
     <!--Settings Fragment-->
     <string name="settings_title">Settings</string>
-    <string name="themes_title">Themes</string>
+    <string name="themes_title">Theme</string>
+    <string name="artist_view_title">Customize list subtitle</string>
     <string name="restart_button">Apply &amp; Restart</string>
 
     <!--New Playlist Dialog-->
@@ -67,10 +71,19 @@
     <string name="lists_fragment_tag">lists_fragment_tag</string>
     <string name="lists_editing_fragment_tag">lists_editing_fragment_tag</string>
 
+    <!--Artist Pref-->
+    <string name="key_category_artist">key_category_artist</string>
+    <string name="key_summary_artist">key_summary_artist</string>
+    <string name="artist_summary">Choose what is shown below the song title in the main screen list.</string>
+    <string name="key_artist_pref">key_artist_pref</string>
+    <string name="key_album_pref">key_album_pref</string>
+    <string name="key_artist_album_pref">key_artist_album_pref</string>
+    <string name="artist_pref_title">Show artists only</string>
+    <string name="album_pref_title">Show albums only</string>
+    <string name="artist_album_pref_title">Show artists and albums</string>
+
     <!--Theme-->
     <string name="key_category_theme">key_category_theme</string>
-    <string name="category_theme_title">Themes</string>
-    <string name="category_theme_subtitle">App restart is needed after changing the theme.</string>
 
     <string name="key_light_theme_pink">key_light_theme_pink</string>
     <string name="key_light_theme_blue">key_light_theme_blue</string>
@@ -129,9 +142,6 @@
     <string name="light_theme_terracotta_2_title">Terracotta Garden 2</string>
     <string name="dark_theme_terracotta_1_title">Attocarret Garden 1</string>
     <string name="dark_theme_terracotta_2_title">Attocarret Garden 2</string>
-
-    <string name="key_theme">key_theme</string>
-    <string name="key_is_light_theme">key_is_light_theme</string>
 
     <!--Other-->
     <string name="sync_musics_dialog">Syncing Musics</string>

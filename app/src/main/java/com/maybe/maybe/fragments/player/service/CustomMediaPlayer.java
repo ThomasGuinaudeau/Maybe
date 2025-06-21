@@ -50,6 +50,18 @@ public class CustomMediaPlayer implements MediaPlayer.OnPreparedListener {
         mediaPlayers[isCurrentPlayer ? currentMediaPlayer : getNextMediaPlayer()].setDataSource(context, uri);
     }
 
+    public void setNormalizedVolume(boolean hasNormalization, double lufs, boolean isCurrentPlayer) {
+        float finalVolume = 0.8f;
+        if (hasNormalization && lufs < 0) {
+            double targetLufs = -14d;
+            double adjustmentDb = lufs - targetLufs;
+            double adjutedVolume = Math.pow(10, -adjustmentDb / 20.0d);
+            double volume = adjutedVolume - 0.2d;//to have 0.8 average instead of 1.0
+            finalVolume = (float) Math.min(Math.max(volume, 0.0d), 1.0d);
+        }
+        mediaPlayers[isCurrentPlayer ? currentMediaPlayer : getNextMediaPlayer()].setVolume(finalVolume, finalVolume);
+    }
+
     public void prepareAsync(boolean isCurrentPlayer) {
         mediaPlayers[isCurrentPlayer ? currentMediaPlayer : getNextMediaPlayer()].prepareAsync();
     }

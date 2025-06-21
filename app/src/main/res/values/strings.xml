@@ -9,6 +9,7 @@
     <string name="current_name">current_name</string>
     <string name="sort">sort</string>
     <string name="artist_view">artist_view</string>
+    <string name="has_normalization">has_normalization</string>
     <string name="current_file_id">current_file_id</string>
     <string name="current_timestamp">current_timestamp</string>
     <string name="key_theme">key_theme</string>
@@ -29,6 +30,7 @@
     <string name="settings_title">Settings</string>
     <string name="themes_title">Theme</string>
     <string name="artist_view_title">Customize list subtitle</string>
+    <string name="normalization_title">Normalization</string>
     <string name="restart_button">Apply &amp; Restart</string>
 
     <!--New Playlist Dialog-->
@@ -81,6 +83,17 @@
     <string name="artist_pref_title">Show artists only</string>
     <string name="album_pref_title">Show albums only</string>
     <string name="artist_album_pref_title">Show artists and albums</string>
+
+    <!--Normalization Pref-->
+    <string name="key_category_normalization">key_category_normalization</string>
+    <string name="key_normalization_question1">key_normalization_question1</string>
+    <string name="normalization_question1_title">What is normalization</string>
+    <string name="normalization_question1_summary">This will analyze the loudness of songs and adjust the volume so that all songs play at the same loudness.</string>
+    <string name="key_normalization_question2">key_normalization_question2</string>
+    <string name="normalization_question2_title">How are song analyzed</string>
+    <string name="normalization_question2_summary">Since analyzing takes time, when a song is played, the next song will be analyzed if it hasn\'t already been.</string>
+    <string name="key_normalization_pref">key_normalization_pref</string>
+    <string name="normalization_pref_title">Activate normalization</string>
 
     <!--Theme-->
     <string name="key_category_theme">key_category_theme</string>

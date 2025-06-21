@@ -82,6 +82,9 @@ public interface MusicDao {
     @Query("SELECT music_folder FROM music")
     List<String> selectAllFolders();
 
+    @Query("SELECT music_rms FROM music")
+    List<Double> selectAllRMS();
+
     /*@Transaction
     @Query("SELECT * FROM music WHERE music_id IN (:musicFileIds)")
     List<MusicWithArtists> selectAllByIds(List<Integer> musicFileIds);

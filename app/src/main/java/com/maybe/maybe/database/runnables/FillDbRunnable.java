@@ -18,6 +18,7 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
 
@@ -109,6 +110,7 @@ public class FillDbRunnable implements Runnable {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.R)
     @Override
     public void run() {
         //appDatabase.musicArtistCrossRefDao().deleteAll();
@@ -143,6 +145,7 @@ public class FillDbRunnable implements Runnable {
             List<Long> oldMusicIds = appDatabase.musicDao().selectAllIds();
             List<String> oldMusicPaths = appDatabase.musicDao().selectAllPaths();
             List<String> oldMusicFolders = appDatabase.musicDao().selectAllFolders();
+            List<Double> oldMusicRMS = appDatabase.musicDao().selectAllRMS();
             boolean[] deletedMusics = new boolean[oldMusicIds.size()];
             Arrays.fill(deletedMusics, true);
 
@@ -160,7 +163,7 @@ public class FillDbRunnable implements Runnable {
                 newMusicFolder = newMusicFolder.substring(fromIndex + 1, toIndex);
                 int oldMusicsFolderPosition = oldMusicFolders.indexOf(newMusicFolder);
                 if (newMusicPath != null && (oldMusicsPathPosition == -1 || oldMusicsFolderPosition == -1)) {
-                    Music music = new Music(longIsNull(cursor.getString(0)), trackIsNull(cursor.getString(1)), stringIsNull(cursor.getString(2)), stringIsNull(cursor.getString(3)), longIsNull(cursor.getString(4)), stringIsNull(cursor.getString(5)), stringIsNull(cursor.getString(7)), newMusicFolder);
+                    Music music = new Music(longIsNull(cursor.getString(0)), trackIsNull(cursor.getString(1)), stringIsNull(cursor.getString(2)), stringIsNull(cursor.getString(3)), longIsNull(cursor.getString(4)), stringIsNull(cursor.getString(5)), stringIsNull(cursor.getString(7)), newMusicFolder, 0);
                     if ((newMusicId != 0 && oldMusicsIdPosition == -1)) {
                         //Add music
                         appDatabase.musicDao().insert(music);

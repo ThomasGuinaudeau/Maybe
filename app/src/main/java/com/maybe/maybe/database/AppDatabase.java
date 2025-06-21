@@ -3,6 +3,7 @@ package com.maybe.maybe.database;
 import static com.maybe.maybe.activities.MainActivity.DATABASE_VERSION;
 import static com.maybe.maybe.database.Migrations.MIGRATION_1_2;
 import static com.maybe.maybe.database.Migrations.MIGRATION_2_3;
+import static com.maybe.maybe.database.Migrations.MIGRATION_3_4;
 
 import android.content.Context;
 
@@ -44,8 +45,7 @@ public abstract class AppDatabase extends RoomDatabase {
     }
 
     private static AppDatabase buildDatabase(final Context appContext, final Executor thread) {
-        //return Room.databaseBuilder(appContext, AppDatabase.class, DATABASE_NAME).fallbackToDestructiveMigration().build();
-        return Room.databaseBuilder(appContext, AppDatabase.class, DATABASE_NAME).addMigrations(MIGRATION_1_2, MIGRATION_2_3).build();
+        return Room.databaseBuilder(appContext, AppDatabase.class, DATABASE_NAME).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).build();
     }
 
     public abstract MusicDao musicDao();

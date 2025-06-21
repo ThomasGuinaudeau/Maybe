@@ -47,6 +47,7 @@ import com.maybe.maybe.activities.MainActivity;
 import com.maybe.maybe.database.AppDatabase;
 import com.maybe.maybe.database.entity.Music;
 import com.maybe.maybe.database.entity.MusicWithArtists;
+import com.maybe.maybe.database.runnables.AnalyzeMusicRunnable;
 import com.maybe.maybe.database.runnables.MusicRunnable;
 import com.maybe.maybe.utils.Constants;
 
@@ -74,7 +75,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Cus
     private MediaMetadataCompat.Builder mediaMetadataBuilder;
     private CustomMediaPlayer mediaPlayer;
     //private Equalizer equalizer;
-    private boolean isNoisyAudioStreamReceiverRegistered;
+    private boolean isNoisyAudioStreamReceiverRegistered, hasNormalization;
     private int currentDuration, begin; //begin-->> -1 = dont prepare, 0 = prepare but dont play(at start), 1 = prepare and play
     private NotificationManager notificationManager;
     private MusicList musicList;
@@ -100,7 +101,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Cus
         updateTimeTask = new Runnable() {
             public void run() {
                 if (mediaPlayer.getCurrentPosition() < 500) {
-                    updateMetaData(true);
+                    updateMetaData(true, false);
                     updateCurrentDuration(PlaybackStateCompat.STATE_PLAYING, mediaPlayer.getCurrentPosition());
                 }
                 if (mediaPlayer.isPlaying())
@@ -190,7 +191,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Cus
             if (!musicList.changeForMusicWithId((int) fileId))
                 timestamp = 0;
             currentDuration = timestamp;
-            updateMetaData(true);
+            updateMetaData(true, false);
             initMediaPlayer(true);
             callback.onSeekTo(currentDuration);
         } else {
@@ -203,7 +204,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Cus
     public void onConnect() {
         Log.d(TAG, "onConnect ");
         if (musicList != null) {
-            updateMetaData(false);
+            updateMetaData(false, false);
             updateCurrentDuration(-1, mediaPlayer.getCurrentPosition());
         }
     }
@@ -237,7 +238,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Cus
             if (begin == 1) {
                 callback.onPlay();
             } else if (begin == 0) {
-                updateMetaData(false);
+                updateMetaData(false, false);
                 mediaPlayer.seekTo(currentDuration);
                 updateCurrentDuration(-1, mediaPlayer.getCurrentPosition());
             } else {
@@ -323,8 +324,11 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Cus
         Log.d(TAG, "onSeekComplete");
     }
 
-    public void updateMetaData(boolean buildNotification) {
+    public void updateMetaData(boolean buildNotification, boolean playAfter) {
         Log.d(TAG, "updateMetaData");
+        SharedPreferences sharedPreferences = getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE);
+        hasNormalization = sharedPreferences.getBoolean(getString(R.string.has_normalization), true);
+
         //Get metadata from database only if it's a new music
         if (musicList == null || currentMusic == null || musicList.getCurrent() != (int) currentMusic.music.getMusic_id()) {
             Executors.newSingleThreadExecutor().execute(new MusicRunnable(this, objects -> {
@@ -333,11 +337,18 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Cus
                 MediaPlayerService.this.updateMetadata2(currentMusic);
                 if (buildNotification)
                     notificationManager.notify(NOTIFICATION_ID, MediaPlayerService.this.buildForegroundNotification());
+                if (playAfter)
+                    playAfterWaiting();
+
+                if (hasNormalization)
+                    Executors.newSingleThreadExecutor().execute(new AnalyzeMusicRunnable(appDatabase, musicList.getNext()));
             }, appDatabase, "selectMusicFromId", (long) musicList.getCurrent(), null, null, null));
         } else {
             updateMetadata2(currentMusic);
             if (buildNotification)
                 notificationManager.notify(NOTIFICATION_ID, buildForegroundNotification());
+            if (playAfter)
+                playAfterWaiting();
         }
     }
 
@@ -452,6 +463,21 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Cus
         }
     }
 
+    private void playAfterWaiting() {
+        mediaPlayer.setNormalizedVolume(hasNormalization, currentMusic.music.getMusic_rms(), true);
+        mediaPlayer.start();
+        updateCurrentDuration(PlaybackStateCompat.STATE_PLAYING, mediaPlayer.getCurrentPosition());
+        addRunnable();
+        if (!isNoisyAudioStreamReceiverRegistered) {
+            registerReceiver(myNoisyAudioStreamReceiver, becomeNoisyIntentFilter);
+            isNoisyAudioStreamReceiverRegistered = true;
+        }
+        if (begin == -1) {
+            notificationManager.notify(NOTIFICATION_ID, buildForegroundNotification());
+        }
+        begin = 1;
+    }
+
     private final MediaSessionCompat.Callback callback = new MediaSessionCompat.Callback() {
         @Override
         public void onPlay() {
@@ -459,19 +485,11 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Cus
             if (!mediaPlayer.isPlaying()) {
                 int audioFocusResult = audioManager.requestAudioFocus(audioFocusRequest);
                 if (audioFocusResult == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-                    mediaPlayer.start();
-                    updateCurrentDuration(PlaybackStateCompat.STATE_PLAYING, mediaPlayer.getCurrentPosition());
-                    addRunnable();
-                    if (!isNoisyAudioStreamReceiverRegistered) {
-                        registerReceiver(myNoisyAudioStreamReceiver, becomeNoisyIntentFilter);
-                        isNoisyAudioStreamReceiverRegistered = true;
-                    }
                     if (begin != -1) {
-                        updateMetaData(true);
+                        updateMetaData(true, true);
                     } else {
-                        notificationManager.notify(NOTIFICATION_ID, buildForegroundNotification());
+                        playAfterWaiting();
                     }
-                    begin = 1;
                 }
             }
         }
@@ -488,7 +506,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Cus
                     isNoisyAudioStreamReceiverRegistered = false;
                 }
                 if (begin != -1) {
-                    updateMetaData(true);
+                    updateMetaData(true, false);
                 } else {
                     notificationManager.notify(NOTIFICATION_ID, buildForegroundNotification());
                 }

@@ -70,6 +70,21 @@ public class SettingsFragment extends PreferenceFragmentCompat implements ITheme
             return true;
         });
         screen.addPreference(artistPreference);
+
+        Preference normalizationPreference = new Preference(context);
+        normalizationPreference.setKey(getString(R.string.key_category_normalization));
+        normalizationPreference.setTitle(R.string.normalization_title);
+        normalizationPreference.setOnPreferenceClickListener(preference -> {
+            NormalizeFragment normalizeFragment = new NormalizeFragment();
+            getParentFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.settings_container, normalizeFragment)
+                    .addToBackStack("normalization_settings")
+                    .commit();
+            return true;
+        });
+        screen.addPreference(normalizationPreference);
+
         setPreferenceScreen(screen);
     }
 

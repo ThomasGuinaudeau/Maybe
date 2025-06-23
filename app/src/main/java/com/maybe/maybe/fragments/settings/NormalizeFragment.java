@@ -36,7 +36,7 @@ public class NormalizeFragment extends PreferenceFragmentCompat {
         Context context = getPreferenceManager().getContext();
 
         SharedPreferences sharedPreferences = context.getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE);
-        boolean hasNormalization = sharedPreferences.getBoolean(getString(R.string.has_normalization), true);
+        boolean hasNormalization = sharedPreferences.getBoolean(getString(R.string.has_normalization), false);
 
         PreferenceScreen screen = getPreferenceManager().createPreferenceScreen(context);
 

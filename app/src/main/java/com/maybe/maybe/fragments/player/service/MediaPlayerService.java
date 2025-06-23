@@ -327,7 +327,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Cus
     public void updateMetaData(boolean buildNotification, boolean playAfter) {
         Log.d(TAG, "updateMetaData");
         SharedPreferences sharedPreferences = getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE);
-        hasNormalization = sharedPreferences.getBoolean(getString(R.string.has_normalization), true);
+        hasNormalization = sharedPreferences.getBoolean(getString(R.string.has_normalization), false);
 
         //Get metadata from database only if it's a new music
         if (musicList == null || currentMusic == null || musicList.getCurrent() != (int) currentMusic.music.getMusic_id()) {

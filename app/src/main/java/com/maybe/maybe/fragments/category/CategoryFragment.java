@@ -29,6 +29,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
@@ -55,6 +56,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 public class CategoryFragment extends Fragment implements IPlaylistRunnableNull, CategoryGridFragment.CategoriesFragmentListener, ActivityResultCallback<ActivityResult> {
@@ -256,7 +258,10 @@ public class CategoryFragment extends Fragment implements IPlaylistRunnableNull,
             List<Playlist> playlists = new ArrayList<>();
             for (long l : keyList)
                 playlists.add(new Playlist(l, name));
-            Executors.newSingleThreadExecutor().execute(new PlaylistRunnableNull(() -> goToMainAndPlay(categoryId, name), appDatabase, name, playlists));
+            Executors.newSingleThreadExecutor().execute(new PlaylistRunnableNull(() -> {
+                Executor mainThreadExecutor = ContextCompat.getMainExecutor(getContext());
+                mainThreadExecutor.execute(() -> goToMainAndPlay(categoryId, name));
+            }, appDatabase, name, playlists));
         } else {
             goToMainAndPlay(categoryId, name);
         }

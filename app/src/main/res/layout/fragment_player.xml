@@ -54,6 +54,18 @@
             type="Integer" />
 
         <variable
+            name="menu"
+            type="Integer" />
+
+        <variable
+            name="lufs"
+            type="Integer" />
+
+        <variable
+            name="showLoading"
+            type="Boolean" />
+
+        <variable
             name="enable"
             type="Boolean" />
 
@@ -116,6 +128,52 @@
             android:textColor="?textColorFaded"
             app:layout_constraintStart_toStartOf="@id/content"
             app:layout_constraintTop_toTopOf="@id/content" />
+
+        <ImageView
+            android:id="@+id/player_menu"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:adjustViewBounds="true"
+            android:background="@drawable/ripple_transparent"
+            android:contentDescription="@string/desc_player_menu"
+            android:enabled="@{enable}"
+            android:onClick="@{(v)->fragment.onClick(v)}"
+            android:scaleType="fitCenter"
+            android:src="@{menu}"
+            android:tint="?android:textColor"
+            app:layout_constraintEnd_toEndOf="@id/content"
+            app:layout_constraintTop_toTopOf="@id/content"
+            tools:ignore="UseAppTint" />
+
+        <ImageView
+            android:id="@+id/player_lufs"
+            isVisible="@{!showLoading}"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:adjustViewBounds="true"
+            android:contentDescription="@string/desc_player_normalize"
+            android:scaleType="fitCenter"
+            android:src="@{lufs}"
+            android:tint="?textColorFaded"
+            app:layout_constraintEnd_toEndOf="@id/content"
+            app:layout_constraintTop_toBottomOf="@id/player_menu"
+            tools:ignore="UseAppTint" />
+
+        <ProgressBar
+            android:id="@+id/player_loading_lufs"
+            isVisible="@{showLoading}"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:contentDescription="@string/desc_player_normalize"
+            android:indeterminateTint="?textColorFaded"
+            app:layout_constraintBottom_toBottomOf="@id/player_lufs"
+            app:layout_constraintEnd_toEndOf="@id/player_lufs"
+            app:layout_constraintStart_toStartOf="@id/player_lufs"
+            app:layout_constraintTop_toTopOf="@id/player_lufs" />
 
         <SeekBar
             android:id="@+id/player_seekBar"

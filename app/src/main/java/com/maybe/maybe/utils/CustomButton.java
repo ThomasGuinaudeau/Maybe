@@ -12,11 +12,15 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.annotation.DrawableRes;
 import androidx.annotation.Nullable;
 
 import com.maybe.maybe.R;
 
 public class CustomButton extends LinearLayout {
+    private View view;
+    private ImageView icon;
+    private TextView textView;
 
     public CustomButton(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
@@ -49,12 +53,12 @@ public class CustomButton extends LinearLayout {
         }
         a.recycle();
 
-        View view = LayoutInflater.from(context).inflate(R.layout.custom_button, this, true);
+        view = LayoutInflater.from(context).inflate(R.layout.custom_button, this, true);
         view.setContentDescription(text);
         view.setBackgroundResource(R.drawable.ripple);
         view.setBackgroundTintList(ColorStateList.valueOf(background));
 
-        ImageView icon = view.findViewById(R.id.custom_button_icon);
+        icon = view.findViewById(R.id.custom_button_icon);
         if (hasIcon) {
             icon.setImageResource(src);
             icon.setImageTintList(ColorStateList.valueOf(textColor));
@@ -63,8 +67,23 @@ public class CustomButton extends LinearLayout {
             icon.setLayoutParams(layoutParams);
         }
 
-        TextView textView = view.findViewById(R.id.custom_button_text);
+        textView = view.findViewById(R.id.custom_button_text);
         textView.setText(text);
         textView.setTextColor(textColor);
+    }
+
+    public void setIcon(@DrawableRes int resId) {
+        icon.setImageResource(resId);
+    }
+
+    public void setText(String text) {
+        textView.setText(text);
+    }
+
+    @Override
+    public void setEnabled(boolean enabled) {
+        super.setEnabled(enabled);
+        if (!enabled)
+            view.setAlpha(0.50f);
     }
 }

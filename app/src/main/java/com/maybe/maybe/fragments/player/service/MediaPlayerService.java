@@ -341,7 +341,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Cus
                     playAfterWaiting();
 
                 if (hasNormalization)
-                    Executors.newSingleThreadExecutor().execute(new AnalyzeMusicRunnable(appDatabase, musicList.getNext()));
+                    Executors.newSingleThreadExecutor().execute(new AnalyzeMusicRunnable(null, appDatabase, musicList.getNext()));
             }, appDatabase, "selectMusicFromId", (long) musicList.getCurrent(), null, null, null));
         } else {
             updateMetadata2(currentMusic);
@@ -362,6 +362,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Cus
         mediaMetadataBuilder.putString(MediaMetadataCompat.METADATA_KEY_ARTIST, musicWithArtists.artistsToString());
         mediaMetadataBuilder.putString(MediaMetadataCompat.METADATA_KEY_ALBUM, musicWithArtists.music.getMusic_album());
         mediaMetadataBuilder.putLong(MediaMetadataCompat.METADATA_KEY_DURATION, musicWithArtists.music.getMusic_duration());
+        mediaMetadataBuilder.putString(Constants.METADATA_KEY_LUFS, musicWithArtists.music.getMusic_rms() + "");
 
         MediaMetadataRetriever receiver = new MediaMetadataRetriever();
         File file = new File(musicWithArtists.music.getMusic_path());
@@ -497,7 +498,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Cus
         @Override
         public void onPause() {
             Log.d(TAG, "MediaSession onPause");
-            if (mediaPlayer.isPlaying()) {
+            if (mediaPlayer != null && mediaPlayer.isPlaying()) {
                 mediaPlayer.pause();
                 updateCurrentDuration(PlaybackStateCompat.STATE_PAUSED, mediaPlayer.getCurrentPosition());
                 removeRunnable();

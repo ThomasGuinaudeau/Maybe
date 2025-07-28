@@ -4,148 +4,118 @@ import android.media.MediaCodec;
 import android.media.MediaExtractor;
 import android.media.MediaFormat;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.Objects;
-
-import be.tarsos.dsp.AudioDispatcher;
-import be.tarsos.dsp.AudioEvent;
-import be.tarsos.dsp.AudioProcessor;
-import be.tarsos.dsp.io.TarsosDSPAudioFormat;
-import be.tarsos.dsp.io.UniversalAudioInputStream;
 
 public class AudioUtils {
-    public static int[] getSampleRateAndChannels(String path) {
-        int sampleRate = 44100;
-        int channels = 2;
-        try {
-            MediaExtractor extractor = new MediaExtractor();
-            extractor.setDataSource(path);
-            MediaFormat format = extractor.getTrackFormat(0);
-
-            if (format.containsKey(MediaFormat.KEY_SAMPLE_RATE)) {
-                sampleRate = format.getInteger(MediaFormat.KEY_SAMPLE_RATE);
-            }
-            if (format.containsKey(MediaFormat.KEY_CHANNEL_COUNT)) {
-                channels = format.getInteger(MediaFormat.KEY_CHANNEL_COUNT);
-            }
-            extractor.release();
-        } catch (Exception e) {
-            e.printStackTrace();
+    private static float[] pcmToFloat(byte[] pcm) {
+        float[] result = new float[pcm.length / 2];
+        for (int i = 0; i < result.length; i++) {
+            int low = pcm[2 * i] & 0xff;
+            int high = pcm[2 * i + 1];
+            short sample = (short) ((high << 8) | low);
+            result[i] = sample / 32768f;
         }
-        return new int[]{ sampleRate, channels };
+        return result;
     }
 
-    public static double getRMS(byte[] pcm, float sampleRate, int channels) {
-        if (pcm == null)
+    private static int selectAudioTrack(MediaExtractor extractor) {
+        for (int i = 0; i < extractor.getTrackCount(); i++) {
+            MediaFormat format = extractor.getTrackFormat(i);
+            String mime = format.getString(MediaFormat.KEY_MIME);
+            if (mime.startsWith("audio/")) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public static float decodeAndAnalyzeLoudness(String filePath) {
+        long oneHourInMicroSec = 3600000000L;
+        try {
+            MediaExtractor extractor = new MediaExtractor();
+            extractor.setDataSource(filePath);
+
+            int trackIndex = selectAudioTrack(extractor);
+            if (trackIndex == -1) throw new Exception("No audio track found");
+            extractor.selectTrack(trackIndex);
+
+            MediaFormat format = extractor.getTrackFormat(trackIndex);
+            long durationUs = format.getLong(MediaFormat.KEY_DURATION);
+            if (durationUs > oneHourInMicroSec)
+                throw new IOException("Audio longer than 1 hour");
+            long halfDurationUs = durationUs / 2;
+
+            String mime = format.getString(MediaFormat.KEY_MIME);
+            MediaCodec codec = MediaCodec.createDecoderByType(mime);
+            codec.configure(format, null, null, 0);
+            codec.start();
+
+            float lufs1 = decodeHalf(extractor, codec, 0, halfDurationUs);
+            float lufs2 = decodeHalf(extractor, codec, halfDurationUs, durationUs);
+
+            codec.stop();
+            codec.release();
+
+            return (lufs1 + lufs2) / 2;
+        } catch (Exception e) {
+            e.printStackTrace();
             return 99;
-
-        int size = 2048;
-        int overlap = 1024;
-
-        TarsosDSPAudioFormat format = new TarsosDSPAudioFormat(sampleRate, 16, channels, true, false);
-
-        ByteArrayInputStream bais = new ByteArrayInputStream(pcm);
-        UniversalAudioInputStream audioStream = new UniversalAudioInputStream(bais, format);
-
-        AudioDispatcher dispatcher = new AudioDispatcher(audioStream, size, overlap);
-
-        final double[] sum = { 0.0 };
-        final int[] count = { 0 };
-
-        dispatcher.addAudioProcessor(new AudioProcessor() {
-            @Override
-            public void processingFinished() {}
-
-            @Override
-            public boolean process(AudioEvent audioEvent) {
-                float[] buffer = audioEvent.getFloatBuffer();
-                for (float sample : buffer) {
-                    sum[0] += sample * sample;
-                    count[0]++;
-                }
-                return true;
-            }
-        });
-        dispatcher.run();
-        double mean = sum[0] / count[0];
-        return 10 * Math.log10(mean);
+        }
     }
 
-    public static byte[] audioToPCM(String path) {
-        try {
-            MediaExtractor extractor = new MediaExtractor();
-            extractor.setDataSource(path);
+    private static float decodeHalf(MediaExtractor extractor, MediaCodec codec, long startUs, long endUs) {
+        extractor.seekTo(startUs, MediaExtractor.SEEK_TO_CLOSEST_SYNC);
 
-            int audioTrackIndex = -1;
-            MediaFormat format = null;
+        boolean inputDone = false;
+        boolean outputDone = false;
+        MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
 
-            for (int i = 0; i < extractor.getTrackCount(); i++) {
-                format = extractor.getTrackFormat(i);
-                String mime = format.getString(MediaFormat.KEY_MIME);
-                if (mime.startsWith("audio/")) {
-                    audioTrackIndex = i;
-                    extractor.selectTrack(i);
-                    break;
-                }
-            }
+        float energySum = 0;
+        long sampleCount = 0;
+        final long TIMEOUT_US = 10000;
 
-            if (audioTrackIndex == -1) {
-                throw new IOException("No audio track found in ");
-            }
+        while (!outputDone) {
+            if (!inputDone) {
+                int inputIndex = codec.dequeueInputBuffer(TIMEOUT_US);
+                if (inputIndex >= 0) {
+                    ByteBuffer inputBuffer = codec.getInputBuffer(inputIndex);
+                    int size = extractor.readSampleData(inputBuffer, 0);
 
-            MediaCodec decoder = MediaCodec.createDecoderByType(Objects.requireNonNull(format.getString(MediaFormat.KEY_MIME)));
-            decoder.configure(format, null, null, 0);
-            decoder.start();
-
-            ByteArrayOutputStream pcmOutput = new ByteArrayOutputStream();
-            boolean inputDone = false;
-            boolean outputDone = false;
-            final long TIMEOUT_US = 1000;
-
-            while (!outputDone) {
-                if (!inputDone) {
-                    int inputBufferId = decoder.dequeueInputBuffer(TIMEOUT_US);
-                    if (inputBufferId >= 0) {
-                        ByteBuffer inputBuffer = decoder.getInputBuffer(inputBufferId);
-                        int size = extractor.readSampleData(inputBuffer, 0);
-                        if (size < 0) {
-                            decoder.queueInputBuffer(inputBufferId, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
-                            inputDone = true;
-                        } else {
-                            long time = extractor.getSampleTime();
-                            decoder.queueInputBuffer(inputBufferId, 0, size, time, 0);
-                            extractor.advance();
-                        }
-                    }
-                }
-
-                MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
-                int outputBufferId = decoder.dequeueOutputBuffer(info, TIMEOUT_US);
-                if (outputBufferId >= 0) {
-                    ByteBuffer outputBuffer = decoder.getOutputBuffer(outputBufferId);
-                    byte[] pcm = new byte[info.size];
-                    outputBuffer.get(pcm);
-                    outputBuffer.clear();
-                    pcmOutput.write(pcm);
-                    decoder.releaseOutputBuffer(outputBufferId, false);
-
-                    if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
-                        outputDone = true;
+                    if (size < 0 || extractor.getSampleTime() > endUs) {
+                        codec.queueInputBuffer(inputIndex, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
+                        inputDone = true;
+                    } else {
+                        long presentationTimeUs = extractor.getSampleTime();
+                        codec.queueInputBuffer(inputIndex, 0, size, presentationTimeUs, 0);
+                        extractor.advance();
                     }
                 }
             }
 
-            decoder.stop();
-            decoder.release();
-            extractor.release();
+            int outputIndex = codec.dequeueOutputBuffer(info, TIMEOUT_US);
+            if (outputIndex >= 0) {
+                ByteBuffer outputBuffer = codec.getOutputBuffer(outputIndex);
+                byte[] pcm = new byte[info.size];
+                outputBuffer.get(pcm);
+                outputBuffer.clear();
 
-            return pcmOutput.toByteArray();
-        } catch (Exception e) {
-            e.printStackTrace();
+                float[] samples = pcmToFloat(pcm);
+                for (float s : samples) {
+                    energySum += s * s;
+                    sampleCount++;
+                }
+
+                codec.releaseOutputBuffer(outputIndex, false);
+
+                if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0 || extractor.getSampleTime() > endUs) {
+                    outputDone = true;
+                }
+            }
         }
-        return null;
+
+        double rms = Math.sqrt(energySum / sampleCount);
+        double lufs = 20 * Math.log10(rms);
+        return (float) lufs;
     }
 }

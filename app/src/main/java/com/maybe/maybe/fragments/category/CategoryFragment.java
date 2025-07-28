@@ -46,6 +46,7 @@ import com.maybe.maybe.database.runnables.playlist.PlaylistRunnableObject;
 import com.maybe.maybe.fragments.category.editing.ListEditingFragment;
 import com.maybe.maybe.fragments.category.grid.CategoryGridFragment;
 import com.maybe.maybe.fragments.category.list.ListsFragment;
+import com.maybe.maybe.utils.Constants;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -213,7 +214,7 @@ public class CategoryFragment extends Fragment implements IPlaylistRunnableNull,
             playlists.add(new Playlist(l, name));
         }
         playlistUpdateAction = "back";
-        Executors.newSingleThreadExecutor().execute(new PlaylistRunnableNull(this, appDatabase, name, playlists));
+        Executors.newSingleThreadExecutor().execute(new PlaylistRunnableNull(this, appDatabase, name, playlists, Constants.PLAYLIST_REPLACE));
         if (isDelete)
             Toast.makeText(getContext(), R.string.toast_playlist_deleted, Toast.LENGTH_SHORT).show();
         else
@@ -261,7 +262,7 @@ public class CategoryFragment extends Fragment implements IPlaylistRunnableNull,
             Executors.newSingleThreadExecutor().execute(new PlaylistRunnableNull(() -> {
                 Executor mainThreadExecutor = ContextCompat.getMainExecutor(getContext());
                 mainThreadExecutor.execute(() -> goToMainAndPlay(categoryId, name));
-            }, appDatabase, name, playlists));
+            }, appDatabase, name, playlists, Constants.PLAYLIST_REPLACE));
         } else {
             goToMainAndPlay(categoryId, name);
         }
@@ -411,7 +412,7 @@ public class CategoryFragment extends Fragment implements IPlaylistRunnableNull,
                     }
                     //delete/insert all ids in the playlist
                     playlistUpdateAction = "nothing";
-                    Executors.newSingleThreadExecutor().execute(new PlaylistRunnableNull(this, appDatabase, playlistName, playlists));
+                    Executors.newSingleThreadExecutor().execute(new PlaylistRunnableNull(this, appDatabase, playlistName, playlists, Constants.PLAYLIST_REPLACE));
                     Toast.makeText(getContext(), R.string.toast_importation_successful, Toast.LENGTH_SHORT).show();
                 }, appDatabase, "selectAllIdsByPath", -1, null, null, lines));
             } else {

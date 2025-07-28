@@ -16,8 +16,8 @@ public interface PlaylistDao {
     @Insert
     void insertAll(List<Playlist> playlists);
 
-    @Query("DELETE FROM playlist WHERE playlist_file_id IN (:fileIds) AND playlist_name LIKE :playlistName")
-    void deleteAllPlaylistsByIds(String playlistName, List<Long> fileIds);
+    @Query("DELETE FROM playlist WHERE playlist_file_id = :fileId AND playlist_name = :playlistName")
+    void deleteMusicFromPlaylist(long fileId, String playlistName);
 
     @Query("DELETE FROM playlist WHERE playlist_name IN (:playlistName)")
     void deleteAllFromPlaylists(List<String> playlistName);
@@ -33,5 +33,4 @@ public interface PlaylistDao {
 
     @Query("SELECT playlist_id FROM playlist WHERE playlist_name LIKE :playlistName")
     List<Long> selectAllIdsOfPlaylist(String playlistName);
-
 }

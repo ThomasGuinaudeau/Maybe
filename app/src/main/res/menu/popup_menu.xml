@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/player_menu_add_to_playlist"
+        android:icon="@drawable/ic_round_playlist_add_24"
+        android:iconTint="?android:textColor"
+        android:title="@string/popup_add_to_playlist" />
+
+    <item
+        android:id="@+id/player_menu_remove_from_playlist"
+        android:icon="@drawable/round_playlist_remove_24"
+        android:iconTint="?android:textColor"
+        android:title="@string/popup_remove_from_playlist" />
+
+    <item
+        android:id="@+id/player_menu_analyze_loudness"
+        android:icon="@drawable/round_equalizer_24"
+        android:iconTint="?android:textColor"
+        android:title="@string/popup_analyze_loudness" />
+</menu>

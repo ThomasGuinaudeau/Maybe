@@ -26,6 +26,13 @@
     <string name="category_title">Categories</string>
     <string name="category_button_play">Play</string>
 
+    <!--Player Fragment-->
+    <string name="popup_add_to_playlist">Add to playlist</string>
+    <string name="popup_remove_from_playlist">Remove from playlist</string>
+    <string name="popup_analyze_loudness">Analyze loudness</string>
+    <string name="popup_btn_add">Add</string>
+    <string name="popup_btn_remove">Remove</string>
+
     <!--Settings Fragment-->
     <string name="settings_title">Settings</string>
     <string name="themes_title">Theme</string>
@@ -51,6 +58,8 @@
     <string name="desc_player_next">Next</string>
     <string name="desc_player_repeat">None/All/One</string>
     <string name="desc_player_sort">Track/Title/Random</string>
+    <string name="desc_player_menu">Menu</string>
+    <string name="desc_player_normalize">Normalize song</string>
     <string name="desc_title">Title: %1$s</string>
     <string name="desc_artist">Artists: %1$s</string>
     <string name="desc_album">Album: %1$s</string>
@@ -67,6 +76,10 @@
     <string name="toast_playlist_deleted">Playlist deleted!</string>
     <string name="toast_playlist_added">Playlist added!</string>
     <string name="toast_invalid_name">Invalid name!</string>
+    <string name="toast_analyzed_loudness_success">Finished analyzing song with success!</string>
+    <string name="toast_analyzed_loudness_fail">Failed to analyze song!</string>
+    <string name="toast_add_song_to_playlist">Added song to playlist</string>
+    <string name="toast_remove_song_from_playlist">Removed song from playlist</string>
 
     <!--Tag-->
     <string name="categories_fragment_tag">categories_fragment_tag</string>

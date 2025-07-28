@@ -25,4 +25,11 @@ public class Constants {
     public static final String REPEAT_NONE = PACKAGE_NAME + ".REPEAT_NONE";
     public static final String REPEAT_ONE = PACKAGE_NAME + ".REPEAT_ONE";
     public static final String REPEAT_ALL = PACKAGE_NAME + ".REPEAT_ALL";
+
+    public static final String METADATA_KEY_LUFS = "METADATA_KEY_LUFS";
+
+    public static final int PLAYLIST_REPLACE = 0;
+    public static final int PLAYLIST_ADD = 1;
+    public static final int PLAYLIST_REMOVE = 2;
+
 }

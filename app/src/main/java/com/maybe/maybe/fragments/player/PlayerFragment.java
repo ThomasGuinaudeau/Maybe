@@ -24,11 +24,19 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.PopupMenu;
 import android.widget.SeekBar;
+import android.widget.Spinner;
+import android.widget.SpinnerAdapter;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.ContextCompat;
 import androidx.databinding.BindingAdapter;
 import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
@@ -38,16 +46,26 @@ import com.maybe.maybe.database.AppDatabase;
 import com.maybe.maybe.database.entity.Artist;
 import com.maybe.maybe.database.entity.Music;
 import com.maybe.maybe.database.entity.MusicWithArtists;
+import com.maybe.maybe.database.entity.Playlist;
+import com.maybe.maybe.database.runnables.AnalyzeMusicRunnable;
+import com.maybe.maybe.database.runnables.playlist.PlaylistRunnableNull;
+import com.maybe.maybe.database.runnables.playlist.PlaylistRunnableObject;
 import com.maybe.maybe.database.runnables.playlist.PlaylistRunnablePlaylist;
 import com.maybe.maybe.databinding.FragmentPlayerBinding;
+import com.maybe.maybe.fragments.category.ListItem;
 import com.maybe.maybe.fragments.player.service.MediaPlayerService;
 import com.maybe.maybe.utils.Constants;
+import com.maybe.maybe.utils.CustomButton;
 import com.maybe.maybe.utils.CycleStateResource;
 import com.maybe.maybe.utils.Methods;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
+import java.util.Set;
+import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 public class PlayerFragment extends Fragment {
 
@@ -56,6 +74,9 @@ public class PlayerFragment extends Fragment {
     private int totalDuration, currentDuration;
     private boolean isFirstLoad = true;
     private ArrayList<Long> idList;
+    private List<Playlist> partOfPlaylist;
+    private long musicId;
+    private double lufs;
     private CycleStateResource shuffleCycle, repeatCycle;
     private FragmentPlayerBinding binding;
     private SeekValueBinding seekValueBinding;
@@ -82,8 +103,10 @@ public class PlayerFragment extends Fragment {
                     binding.setDescArtist(metadata.getDescription().getSubtitle().toString());
                     binding.setDescAlbum(metadata.getString(MediaMetadataCompat.METADATA_KEY_ALBUM));
                     binding.setDescTotalDuration(getString(R.string.desc_total_duration, timeArray[0], timeArray[1], timeArray[2]));
+                    lufs = Double.parseDouble(metadata.getString(Constants.METADATA_KEY_LUFS));
+                    updateLufsIcon();
 
-                    long musicId = Long.parseLong(metadata.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID));
+                    musicId = Long.parseLong(metadata.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID));
                     callback.changeCurrentMusic(musicId);
                     updatePlaylist(musicId);
                 }
@@ -154,6 +177,11 @@ public class PlayerFragment extends Fragment {
         imageView.setImageResource(resource);
     }
 
+    @BindingAdapter({ "isVisible" })
+    public static void setIsVisible(View view, boolean isVisible) {
+        view.setVisibility(isVisible ? View.VISIBLE : View.INVISIBLE);
+    }
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -209,6 +237,8 @@ public class PlayerFragment extends Fragment {
         binding.setNext(R.drawable.round_skip_next);
         binding.setRepeat(repeatCycle.getResource());
         binding.setShuffle(shuffleCycle.getResource());
+        binding.setMenu(R.drawable.round_more_horiz_24);
+        binding.setShowLoading(false);
         binding.setFragment(this);
         binding.setSeekValue(seekValueBinding);
         binding.setEnable(false);
@@ -217,6 +247,8 @@ public class PlayerFragment extends Fragment {
         binding.setDescAlbum(getString(R.string.desc_album, musicWithArtists.music.getMusic_album()));
         binding.setDescPlaylists(getString(R.string.desc_playlists, ""));
         binding.setPlaylists("");
+        lufs = 0;
+        updateLufsIcon();
 
         return binding.getRoot();
     }
@@ -309,7 +341,80 @@ public class PlayerFragment extends Fragment {
             case R.id.player_next:
                 mediaController.getTransportControls().skipToNext();
                 break;
+            case R.id.player_menu:
+                PopupMenu popupMenu = new PopupMenu(getContext(), v);
+                popupMenu.getMenuInflater().inflate(R.menu.popup_menu, popupMenu.getMenu());
+                popupMenu.setForceShowIcon(true);
+
+                popupMenu.setOnMenuItemClickListener(menuItem -> {
+                    AppDatabase appDatabase = AppDatabase.getInstance(getContext());
+                    if (menuItem.getItemId() == R.id.player_menu_add_to_playlist) {
+                        Executors.newSingleThreadExecutor().execute(new PlaylistRunnableObject(objects -> {
+                            objects.remove(0);
+                            // Remove playlist if it already contains the song to not have the option to add again to same playlist
+                            Set<String> excludedPlaylists = partOfPlaylist.stream().map(Playlist::getPlaylist_name).collect(Collectors.toSet());
+                            List<String> playlistsStr = objects.stream().map(ListItem::getName).filter(name -> !excludedPlaylists.contains(name)).collect(Collectors.toList());
+                            Executor mainThreadExecutor = ContextCompat.getMainExecutor(getContext());
+                            mainThreadExecutor.execute(() -> popupAddOrRemoveFromPlaylist(playlistsStr, Constants.PLAYLIST_ADD));
+                        }, appDatabase));
+                    } else if (menuItem.getItemId() == R.id.player_menu_remove_from_playlist) {
+                        List<String> playlistsStr = partOfPlaylist.stream().map(Playlist::getPlaylist_name).collect(Collectors.toList());
+                        popupAddOrRemoveFromPlaylist(playlistsStr, Constants.PLAYLIST_REMOVE);
+                    } else if (menuItem.getItemId() == R.id.player_menu_analyze_loudness) {
+                        binding.setShowLoading(true);
+                        Executors.newSingleThreadExecutor().execute(new AnalyzeMusicRunnable(lufs1 -> {
+                            lufs = lufs1;
+                            updateLufsIcon();
+                            binding.setShowLoading(false);
+                            Executor mainThreadExecutor = ContextCompat.getMainExecutor(getContext());
+                            mainThreadExecutor.execute(() -> Toast.makeText(getContext(), getString(lufs1 < 0 ? R.string.toast_analyzed_loudness_success : R.string.toast_analyzed_loudness_fail), Toast.LENGTH_SHORT).show());
+                        }, appDatabase, musicId));
+                    }
+                    return true;
+                });
+                popupMenu.show();
         }
+    }
+
+    private void popupAddOrRemoveFromPlaylist(List<String> playlists, int type) {
+        //Create AlertDialog to choose a playlist to add/remove current song
+        playlists = playlists.stream().sorted().collect(Collectors.toList());
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        AlertDialog alertDialog = builder.create();//Used to be able to dismiss the dialog
+        View dialogView = getLayoutInflater().inflate(R.layout.add_to_playlist_dialog, null);
+
+        Spinner spinner = dialogView.findViewById(R.id.playlist_dialog_playlist_name);
+        SpinnerAdapter adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1, playlists);
+        spinner.setAdapter(adapter);
+
+        CustomButton btnAdd = dialogView.findViewById(R.id.playlist_dialog_add);
+        if (playlists.isEmpty())
+            btnAdd.setEnabled(false);
+
+        if (type == Constants.PLAYLIST_ADD) {
+            btnAdd.setIcon(R.drawable.ic_round_playlist_add_24);
+            btnAdd.setText(getString(R.string.popup_btn_add));
+        } else if (type == Constants.PLAYLIST_REMOVE) {
+            btnAdd.setIcon(R.drawable.round_playlist_remove_24);
+            btnAdd.setText(getString(R.string.popup_btn_remove));
+        }
+        btnAdd.setOnClickListener(v -> {
+            String name = spinner.getSelectedItem().toString();
+            List<Playlist> listOfPlaylist = new ArrayList<>();
+            listOfPlaylist.add(new Playlist(musicId, name));
+            Executors.newSingleThreadExecutor().execute(new PlaylistRunnableNull(() -> {
+                updatePlaylist(musicId);
+                Executor mainThreadExecutor = ContextCompat.getMainExecutor(getContext());
+                mainThreadExecutor.execute(() -> Toast.makeText(getContext(), getString(type == Constants.PLAYLIST_ADD ? R.string.toast_add_song_to_playlist : R.string.toast_remove_song_from_playlist), Toast.LENGTH_SHORT).show());
+            }, AppDatabase.getInstance(getContext()), name, listOfPlaylist, type));
+            alertDialog.dismiss();
+        });
+        Button btnCancel = dialogView.findViewById(R.id.playlist_dialog_cancel);
+        btnCancel.setOnClickListener(v -> alertDialog.dismiss());
+
+        alertDialog.setView(dialogView);
+        alertDialog.show();
     }
 
     private String changeState(CycleStateResource cycle, String state) {
@@ -341,8 +446,9 @@ public class PlayerFragment extends Fragment {
     private void updatePlaylist(long musicId) {
         AppDatabase appDatabase = AppDatabase.getInstance(getContext());
         Executors.newSingleThreadExecutor().execute(new PlaylistRunnablePlaylist(playlists -> {
-            String playlistStr = "";
-            String descPlaylistsStr = "";
+            partOfPlaylist = playlists;
+            String playlistStr = playlists.isEmpty() ? "" : "Part of playlist:\n";
+            String descPlaylistsStr = "Part of playlist: ";
             for (int i = 0; i < playlists.size(); i++) {
                 playlistStr += playlists.get(i).getPlaylist_name();
                 descPlaylistsStr += playlists.get(i).getPlaylist_name();
@@ -376,6 +482,13 @@ public class PlayerFragment extends Fragment {
             time = String.format(Locale.getDefault(), "%02d:%02d:%02d", timeArray[0], timeArray[1], timeArray[2]);
         else time = String.format(Locale.getDefault(), "%02d:%02d", timeArray[1], timeArray[2]);
         return time;
+    }
+
+    public void updateLufsIcon() {
+        if (lufs < 0)
+            binding.setLufs(R.drawable.round_eq_pass);
+        else
+            binding.setLufs(R.drawable.round_eq_fail);
     }
 
     public void updateListInService(ArrayList<Long> idList) {
